@@ -1,0 +1,87 @@
+{
+  "workbench.iconTheme": "symbols",
+  "workbench.colorTheme": "Min Dark",
+
+  // Change font
+  "editor.fontFamily": "Geist Mono",
+  "editor.fontSize": 14,
+  "apc.font.family": "Geist Mono",
+  "apc.monospace.font.family": "Geist Mono",
+  "terminal.integrated.fontFamily": "JetBrainsMono Nerd Font",
+
+  // Terminal
+  "terminal.integrated.fontSize": 14,
+  "terminal.integrated.lineHeight": 1.3,
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+
+  // Code Formatting
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "quickfix.biome": "explicit",
+    "source.organizeImports": "explicit",
+    "source.organizeImports.biome": "explicit"
+  },
+  "editor.formatOnSave": true,
+
+  // Exclude files
+  "files.exclude": {
+    "**/.DS_Store": true,
+    "**/.git": true,
+    "**/.hg": true,
+    "**/.svn": true,
+    "**/CVS": true,
+    "**/Pods": true,
+    "node_modules": false
+  },
+
+  // Files associations
+  "files.associations": {
+    "*.css": "tailwindcss",
+    ".env-example": "dotenv"
+  },
+  "tailwindCSS.includeLanguages": {
+    "plaintext": "html"
+  },
+
+  // Misc
+  "editor.lightbulb.enabled": "off",
+  "editor.accessibilitySupport": "off",
+  "editor.fontLigatures": true,
+  "editor.inlineSuggest.enabled": true,
+  "editor.lineHeight": 30,
+  "editor.minimap.enabled": false,
+  "editor.quickSuggestions": {
+    "strings": false
+  },
+  "editor.renderControlCharacters": false,
+  "editor.renderLineHighlight": "gutter",
+  "editor.rulers": [80, 120],
+  "editor.scrollbar.horizontalScrollbarSize": 10,
+  "editor.scrollbar.verticalScrollbarSize": 10,
+  "editor.semanticHighlighting.enabled": false,
+  "editor.suggest.preview": false,
+  "editor.tabCompletion": "on",
+  "extensions.ignoreRecommendations": true,
+  "javascript.suggest.autoImports": false,
+  "javascript.updateImportsOnFileMove.enabled": "never",
+  "remote.autoForwardPortsSource": "hybrid",
+  "security.workspace.trust.untrustedFiles": "open",
+  "settingsSync.keybindingsPerPlatform": true,
+  "workbench.sideBar.location": "right",
+  "window.nativeTabs": false,
+  "window.commandCenter": true,
+  "window.titleBarStyle": "custom",
+  "window.customTitleBarVisibility": "never",
+  "workbench.activityBar.location": "hidden",
+  "workbench.editor.empty.hint": "hidden",
+  "workbench.layoutControl.enabled": false,
+  "workbench.startupEditor": "none",
+  "workbench.tree.enableStickyScroll": true,
+  "workbench.tree.indent": 16,
+  "breadcrumbs.filePath": "last",
+  "files.trimTrailingWhitespace": true,
+  "symbols.hidesExplorerArrows": false,
+  "redhat.telemetry.enabled": false,
+  "git.openRepositoryInParentFolders": "always",
+  "git.confirmSync": false
+}

@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Temporary
+*.tmp
+*.bak
+*.backup
+
+# Node modules (if any configs have dependencies)
+node_modules/
