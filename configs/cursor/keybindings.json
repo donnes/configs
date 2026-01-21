@@ -1,0 +1,86 @@
+// Place your key bindings in this file to override the defaults
+[
+  {
+    "mac": "a",
+    "win": "a",
+    "linux": "a",
+    "key": "a",
+    "when": "filesExplorerFocus && !inputFocus",
+    "command": "explorer.newFile"
+  },
+  {
+    "mac": "shift+a",
+    "win": "shift+a",
+    "linux": "shift+a",
+    "key": "shift+a",
+    "when": "filesExplorerFocus && !inputFocus",
+    "command": "explorer.newFolder"
+  },
+  {
+    "mac": "cmd+shift+d",
+    "win": "ctrl+shift+d",
+    "linux": "ctrl+shift+d",
+    "key": "shift+cmd+d",
+    "command": "editor.action.copyLinesDownAction",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "mac": "ctrl+cmd+down",
+    "win": "alt+down",
+    "linux": "alt+down",
+    "key": "alt+down",
+    "command": "editor.action.moveLinesDownAction",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "mac": "ctrl+cmd+up",
+    "win": "alt+up",
+    "linux": "alt+up",
+    "key": "alt+up",
+    "command": "editor.action.moveLinesUpAction",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "mac": "cmd+shift+t",
+    "win": "alt+shift+t",
+    "linux": "alt+shift+t",
+    "key": "cmd+shift+t",
+    "command": "workbench.action.newWindowTab"
+  },
+  {
+    "mac": "cmd+\\",
+    "win": "ctrl+\\",
+    "linux": "ctrl+\\",
+    "key": "cmd+\\",
+    "command": "workbench.action.toggleSidebarVisibility"
+  },
+  {
+    "key": "ctrl+\\",
+    "command": "-workbench.action.splitEditor"
+  },
+  {
+    "key": "ctrl+b",
+    "command": "-workbench.action.toggleSidebarVisibility"
+  },
+  {
+    "key": "ctrl+shift+d",
+    "command": "-workbench.view.debug",
+    "when": "viewContainer.workbench.view.debug.enabled"
+  },
+  {
+    "key": "cmd+\\",
+    "command": "-workbench.action.splitEditor"
+  },
+  {
+    "key": "cmd+]",
+    "command": "workbench.action.toggleAuxiliaryBar"
+  },
+  {
+    "key": "alt+cmd+b",
+    "command": "-workbench.action.toggleAuxiliaryBar"
+  },
+  {
+    "key": "cmd+i",
+    "command": "composerMode.agent"
+  }
+]

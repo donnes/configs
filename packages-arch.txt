@@ -1,0 +1,31 @@
+# packages-arch.txt - Core machine dependencies
+# Edit to customize
+# Install with: yay -S --needed - < packages-arch.txt
+
+# Core dev tools
+neovim
+ripgrep
+fd
+fzf
+base-devel
+curl
+unzip
+tree-sitter
+github-cli
+lazygit
+
+# Node.js ecosystem
+fnm-bin
+
+# Shell enhancements
+zoxide
+eza
+atuin
+
+# Languages & runtimes
+go
+rbenv
+
+# Utilities
+biome-bin
+aws-cli-v2

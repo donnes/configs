@@ -1,0 +1,64 @@
+{
+  "editor.fontSize": 12,
+  "editor.lineHeight": 1.8,
+  "workbench.iconTheme": "moxer-icons",
+  "workbench.colorTheme": "Oscura Midnight",
+  "editor.fontFamily": "Geist Mono",
+  "terminal.integrated.fontFamily": "JetBrainsMono Nerd Font",
+  "terminal.integrated.fontSize": 13,
+  "terminal.integrated.lineHeight": 1.3,
+  "files.exclude": {
+    "**/.DS_Store": true,
+    "**/.git": true,
+    "**/.hg": true,
+    "**/.svn": true,
+    "**/CVS": true,
+    "**/Pods": true,
+    "node_modules": false
+  },
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "tailwindCSS.includeLanguages": {
+    "plaintext": "html"
+  },
+  "editor.formatOnSave": true,
+  "[dockercompose]": {
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.autoIndent": "advanced",
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[github-actions-workflow]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "editor.lightbulb.enabled": "off",
+  "editor.accessibilitySupport": "off",
+  "editor.fontLigatures": true,
+  "editor.minimap.enabled": false,
+  "editor.renderControlCharacters": false,
+  "editor.renderLineHighlight": "gutter",
+  "editor.rulers": [
+    80,
+    120
+  ],
+  "editor.scrollbar.horizontalScrollbarSize": 10,
+  "editor.scrollbar.verticalScrollbarSize": 10,
+  "editor.semanticHighlighting.enabled": false,
+  "workbench.sideBar.location": "right",
+  "workbench.editor.empty.hint": "hidden",
+  "workbench.tree.enableStickyScroll": true,
+  "workbench.tree.indent": 16,
+  "breadcrumbs.filePath": "last",
+  "files.trimTrailingWhitespace": true,
+  "symbols.hidesExplorerArrows": false,
+  "redhat.telemetry.enabled": false,
+  "extensions.ignoreRecommendations": true,
+  "git.replaceTagsWhenPull": true,
+  "cursor.composer.shouldChimeAfterChatFinishes": true,
+  "workbench.activityBar.orientation": "vertical",
+  "git.confirmSync": false
+}
