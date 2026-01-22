@@ -15,6 +15,15 @@ source $ZSH/oh-my-zsh.sh
 
 # User configuration
 
+# Aliases
+alias cdc="z ~/.syncode/repo"
+alias lg="lazygit"
+alias nv="nvim"
+alias oc="opencode"
+alias c="cursor"
+alias ws="windsurf"
+alias cc="claude"
+
 # Language
 export LANG=en_US.UTF-8
 
@@ -68,23 +77,9 @@ esac
 # Eza
 alias ls="eza --color=auto --long --git --no-filesize --icons=always --no-time --no-user --no-permissions"
 
-# Lazygit
-alias lg="lazygit"
-
-# Cursor
-alias c="cursor"
-
 # Windsurf
 export PATH="$HOME/.codeium/windsurf/bin:$PATH"
 export EDITOR="c --wait"
-alias ws="windsurf"
 
 # opencode
 export PATH="$HOME/.opencode/bin:$PATH"
-alias oc="opencode"
-
-# Claue Code
-alias cc="claude"
-
-# Neovim
-alias nv="nvim"
