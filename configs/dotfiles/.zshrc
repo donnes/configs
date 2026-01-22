@@ -1,0 +1,90 @@
+# If you come from bash you might have to change your $PATH.
+# export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
+export PATH="$HOME/.local/bin:$PATH"
+
+# Path to your Oh My Zsh installation.
+export ZSH="$HOME/.oh-my-zsh"
+
+# Theme
+ZSH_THEME="robbyrussell"
+
+# Plugins
+plugins=(git)
+
+source $ZSH/oh-my-zsh.sh
+
+# User configuration
+
+# Language
+export LANG=en_US.UTF-8
+
+# fnm
+eval "$(fnm env --use-on-cd)"
+
+# Zoxide
+eval "$(zoxide init zsh)"
+
+# fnm
+FNM_PATH="$HOME/Library/Application Support/fnm"
+if [ -d "$FNM_PATH" ]; then
+  export PATH="$HOME/Library/Application Support/fnm:$PATH"
+  eval "`fnm env`"
+fi
+
+# bun completions
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+# Atuin
+export ATUIN_INSTALL="$HOME/.atuin"
+export PATH="$ATUIN_INSTALL/bin:$PATH"
+eval "$(atuin init zsh)"
+
+# Ruby
+eval "$(rbenv init -)"
+
+# Android SDK & Java SDK
+export ANDROID_SDK_ROOT="$HOME/Library/Android/sdk"
+export PATH="${PATH}:$HOME/Library/Android/sdk/platform-tools"
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
+
+# Node Options
+export NODE_OPTIONS=--max-old-space-size=4096
+
+# Node Binary
+export NODE_BINARY=$(which node)
+
+# pnpm
+export PNPM_HOME="$HOME/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
+
+# Eza
+alias ls="eza --color=auto --long --git --no-filesize --icons=always --no-time --no-user --no-permissions"
+
+# Lazygit
+alias lg="lazygit"
+
+# Cursor
+alias c="cursor"
+
+# Windsurf
+export PATH="$HOME/.codeium/windsurf/bin:$PATH"
+export EDITOR="c --wait"
+alias ws="windsurf"
+
+# opencode
+export PATH="$HOME/.opencode/bin:$PATH"
+alias oc="opencode"
+
+# Claue Code
+alias cc="claude"
+
+# Neovim
+alias nv="nvim"
