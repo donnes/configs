@@ -1,6 +1,6 @@
 ---
 description: Create a pull request with commit
-model: opencode/glm-4.6
+model: opencode/grok-code
 subtask: true
 ---
 
