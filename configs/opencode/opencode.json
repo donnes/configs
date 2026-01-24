@@ -1,9 +1,26 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/gpt-5.2-codex",
+  "provider": {
+    "opencode": {
+      "models": {
+        "gpt-5.2-codex": {
+          "options": {
+            "reasoningEffort": "high"
+          }
+        }
+      }
+    }
+  },
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "limit": 233000
+  },
   "permission": {
     "read": {
       "*": "allow",
-      "*.env*": "deny",
+      "*.env*": "deny"
     },
     "bash": {
       "*": "allow",
@@ -12,17 +29,9 @@
     "external_directory": "ask"
   },
   "mcp": {
-    "gh_grep": {
-      "type": "remote",
-      "url": "https://mcp.grep.app",
-      "enabled": true
-    },
     "playwright": {
       "type": "local",
-      "command": [
-        "npx",
-        "@playwright/mcp@latest"
-      ],
+      "command": ["npx", "@playwright/mcp@latest"],
       "enabled": true
     },
     "linear": {
