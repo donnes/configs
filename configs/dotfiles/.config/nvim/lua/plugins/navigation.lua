@@ -47,7 +47,9 @@ return {
           },
         },
         window = {
-          width = 30,
+          position = "float",
+          width = 70,
+          height = 30,
         },
       })
     end,

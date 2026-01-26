@@ -1,43 +1,32 @@
 {
-  "$schema": "https://opencode.ai/config.json",
-  "model": "opencode/gpt-5.2-codex",
-  "provider": {
-    "opencode": {
-      "models": {
-        "gpt-5.2-codex": {
-          "options": {
-            "reasoningEffort": "high"
-          }
-        }
-      }
-    }
-  },
-  "compaction": {
-    "auto": true,
-    "prune": true,
-    "limit": 233000
-  },
-  "permission": {
-    "read": {
-      "*": "allow",
-      "*.env*": "deny"
-    },
-    "bash": {
-      "*": "allow",
-      "rm -rf *": "deny"
-    },
-    "external_directory": "ask"
-  },
-  "mcp": {
-    "playwright": {
-      "type": "local",
-      "command": ["npx", "@playwright/mcp@latest"],
-      "enabled": true
-    },
-    "linear": {
-      "type": "remote",
-      "url": "https://mcp.linear.app/mcp",
-      "enabled": true
-    }
-  }
+	"$schema": "https://opencode.ai/config.json",
+	"model": "opencode/gpt-5.2-codex",
+	"compaction": {
+		"auto": true,
+		"prune": true,
+		"limit": 233000
+	},
+	"permission": {
+		"read": {
+			"*": "allow",
+			"*.env*": "deny"
+		},
+		"bash": {
+			"*": "allow",
+			"rm -rf *": "deny"
+		},
+		"external_directory": "allow"
+	},
+	"mcp": {
+		"playwright": {
+			"type": "local",
+			"command": ["npx", "@playwright/mcp@latest"],
+			"enabled": true
+		},
+		"linear": {
+			"type": "remote",
+			"url": "https://mcp.linear.app/mcp",
+			"enabled": true
+		}
+	}
 }
