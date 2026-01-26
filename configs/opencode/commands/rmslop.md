@@ -1,6 +1,6 @@
 ---
 description: Removes AI-generated slop.
-model: opencode/gpt-5.2-codex
+model: opencode/claude-opus-5-2
 ---
 
 # Remove AI code slop

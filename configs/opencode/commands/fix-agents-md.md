@@ -1,6 +1,6 @@
 ---
 description: Fix a broken AGENTS.md with this prompt
-model: opencode/gpt-5.2-codex
+model: opencode/claude-opus-4-5
 subtask: true
 ---
 
