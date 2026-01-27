@@ -14,44 +14,26 @@ return {
           layout_config = { prompt_position = "top" },
           sorting_strategy = "ascending",
           winblend = 5,
+          file_ignore_patterns = { "%.DS_Store" },
         },
         extensions = {
           ["ui-select"] = {
             require("telescope.themes").get_dropdown({}),
           },
+          file_browser = {
+            hidden = true
+          }
+        },
+        pickers = {
+          find_files = {
+            hidden = true
+          }
         },
       })
       pcall(telescope.load_extension, "fzf")
       pcall(telescope.load_extension, "zoxide")
       pcall(telescope.load_extension, "ui-select")
-    end,
+    end
   },
-  {
-    "nvim-neo-tree/neo-tree.nvim",
-    branch = "v3.x",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "nvim-tree/nvim-web-devicons",
-      "MunifTanjim/nui.nvim",
-    },
-    config = function()
-      require("neo-tree").setup({
-        filesystem = {
-          use_libuv_file_watcher = true,
-          follow_current_file = {
-            enabled = true,
-          },
-          filtered_items = {
-            hide_dotfiles = false,
-            hide_gitignored = false,
-          },
-        },
-        window = {
-          position = "float",
-          width = 70,
-          height = 30,
-        },
-      })
-    end,
-  },
+  
 }
