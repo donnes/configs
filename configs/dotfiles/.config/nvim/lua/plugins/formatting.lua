@@ -17,6 +17,9 @@ return {
           }
         end,
       })
+
+      local map = vim.keymap.set
+      map("n", "<leader>f", ":lua require('conform').format()<CR>", { desc = "Format file" })
     end,
   },
 }

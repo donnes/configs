@@ -5,7 +5,7 @@ model: opencode/glm-4.7
 
 # Remove AI code slop
 
-Check the diff against main, and remove all AI-generated slop introduced in this branch. If currently on main, ask me how far we should look back.
+Check the diff against main, and remove all AI-generated slop introduced in this branch. If currently on main, check if there is current changes and if not, ask me what to do.
 
 This includes:
 - Extra comments that a human wouldn't add or is inconsistent with the rest of the file
