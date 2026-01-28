@@ -33,7 +33,18 @@ return {
       pcall(telescope.load_extension, "fzf")
       pcall(telescope.load_extension, "zoxide")
       pcall(telescope.load_extension, "ui-select")
+
+      local map = vim.keymap.set
+      map("n", "<leader>ff", ":Telescope find_files<CR>", { desc = "Find files" })
+      map("n", "<leader>fg", ":Telescope live_grep<CR>", { desc = "Live grep" })
+      map("n", "<leader>fb", ":Telescope buffers<CR>", { desc = "List buffers" })
+      map("n", "<leader>fh", ":Telescope help_tags<CR>", { desc = "Help tags" })
+      map("n", "<leader>fc", ":Telescope commands<CR>", { desc = "Find commands" })
+      map("n", "<leader>fk", ":Telescope keymaps<CR>", { desc = "Find keymaps" })
+      map("n", "<leader>cd", ":Telescope zoxide list<CR>", { desc = "Zoxide" })
+      map("n", "<leader>gd", ":Telescope git_status<CR>", { desc = "Git status" })
+      map("n", "<space>fb", ":Telescope file_browser path=%:p:h select_buffer=true<CR>", { desc = "Toggle file browser" })
     end
   },
-  
+
 }
