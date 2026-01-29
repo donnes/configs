@@ -3,22 +3,21 @@
 
 # Taps
 tap "jesseduffield/lazygit"
+tap "oven-sh/bun"
 
 # Core dev tools
-brew "neovim"
+brew "ca-certificates"
 brew "ripgrep"
 brew "fd"
 brew "fzf"
+brew "fzy"
 brew "gcc"
-brew "make"
-brew "curl"
-brew "unzip"
-brew "tree-sitter"
 brew "gh"
 brew "lazygit"
 
-# Node.js ecosystem
+# Version managers
 brew "fnm"
+brew "bob"
 
 # Shell enhancements
 brew "zoxide"
@@ -28,10 +27,12 @@ brew "atuin"
 # Languages & runtimes
 brew "go"
 brew "rbenv"
+brew "oven-sh/bun/bun"
 
 # Utilities
 brew "biome"
 brew "awscli"
+brew "uv"
 
 # Casks (GUI apps)
 cask "orbstack"

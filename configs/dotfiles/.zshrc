@@ -19,6 +19,7 @@ source $ZSH/oh-my-zsh.sh
 alias cdc="z ~/.syncode/repo"
 alias lg="lazygit"
 alias nv="nvim"
+alias nvn="NVIM_APPNAME=nvim-new nvim"
 alias oc="opencode"
 alias c="cursor"
 alias ws="windsurf"
@@ -83,3 +84,6 @@ export EDITOR="c --wait"
 
 # opencode
 export PATH="$HOME/.opencode/bin:$PATH"
+
+# bob
+export PATH="/Users/$USER/.local/share/bob/nvim-bin/:$PATH"

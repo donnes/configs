@@ -1,25 +1,44 @@
 return {
   {
     "stevearc/conform.nvim",
-    config = function()
-      require("conform").setup({
-        formatters_by_ft = {
-          javascript = { "biome" },
-          javascriptreact = { "biome" },
-          typescript = { "biome" },
-          typescriptreact = { "biome" },
-          json = { "biome" },
-        },
-        format_on_save = function()
-          return {
-            timeout_ms = 2000,
-            lsp_fallback = true,
-          }
+    event = { "BufWritePre" },
+    cmd = { "ConformInfo" },
+    keys = {
+      {
+        "<leader>lf",
+        function()
+          require("conform").format({ async = true, lsp_fallback = true })
         end,
-      })
-
-      local map = vim.keymap.set
-      map("n", "<leader>f", ":lua require('conform').format()<CR>", { desc = "Format file" })
-    end,
+        mode = { "n", "v" },
+        desc = "Format buffer or range",
+      },
+    },
+    opts = {
+      notify_on_error = false,
+      format_on_save = function(bufnr)
+        local disable_filetypes = { c = true, cpp = true }
+        return {
+          timeout_ms = 500,
+          lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
+        }
+      end,
+      formatters_by_ft = {
+        lua = { "stylua" },
+        javascript = { "biome" },
+        typescript = { "biome" },
+        javascriptreact = { "biome" },
+        typescriptreact = { "biome" },
+        vue = { "biome" },
+        css = { "biome" },
+        html = { "biome" },
+        graphql = { "biome" },
+        json = { "biome" },
+        yaml = { "prettierd" },
+        markdown = { "prettierd" },
+        ["markdown.mdx"] = { "prettierd" },
+        python = { "isort", "black" },
+        go = { "goimports", "gofmt" },
+      },
+    },
   },
 }
