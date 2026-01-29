@@ -37,9 +37,40 @@ return {
         on_attach = on_attach,
       })
 
+      vim.api.nvim_create_autocmd("LspAttach", {
+        callback = function(args)
+          local client = vim.lsp.get_client_by_id(args.data.client_id)
+          if client and client.name == "tailwindcss" then
+            local paths = {
+              "./src/styles/globals.css",
+              "./packages/ui/src/styles/globals.css",
+              "./src/app/globals.css",
+              "./src/index.css",
+              "./app/globals.css",
+            }
+            for _, path in pairs(paths) do
+              local full_path = vim.fn.getcwd() .. "/" .. path
+              if vim.fn.filereadable(full_path) == 1 then
+                client.notify("workspace/didChangeConfiguration", {
+                  settings = {
+                    tailwindCSS = {
+                      experimental = {
+                        configFile = path,
+                      },
+                    },
+                  },
+                })
+                break
+              end
+            end
+          end
+        end,
+      })
+
       vim.lsp.config("tailwindcss", {
         capabilities = capabilities,
         on_attach = on_attach,
+        root_dir = require("lspconfig.util").root_pattern("package.json", "tsconfig.json"),
       })
 
       vim.lsp.config("pyright", {
