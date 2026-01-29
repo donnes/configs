@@ -37,6 +37,7 @@ return {
       local map = vim.keymap.set
       map("n", "<leader>ff", ":Telescope find_files<CR>", { desc = "Find files" })
       map("n", "<leader>fg", ":Telescope live_grep<CR>", { desc = "Live grep" })
+      map("n", "<leader>fo", ":Telescope oldfiles<CR>", { desc = "Open recent files" })
       map("n", "<leader>fb", ":Telescope buffers<CR>", { desc = "List buffers" })
       map("n", "<leader>fh", ":Telescope help_tags<CR>", { desc = "Help tags" })
       map("n", "<leader>fc", ":Telescope commands<CR>", { desc = "Find commands" })

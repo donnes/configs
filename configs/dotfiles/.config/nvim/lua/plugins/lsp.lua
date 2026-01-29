@@ -11,6 +11,7 @@ return {
     config = function()
       require("mason-lspconfig").setup({
         ensure_installed = {
+          "lua_ls",
           "vtsls",
           "tailwindcss",
           "pyright",
@@ -22,7 +23,6 @@ return {
   {
     "neovim/nvim-lspconfig",
     dependencies = {
-      "williamboman/mason-lspconfig.nvim",
       "hrsh7th/cmp-nvim-lsp",
     },
     config = function()
@@ -36,7 +36,7 @@ return {
         map("n", "gd", vim.lsp.buf.definition, "Go to definition")
         map("n", "gr", vim.lsp.buf.references, "References")
         map("n", "K", vim.lsp.buf.hover, "Hover")
-        map("n", "ga", vim.lsp.buf.code_action, "Code action")
+        map("n", "<leader>ca", vim.lsp.buf.code_action, "Code action")
         map("n", "rn", vim.lsp.buf.rename, "Rename")
         map("n", "ds", vim.lsp.buf.document_symbol, "Document symbols")
         map("n", "ws", vim.lsp.buf.workspace_symbol, "Workspace symbols")
@@ -70,10 +70,16 @@ return {
         },
       })
 
+      vim.lsp.config("lua_ls", {
+        capabilities = capabilities,
+        on_attach = on_attach,
+      })
+
       vim.lsp.enable("vtsls")
       vim.lsp.enable("tailwindcss")
       vim.lsp.enable("pyright")
       vim.lsp.enable("gopls")
+      vim.lsp.enable("lua_ls")
     end,
   },
 }

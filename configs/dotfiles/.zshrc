@@ -22,7 +22,7 @@ alias nv="nvim"
 alias oc="opencode"
 alias c="cursor"
 alias ws="windsurf"
-alias cc="claude"
+alias cc="claude --dangerously-skip-permissions"
 
 # Language
 export LANG=en_US.UTF-8
