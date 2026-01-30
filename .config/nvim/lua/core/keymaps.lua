@@ -20,12 +20,6 @@ map("n", "<leader>bd", ":bdelete<CR>", { desc = "Delete buffer" })
 map("n", "<leader>bn", ":bnext<CR>", { desc = "Next buffer" })
 map("n", "<leader>bp", ":bprevious<CR>", { desc = "Previous buffer" })
 
--- Move lines up/down
-map("n", "<M-j>", ":m .+1<CR>==", { desc = "Move line down" })
-map("n", "<M-k>", ":m .-2<CR>==", { desc = "Move line up" })
-map("v", "<M-j>", ":m '>+1<CR>gv=gv", { desc = "Move selection down" })
-map("v", "<M-k>", ":m '<-2<CR>gv=gv", { desc = "Move selection up" })
-
 -- Better paste behavior
 map("x", "<leader>p", '"_dP', { desc = "Paste without yanking" })
 

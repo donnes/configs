@@ -84,6 +84,28 @@ return {
 
     require("mini.surround").setup()
 
+    require("mini.move").setup({
+      mappings = {
+        -- Normal mode
+        left  = '<M-h>',
+        right = '<M-l>',
+        down  = '<M-j>',
+        up    = '<M-k>',
+
+        -- Visual mode
+        line_left  = '<M-h>',
+        line_right = '<M-l>',
+        line_down  = '<M-j>',
+        line_up    = '<M-k>',
+      },
+    })
+
+    -- Add macOS literal mappings for mini.move if terminal doesn't send Meta
+    vim.keymap.set('n', '∆', ':MoveLineDown<CR>', { silent = true })
+    vim.keymap.set('n', '˚', ':MoveLineUp<CR>', { silent = true })
+    vim.keymap.set('v', '∆', ':MoveBlockDown<CR>', { silent = true })
+    vim.keymap.set('v', '˚', ':MoveBlockUp<CR>', { silent = true })
+
     require("mini.bracketed").setup()
 
     vim.api.nvim_create_autocmd("User", {
