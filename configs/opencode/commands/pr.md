@@ -1,12 +1,13 @@
 ---
 description: Create a pull request with commit
-model: opencode/glm-4.7
+model: opencode/kimi-k2.5
 subtask: true
 ---
 
 Check the current branch with `git branch --show-current`
 
 If the current branch is 'main' or 'master':
+
 - Inform the user: "Direct commits to the main branch are not allowed. Creating a new branch automatically."
 - Analyze the changes with `git diff` to understand the context.
 - Generate a descriptive branch name based on the changes (e.g., 'feature/add-user-auth', 'fix/login-validation', or 'refactor/database-schema').
@@ -14,6 +15,7 @@ If the current branch is 'main' or 'master':
 - Proceed with the rest of the command.
 
 If the current branch is not 'main' or 'master':
+
 - Inform the user: "You are currently on branch '<current-branch>'. Do you want to commit and push changes to this branch and create a PR from it? (y/n)"
 - If yes, proceed with the rest of the command.
 - If no, analyze the changes with `git diff`, generate a new descriptive branch name, create it with `git checkout -b <new-generated-branch-name>`, and proceed.
@@ -29,6 +31,7 @@ To create the PR:
 Get the current branch changes with `git diff main...HEAD`
 
 Analyze the diff to identify:
+
 - New files added
 - Modified files
 - Deleted files
@@ -47,20 +50,27 @@ Use the following PR template to generate the title and description:
 ## Changes
 
 ### New Files
+
 [List any new files added with brief descriptions]
+
 - `path/to/file` - Description
 
 ### Modified Files
+
 [List any files that were modified with brief descriptions]
+
 - `path/to/file` - Description of changes
 
 ### Deleted Files
+
 [List any files that were removed]
+
 - `path/to/file` - Reason for removal
 
 ## Features
 
 [List the key features or improvements this PR introduces]
+
 - Feature 1
 - Feature 2
 
@@ -78,6 +88,7 @@ Use the following PR template to generate the title and description:
 ## Testing
 
 [Describe how this change was tested. Use checkboxes for test cases]
+
 - [ ] Test case 1
 - [ ] Test case 2
 
