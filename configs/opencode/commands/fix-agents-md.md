@@ -1,6 +1,6 @@
 ---
 description: Fix a broken AGENTS.md with this prompt
-model: opencode/claude-opus-4-5
+model: opencode/kimi-k2.5-free
 subtask: true
 ---
 
@@ -27,3 +27,5 @@ Follow these steps:
    - Redundant (the agent already knows this)
    - Too vague to be actionable
    - Overly obvious (like "write clean code")
+
+$ARGUMENTS
