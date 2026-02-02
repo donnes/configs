@@ -82,12 +82,15 @@ function _G.lsp_keymaps(buffer)
   end
 
   map("n", "gd", vim.lsp.buf.definition, "Go to definition")
-  map("n", "gr", vim.lsp.buf.references, "References")
   map("n", "K", vim.lsp.buf.hover, "Hover")
-  map("n", "<leader>ca", vim.lsp.buf.code_action, "Code action")
-  map("n", "rn", vim.lsp.buf.rename, "Rename")
-  map("n", "ds", vim.lsp.buf.document_symbol, "Document symbols")
-  map("n", "ws", vim.lsp.buf.workspace_symbol, "Workspace symbols")
+  map("n", "<leader>vws", vim.lsp.buf.workspace_symbol, "Workspace symbols")
+  map("n", "<leader>vd", vim.diagnostic.open_float, "Diagnostics")
+  map("n", "[d", vim.diagnostic.goto_prev, "Previous diagnostic")
+  map("n", "]d", vim.diagnostic.goto_next, "Next diagnostic")
+  map("n", "<leader>vca", vim.lsp.buf.code_action, "Code action")
+  map("n", "<leader>vrr", vim.lsp.buf.references, "References")
+  map("n", "<leader>vrn", vim.lsp.buf.rename, "Rename")
+  map("i", "<C-h>", vim.lsp.buf.signature_help, "Signature help")
 end
 
 -- ============================================================================
@@ -117,11 +120,10 @@ end, { desc = "Open mini.files in cwd" })
 -- ============================================================================
 
 local cmp_keymaps = {
+  ["<C-p>"] = "select_prev_item",
+  ["<C-n>"] = "select_next_item",
+  ["<C-y>"] = "confirm",
   ["<C-Space>"] = "complete",
-  ["<C-b>"] = "scroll_docs(-4)",
-  ["<C-f>"] = "scroll_docs(4)",
-  ["<C-e>"] = "abort",
-  ["<CR>"] = "confirm({ select = true })",
 }
 
 function _G.get_cmp_keymaps()
