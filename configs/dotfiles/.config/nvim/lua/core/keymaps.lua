@@ -1,3 +1,6 @@
+vim.g.mapleader = " "
+vim.g.maplocalleader = " "
+
 local map = vim.keymap.set
 
 -- ============================================================================
@@ -37,8 +40,8 @@ map("v", "<", "<gv", { desc = "Indent left and reselect" })
 map("v", ">", ">gv", { desc = "Indent right and reselect" })
 
 -- Window splitting & resizing
-map("n", "<leader>sv", ":vsplit<CR>", { desc = "Split window vertically" })
-map("n", "<leader>sh", ":split<CR>", { desc = "Split window horizontally" })
+map("n", "<leader>sv", ":split<CR>", { desc = "Split window vertically" })
+map("n", "<leader>sh", ":vsplit<CR>", { desc = "Split window horizontally" })
 map("n", "<C-Up>", ":resize +2<CR>", { desc = "Increase window height" })
 map("n", "<C-Down>", ":resize -2<CR>", { desc = "Decrease window height" })
 map("n", "<C-Left>", ":vertical resize -2<CR>", { desc = "Decrease window width" })
@@ -85,7 +88,7 @@ function _G.lsp_keymaps(buffer)
   map("n", "rn", vim.lsp.buf.rename, "Rename")
   map("n", "ds", vim.lsp.buf.document_symbol, "Document symbols")
   map("n", "ws", vim.lsp.buf.workspace_symbol, "Workspace symbols")
-  end
+end
 
 -- ============================================================================
 -- FLASH MAPPINGS

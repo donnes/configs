@@ -15,8 +15,8 @@ return {
       evaluate_single = false,
       items = {
         { name = "Recent Files", action = function() require("mini.extra").pickers.oldfiles() end, section = "Search" },
-        { name = "Session",      action = function() require("mini.sessions").select() end,        section = "Search" },
         starter.sections.recent_files(5, false, false),
+        starter.sections.recent_files(5, true, false),
       },
       footer = "https://donnes.dev"
     })
@@ -34,11 +34,7 @@ return {
         { mode = 'n', keys = '<Leader>f', desc = '+file/find' },
         { mode = 'n', keys = '<Leader>g', desc = '+git' },
         { mode = 'n', keys = '<Leader>l', desc = '+lsp' },
-        { mode = 'n', keys = '<Leader>q', desc = '+quit/session' },
         { mode = 'n', keys = '<Leader>s', desc = '+search' },
-        { mode = 'n', keys = '<Leader>t', desc = '+toggle' },
-        { mode = 'n', keys = '<Leader>w', desc = '+windows' },
-        { mode = 'n', keys = '<Leader>x', desc = '+diagnostics' },
       },
     })
 
@@ -87,10 +83,10 @@ return {
     require("mini.move").setup({
       mappings = {
         -- Normal mode
-        left  = '<M-h>',
-        right = '<M-l>',
-        down  = '<M-j>',
-        up    = '<M-k>',
+        left       = '<M-h>',
+        right      = '<M-l>',
+        down       = '<M-j>',
+        up         = '<M-k>',
 
         -- Visual mode
         line_left  = '<M-h>',
@@ -99,12 +95,6 @@ return {
         line_up    = '<M-k>',
       },
     })
-
-    -- Add macOS literal mappings for mini.move if terminal doesn't send Meta
-    vim.keymap.set('n', '∆', ':MoveLineDown<CR>', { silent = true })
-    vim.keymap.set('n', '˚', ':MoveLineUp<CR>', { silent = true })
-    vim.keymap.set('v', '∆', ':MoveBlockDown<CR>', { silent = true })
-    vim.keymap.set('v', '˚', ':MoveBlockUp<CR>', { silent = true })
 
     require("mini.bracketed").setup()
 
