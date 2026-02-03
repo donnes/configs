@@ -23,17 +23,5 @@
       "rm -rf *": "deny"
     },
     "external_directory": "allow"
-  },
-  "mcp": {
-    "playwright": {
-      "type": "local",
-      "command": ["npx", "@playwright/mcp@latest"],
-      "enabled": true
-    },
-    "linear": {
-      "type": "remote",
-      "url": "https://mcp.linear.app/mcp",
-      "enabled": true
-    }
   }
 }

@@ -14,9 +14,9 @@ return {
 ]],
       evaluate_single = false,
       items = {
-        { name = "Recent Files", action = function() require("mini.extra").pickers.oldfiles() end, section = "Search" },
-        starter.sections.recent_files(5, false, false),
-        starter.sections.recent_files(5, true, false),
+        { name = "Recent Files",  action = function() require("mini.extra").pickers.oldfiles() end, section = "Search" },
+        { name = "File explorer", action = function() require("mini.extra").pickers.explorer() end, section = "Search" },
+        starter.sections.recent_files(10, false, false),
       },
       footer = "https://donnes.dev"
     })
@@ -33,13 +33,13 @@ return {
         { mode = 'n', keys = 'K' },
       },
       clues = {
-        { mode = 'n', keys = 'gd', desc = 'Definition' },
-        { mode = 'n', keys = 'K', desc = 'Hover' },
-        { mode = 'n', keys = '[d', desc = 'Previous diagnostic' },
-        { mode = 'n', keys = ']d', desc = 'Next diagnostic' },
-        { mode = 'n', keys = '<Leader>v', desc = '+lsp' },
+        { mode = 'n', keys = 'gd',          desc = 'Definition' },
+        { mode = 'n', keys = 'K',           desc = 'Hover' },
+        { mode = 'n', keys = '[d',          desc = 'Previous diagnostic' },
+        { mode = 'n', keys = ']d',          desc = 'Next diagnostic' },
+        { mode = 'n', keys = '<Leader>v',   desc = '+lsp' },
         { mode = 'n', keys = '<Leader>vws', desc = 'Workspace symbols' },
-        { mode = 'n', keys = '<Leader>vd', desc = 'Diagnostics' },
+        { mode = 'n', keys = '<Leader>vd',  desc = 'Diagnostics' },
         { mode = 'n', keys = '<Leader>vca', desc = 'Code action' },
         { mode = 'n', keys = '<Leader>vrr', desc = 'References' },
         { mode = 'n', keys = '<Leader>vrn', desc = 'Rename' },
