@@ -4,7 +4,10 @@ return {
     "vague-theme/vague.nvim",
     priority = 1000,
     config = function()
-      vim.cmd("colorscheme vague")
+      require("vague").setup({
+        transparent = true
+      })
+      vim.cmd.colorscheme("vague")
     end
   },
   -- {
