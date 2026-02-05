@@ -4,6 +4,7 @@
 # Taps
 tap "jesseduffield/lazygit"
 tap "oven-sh/bun"
+tap "opencode/tap"
 
 # Core dev tools
 brew "ca-certificates"
@@ -14,6 +15,10 @@ brew "fzy"
 brew "gcc"
 brew "gh"
 brew "lazygit"
+
+
+# AI Agents
+brew "opencode"
 
 # Version managers
 brew "fnm"
@@ -37,3 +42,4 @@ brew "uv"
 # Casks (GUI apps)
 cask "orbstack"
 cask "raycast"
+cask "opencode-desktop"

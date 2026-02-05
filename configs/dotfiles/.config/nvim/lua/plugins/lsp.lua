@@ -18,6 +18,11 @@ return {
   {
     "williamboman/mason-lspconfig.nvim",
     dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig" },
+    opts = {
+      servers = {
+        marksman = {},
+      },
+    },
     config = function()
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
       local on_attach = function(_, buffer) _G.lsp_keymaps(buffer) end
@@ -74,6 +79,46 @@ return {
                 "vue",
                 "svelte",
                 "heex",
+              },
+            })
+          end,
+          ["vtsls"] = function()
+            lspconfig.vtsls.setup({
+              capabilities = capabilities,
+              on_attach = on_attach,
+              settings = {
+                vtsls = {
+                  autoUseWorkspaceTsdk = true,
+                  tsserver = {
+                    experimental = {
+                      enableProjectDiagnostics = true,
+                    },
+                  },
+                },
+                typescript = {
+                  preferences = {
+                    includeInlayParameterNameHints = "all",
+                    includeInlayFunctionParameterTypeHints = true,
+                    includeInlayVariableTypeHints = true,
+                    includeInlayPropertyDeclarationTypeHints = true,
+                    includeInlayFunctionLikeReturnTypeHints = true,
+                  },
+                  updateImportsOnFileMove = {
+                    enabled = "always",
+                  },
+                },
+                javascript = {
+                  preferences = {
+                    includeInlayParameterNameHints = "all",
+                    includeInlayFunctionParameterTypeHints = true,
+                    includeInlayVariableTypeHints = true,
+                    includeInlayPropertyDeclarationTypeHints = true,
+                    includeInlayFunctionLikeReturnTypeHints = true,
+                  },
+                  updateImportsOnFileMove = {
+                    enabled = "always",
+                  },
+                },
               },
             })
           end,

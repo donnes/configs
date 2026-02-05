@@ -1,6 +1,6 @@
 ---
 description: Create a pull request with commit
-model: opencode/kimi-k2.5
+model: opencode/kimi-k2.5-free
 subtask: true
 ---
 

@@ -12,3 +12,6 @@
 
 # Node modules (if any configs have dependencies)
 node_modules/
+
+# sensitive
+credentials/
