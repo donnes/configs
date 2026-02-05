@@ -86,3 +86,14 @@ export PATH="$HOME/.opencode/bin:$PATH"
 
 # bob
 export PATH="/Users/$USER/.local/share/bob/nvim-bin/:$PATH"
+
+# opencode
+export PATH=/Users/donaldsilveira/.opencode/bin:$PATH
+export OPENCODE_SERVER_PASSWORD=$(cat ~/.config/opencode/credentials/server_password)
+launchctl setenv OPENCODE_SERVER_PASSWORD "$OPENCODE_SERVER_PASSWORD"
+
+alias ocs-start="launchctl load ~/Library/LaunchAgents/com.opencode.server.plist"
+alias ocs-stop="launchctl unload ~/Library/LaunchAgents/com.opencode.server.plist"
+alias ocs-restart="launchctl unload ~/Library/LaunchAgents/com.opencode.server.plist && launchctl load ~/Library/LaunchAgents/com.opencode.server.plist"
+alias ocs-status="launchctl list | grep opencode"
+alias ocs-logs="tail -f /tmp/opencode.log /tmp/opencode.error.log"
