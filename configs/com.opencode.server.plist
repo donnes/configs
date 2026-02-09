@@ -6,12 +6,9 @@
   <string>com.opencode.server</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/donaldsilveira/.opencode/bin/opencode</string>
-    <string>serve</string>
-    <string>--hostname</string>
-    <string>0.0.0.0</string>
-    <string>--port</string>
-    <string>4096</string>
+    <string>/bin/sh</string>
+    <string>-lc</string>
+    <string>export OPENCODE_SERVER_PASSWORD="$(cat $HOME/.config/opencode/credentials/server_password)"; exec /Users/donaldsilveira/.opencode/bin/opencode serve --hostname 0.0.0.0 --port 4096</string>
   </array>
   <key>RunAtLoad</key>
   <true/>

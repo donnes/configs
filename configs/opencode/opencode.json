@@ -1,18 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "mode": {
-    "plan": {
-      "model": "opencode/kimi-k2.5-free"
-    },
-    "build": {
-      "model": "opencode/gpt-5.2-codex"
-    }
-  },
-  "compaction": {
-    "auto": true,
-    "prune": true,
-    "limit": 233000
-  },
+  "model": "opencode/kimi-k2.5",
   "permission": {
     "read": {
       "*": "allow",
