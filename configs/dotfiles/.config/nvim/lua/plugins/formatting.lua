@@ -13,32 +13,40 @@ return {
         desc = "Format buffer or range",
       },
     },
-    opts = {
-      notify_on_error = false,
-      format_on_save = function(bufnr)
-        local disable_filetypes = { c = true, cpp = true }
-        return {
-          timeout_ms = 500,
-          lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
-        }
-      end,
-      formatters_by_ft = {
-        lua = { "stylua" },
-        javascript = { "biome" },
-        typescript = { "biome" },
-        javascriptreact = { "biome" },
-        typescriptreact = { "biome" },
-        vue = { "biome" },
-        css = { "biome" },
-        html = { "biome" },
-        graphql = { "biome" },
-        json = { "biome" },
-        yaml = { "prettierd" },
-        markdown = { "prettier" },
-        ["markdown.mdx"] = { "prettier" },
-        python = { "isort", "black" },
-        go = { "goimports", "gofmt" },
-      },
-    },
+    opts = function(_, opts)
+      -- Ensure formatters_by_ft exists
+      opts.formatters_by_ft = opts.formatters_by_ft or {}
+
+      -- Add formatters for filetypes not covered by biome extra
+      opts.formatters_by_ft.lua = { "stylua" }
+      opts.formatters_by_ft.yaml = { "prettierd" }
+      opts.formatters_by_ft.markdown = { "prettier" }
+      opts.formatters_by_ft["markdown.mdx"] = { "prettier" }
+      opts.formatters_by_ft.python = { "isort", "black" }
+      opts.formatters_by_ft.go = { "goimports", "gofmt" }
+
+      -- Ensure formatters config exists
+      opts.formatters = opts.formatters or {}
+
+      return opts
+    end,
+  },
+  {
+    "mason-org/mason.nvim",
+    opts = function(_, opts)
+      opts.ensure_installed = opts.ensure_installed or {}
+      vim.list_extend(opts.ensure_installed, {
+        "stylua",
+        "biome",
+        "shellcheck",
+        "shfmt",
+        "flake8",
+        "prettierd",
+        "prettier",
+        "isort",
+        "black",
+        "goimports",
+      })
+    end,
   },
 }

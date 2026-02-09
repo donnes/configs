@@ -1,40 +1,24 @@
 return {
+  -- change some telescope options and a keymap to browse plugin files
   {
     "nvim-telescope/telescope.nvim",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "jvgrootveld/telescope-zoxide",
-      "nvim-telescope/telescope-ui-select.nvim",
+    keys = {
+      -- add a keymap to browse plugin files
+      -- stylua: ignore
+      {
+        "<leader>fp",
+        function() require("telescope.builtin").find_files({ cwd = require("lazy.core.config").options.root }) end,
+        desc = "Find Plugin File",
+      },
     },
-    config = function()
-      local telescope = require("telescope")
-      telescope.setup({
-        defaults = {
-          layout_strategy = "horizontal",
-          layout_config = { prompt_position = "top" },
-          sorting_strategy = "ascending",
-          winblend = 5,
-          file_ignore_patterns = { "%.DS_Store" },
-          prompt_prefix = " ",
-        },
-        extensions = {
-          ["ui-select"] = {
-            require("telescope.themes").get_dropdown({}),
-          },
-          file_browser = {
-            hidden = true
-          }
-        },
-        pickers = {
-          find_files = {
-            hidden = true
-          }
-        },
-      })
-      pcall(telescope.load_extension, "fzf")
-      pcall(telescope.load_extension, "zoxide")
-      pcall(telescope.load_extension, "ui-select")
-    end
+    -- change some options
+    opts = {
+      defaults = {
+        layout_strategy = "horizontal",
+        layout_config = { prompt_position = "top" },
+        sorting_strategy = "ascending",
+        winblend = 0,
+      },
+    },
   },
-
 }

@@ -60,10 +60,8 @@ export ANDROID_SDK_ROOT="$HOME/Library/Android/sdk"
 export PATH="${PATH}:$HOME/Library/Android/sdk/platform-tools"
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
 
-# Node Options
+# Node
 export NODE_OPTIONS=--max-old-space-size=4096
-
-# Node Binary
 export NODE_BINARY=$(which node)
 
 # pnpm
@@ -72,7 +70,6 @@ case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
-# pnpm end
 
 # Eza
 alias ls="eza --color=auto --long --git --no-filesize --icons=always --no-time --no-user --no-permissions"
@@ -81,19 +78,19 @@ alias ls="eza --color=auto --long --git --no-filesize --icons=always --no-time -
 export PATH="$HOME/.codeium/windsurf/bin:$PATH"
 export EDITOR="c --wait"
 
-# opencode
-export PATH="$HOME/.opencode/bin:$PATH"
-
 # bob
 export PATH="/Users/$USER/.local/share/bob/nvim-bin/:$PATH"
 
 # opencode
-export PATH=/Users/donaldsilveira/.opencode/bin:$PATH
-export OPENCODE_SERVER_PASSWORD=$(cat ~/.config/opencode/credentials/server_password)
-launchctl setenv OPENCODE_SERVER_PASSWORD "$OPENCODE_SERVER_PASSWORD"
-
+export PATH="$HOME/.opencode/bin:$PATH"
 alias ocs-start="launchctl load ~/Library/LaunchAgents/com.opencode.server.plist"
 alias ocs-stop="launchctl unload ~/Library/LaunchAgents/com.opencode.server.plist"
 alias ocs-restart="launchctl unload ~/Library/LaunchAgents/com.opencode.server.plist && launchctl load ~/Library/LaunchAgents/com.opencode.server.plist"
 alias ocs-status="launchctl list | grep opencode"
 alias ocs-logs="tail -f /tmp/opencode.log /tmp/opencode.error.log"
+
+# tailscale
+alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+
+# opencode
+export PATH=/Users/donaldsilveira/.opencode/bin:$PATH

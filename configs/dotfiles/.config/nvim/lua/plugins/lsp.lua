@@ -1,140 +1,65 @@
 return {
+  -- add pyright to lspconfig
   {
-    "williamboman/mason.nvim",
-    opts = {},
-  },
-  {
-    "j-hui/fidget.nvim",
-    opts = {},
-  },
-  {
-    "WhoIsSethDaniel/mason-tool-installer.nvim",
+    "neovim/nvim-lspconfig",
+    ---@class PluginLspOpts
     opts = {
-      ensure_installed = {
-        "prettier",
-      },
-    },
-  },
-  {
-    "williamboman/mason-lspconfig.nvim",
-    dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig" },
-    opts = {
+      ---@type lspconfig.options
       servers = {
-        marksman = {},
+        -- pyright will be automatically installed with mason and loaded with lspconfig
+        pyright = {},
+        -- biome for linting and import sorting
+        biome = {},
       },
     },
-    config = function()
-      local capabilities = require("cmp_nvim_lsp").default_capabilities()
-      local on_attach = function(_, buffer) _G.lsp_keymaps(buffer) end
-      local lspconfig = require("lspconfig")
+  },
 
-      require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls", "vtsls", "tailwindcss", "pyright", "gopls" },
-        handlers = {
-          function(server_name)
-            lspconfig[server_name].setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-            })
+  -- add tsserver and setup with typescript.nvim instead of lspconfig
+  {
+    "neovim/nvim-lspconfig",
+    dependencies = {
+      "jose-elias-alvarez/typescript.nvim",
+      init = function()
+        vim.api.nvim_create_autocmd("LspAttach", {
+          callback = function(args)
+            local buffer = args.buf
+            local client = vim.lsp.get_client_by_id(args.data.client_id)
+            if client and client.name == "tsserver" then
+              -- stylua: ignore
+              vim.keymap.set("n", "<leader>co", "TypescriptOrganizeImports", { buffer = buffer, desc = "Organize Imports" })
+              vim.keymap.set("n", "<leader>cR", "TypescriptRenameFile", { desc = "Rename File", buffer = buffer })
+            elseif client and client.name == "biome" then
+              -- Biome import sorting
+              vim.keymap.set("n", "<leader>co", function()
+                vim.lsp.buf.code_action({
+                  context = { only = { "source.organizeImports.biome" } },
+                  apply = true,
+                })
+              end, { buffer = buffer, desc = "Organize Imports (Biome)" })
+            end
           end,
-          ["lua_ls"] = function()
-            lspconfig.lua_ls.setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-              settings = {
-                Lua = {
-                  runtime = {
-                    version = "LuaJIT",
-                  },
-                  diagnostics = {
-                    globals = { "vim" },
-                  },
-                  workspace = {
-                    library = vim.api.nvim_get_runtime_file("", true),
-                    checkThirdParty = false,
-                  },
-                },
-              },
-            })
-          end,
-          ["gopls"] = function()
-            lspconfig.gopls.setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-              settings = { gopls = { usePlaceholders = true, analyses = { unusedparams = true } } },
-            })
-          end,
-          ["tailwindcss"] = function()
-            lspconfig.tailwindcss.setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-              filetypes = {
-                "html",
-                "css",
-                "scss",
-                "javascript",
-                "javascriptreact",
-                "typescript",
-                "typescriptreact",
-                "vue",
-                "svelte",
-                "heex",
-              },
-            })
-          end,
-          ["vtsls"] = function()
-            lspconfig.vtsls.setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-              settings = {
-                vtsls = {
-                  autoUseWorkspaceTsdk = true,
-                  tsserver = {
-                    experimental = {
-                      enableProjectDiagnostics = true,
-                    },
-                  },
-                },
-                typescript = {
-                  preferences = {
-                    includeInlayParameterNameHints = "all",
-                    includeInlayFunctionParameterTypeHints = true,
-                    includeInlayVariableTypeHints = true,
-                    includeInlayPropertyDeclarationTypeHints = true,
-                    includeInlayFunctionLikeReturnTypeHints = true,
-                  },
-                  updateImportsOnFileMove = {
-                    enabled = "always",
-                  },
-                },
-                javascript = {
-                  preferences = {
-                    includeInlayParameterNameHints = "all",
-                    includeInlayFunctionParameterTypeHints = true,
-                    includeInlayVariableTypeHints = true,
-                    includeInlayPropertyDeclarationTypeHints = true,
-                    includeInlayFunctionLikeReturnTypeHints = true,
-                  },
-                  updateImportsOnFileMove = {
-                    enabled = "always",
-                  },
-                },
-              },
-            })
-          end,
-        },
-      })
-
-      vim.diagnostic.config({
-        float = {
-          focusable = false,
-          style = "minimal",
-          border = "rounded",
-          source = "always",
-          header = "",
-          prefix = "",
-        },
-      })
-    end,
+        })
+      end,
+    },
+    ---@class PluginLspOpts
+    opts = {
+      ---@type lspconfig.options
+      servers = {
+        -- tsserver will be automatically installed with mason and loaded with lspconfig
+        tsserver = {},
+      },
+      -- you can do any additional lsp server setup here
+      -- return true if you don't want this server to be setup with lspconfig
+      ---@type table<string, fun(server:string, opts:_.lspconfig.options):boolean?>
+      setup = {
+        -- example to setup with typescript.nvim
+        tsserver = function(_, opts)
+          require("typescript").setup({ server = opts })
+          return true
+        end,
+        -- Specify * to use this function as a fallback for any server
+        -- ["*"] = function(server, opts) end,
+      },
+    },
   },
 }
