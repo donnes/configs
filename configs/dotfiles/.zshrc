@@ -18,6 +18,8 @@ source $ZSH/oh-my-zsh.sh
 # Aliases
 alias cdc="z ~/.syncode/repo"
 alias lg="lazygit"
+alias ocgac='git add -A && git commit -m "$(opencode run "Write a concise commit message (max 80 characters) based on the staged changes. Only output the commit message, nothing else." 2>&1)"'
+alias ocgcm='opencode run "Write a concise commit message (max 80 characters) based on the staged changes. Only output the commit message, nothing else." 2>&1'
 alias nv="nvim"
 alias oc="opencode"
 alias c="cursor"

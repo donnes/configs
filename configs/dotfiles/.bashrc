@@ -2,3 +2,4 @@
 
 # Node Binary
 export NODE_BINARY=$(which node)
+. "$HOME/.cargo/env"

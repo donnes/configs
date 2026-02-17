@@ -1,6 +1,5 @@
 ---
 description: Fix a broken AGENTS.md with this prompt
-model: opencode/kimi-k2.5-free
 subtask: true
 ---
 
