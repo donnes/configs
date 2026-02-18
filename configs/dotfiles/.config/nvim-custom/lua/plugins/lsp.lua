@@ -12,6 +12,8 @@ return {
     opts = {
       ensure_installed = {
         "prettier",
+        "prettierd",
+        "eslint-lsp",
       },
     },
   },
@@ -29,7 +31,7 @@ return {
       local lspconfig = require("lspconfig")
 
       require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls", "vtsls", "tailwindcss", "pyright", "gopls" },
+        ensure_installed = { "lua_ls", "vtsls", "tailwindcss", "pyright", "gopls", "eslint" },
         handlers = {
           function(server_name)
             lspconfig[server_name].setup({
@@ -80,6 +82,19 @@ return {
                 "svelte",
                 "heex",
               },
+            })
+          end,
+          -- eslint: built-in root_dir won't attach without .eslintrc.* / eslint.config.*
+          ["eslint"] = function()
+            lspconfig.eslint.setup({
+              capabilities = capabilities,
+              on_attach = function(_, bufnr)
+                _G.lsp_keymaps(bufnr)
+                vim.api.nvim_create_autocmd("BufWritePre", {
+                  buffer = bufnr,
+                  command = "EslintFixAll",
+                })
+              end,
             })
           end,
           ["vtsls"] = function()
