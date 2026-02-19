@@ -128,7 +128,9 @@ install_fzf() {
     return
   fi
   log_info "Installing fzf..."
-  git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+  if [ ! -d ~/.fzf ]; then
+    git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+  fi
   ~/.fzf/install --key-bindings --completion --no-update-rc --no-bash --no-zsh --no-fish
   export PATH="$HOME/.fzf/bin:$PATH"
   log_success "fzf installed"
