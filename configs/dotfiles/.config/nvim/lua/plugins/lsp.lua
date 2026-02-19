@@ -34,7 +34,7 @@ return {
       servers = {
         pyright = {},
         biome = {},
-        -- Each tool's built-in root_dir handles detection:
+        tailwindcss = {},
         -- eslint won't attach without .eslintrc.* / eslint.config.*
         eslint = {},
       },
