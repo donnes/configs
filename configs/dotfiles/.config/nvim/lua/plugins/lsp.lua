@@ -1,13 +1,4 @@
 local on_attach_by_client = {
-  eslint = function(buffer)
-    vim.api.nvim_create_autocmd("BufWritePre", {
-      buffer = buffer,
-      vim.lsp.buf.code_action({
-        context = { only = { "source.fixAll.eslint" } },
-        apply = true,
-      }),
-    })
-  end,
   biome = function(buffer)
     vim.keymap.set("n", "<leader>co", function()
       vim.lsp.buf.code_action({
@@ -39,7 +30,22 @@ return {
         pyright = {},
         biome = {},
         tailwindcss = {},
-        eslint = {},
+        eslint = {
+          settings = {
+            workingDirectories = { mode = "auto" },
+          },
+        },
+      },
+      setup = {
+        eslint = function()
+          local formatter = LazyVim.lsp.formatter({
+            name = "eslint: lsp",
+            primary = false,
+            priority = 200,
+            filter = "eslint",
+          })
+          LazyVim.format.register(formatter)
+        end,
       },
     },
   },
