@@ -1,9 +1,11 @@
--- Per-client keymaps/autocmds set on LspAttach
 local on_attach_by_client = {
   eslint = function(buffer)
     vim.api.nvim_create_autocmd("BufWritePre", {
       buffer = buffer,
-      command = "EslintFixAll",
+      vim.lsp.buf.code_action({
+        context = { only = { "source.fixAll.eslint" } },
+        apply = true,
+      }),
     })
   end,
   biome = function(buffer)
@@ -24,7 +26,9 @@ return {
         callback = function(args)
           local client = vim.lsp.get_client_by_id(args.data.client_id)
           local handler = client and on_attach_by_client[client.name]
-          if handler then handler(args.buf) end
+          if handler then
+            handler(args.buf)
+          end
         end,
       })
     end,
@@ -35,7 +39,6 @@ return {
         pyright = {},
         biome = {},
         tailwindcss = {},
-        -- eslint won't attach without .eslintrc.* / eslint.config.*
         eslint = {},
       },
     },
