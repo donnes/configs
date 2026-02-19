@@ -420,6 +420,37 @@ install_fastlane() {
   log_success "fastlane installed"
 }
 
+install_tmux() {
+  local os="$1"
+
+  if check_command tmux; then
+    log_success "tmux already installed"
+    return
+  fi
+
+  log_info "Installing tmux..."
+
+  case "$os" in
+  macos)
+    brew install tmux
+    ;;
+  arch)
+    if check_command yay; then
+      yay -S --needed --noconfirm tmux
+    else
+      sudo pacman -S --needed --noconfirm tmux
+    fi
+    ;;
+  debian)
+    sudo apt-get install -y tmux
+    ;;
+  linux)
+    log_warn "Install tmux manually for your distribution"
+    ;;
+  esac
+  log_success "tmux installed"
+}
+
 install_opencode() {
   if check_command opencode; then
     log_success "opencode already installed"
@@ -503,6 +534,7 @@ main() {
   install_aws_cli "$os"
   install_bob
   install_fastlane
+  install_tmux "$os"
 
   log_info "Installing AI tools..."
   install_opencode
