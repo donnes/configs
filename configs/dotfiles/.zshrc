@@ -24,6 +24,7 @@ alias oc="opencode"
 alias c="cursor"
 alias ws="windsurf"
 alias cc="claude --dangerously-skip-permissions"
+alias tokens="tokscale"
 
 # Language
 export LANG=en_US.UTF-8
