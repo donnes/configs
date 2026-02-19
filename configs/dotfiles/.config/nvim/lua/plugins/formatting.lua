@@ -70,6 +70,7 @@ return {
         "black",
         "goimports",
         "eslint-lsp",
+        "tailwindcss-language-server",
       })
     end,
   },
