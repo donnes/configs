@@ -19,6 +19,11 @@ return {
         sorting_strategy = "ascending",
         winblend = 0,
       },
+      pickers = {
+        find_files = {
+          hidden = true,
+        },
+      },
     },
   },
 }
