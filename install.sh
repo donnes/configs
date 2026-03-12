@@ -46,7 +46,7 @@ install_system_packages() {
       log_info "Installing Homebrew..."
       /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     fi
-    brew install git neovim curl unzip ca-certificates gcc
+    brew install git neovim curl unzip ca-certificates gcc btop
     ;;
   arch)
     if check_command yay; then
@@ -558,4 +558,3 @@ main() {
 }
 
 main "$@"
-
