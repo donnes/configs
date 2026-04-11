@@ -21,8 +21,6 @@ alias lg="lazygit"
 alias t='tmux attach || tmux new -s Work'
 alias nv="nvim"
 alias oc="opencode"
-alias c="cursor"
-alias ws="windsurf"
 alias cc="claude --dangerously-skip-permissions"
 alias tokens="tokscale"
 
