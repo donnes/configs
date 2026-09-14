@@ -1,0 +1,153 @@
+model = "gpt-5.6-sol"
+model_reasoning_effort = "high"
+personality = "pragmatic"
+
+notify = ["/Users/donaldsilveira/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
+service_tier = "default"
+approvals_reviewer = "user"
+model_reasoning_summary = "concise"
+
+[projects."/Users/donaldsilveira/Git/muisland/monorepo"]
+trust_level = "trusted"
+
+[projects."/Users/donaldsilveira/Git/purpose/Purpose-Monorepo-design-1.5"]
+trust_level = "trusted"
+
+[projects."/Users/donaldsilveira/Git/purpose/Purpose-Monorepo"]
+trust_level = "trusted"
+
+[projects."/Users/donaldsilveira/Git/levers/levers-monorepo"]
+trust_level = "trusted"
+
+[projects."/Users/donaldsilveira/Git/levers/levers-monorepo-app-portal-2.0"]
+trust_level = "trusted"
+
+[projects."/Users/donaldsilveira"]
+trust_level = "trusted"
+
+[projects."/Users/donaldsilveira/Git"]
+trust_level = "trusted"
+
+[projects."/Users/donaldsilveira/Documents/Codex/2026-08-03/eu"]
+trust_level = "trusted"
+
+[projects."/Users/donaldsilveira/Documents/Codex/2026-08-05/o-w"]
+trust_level = "trusted"
+
+[projects."/Users/donaldsilveira/Documents/Codex/2026-08-09/a"]
+trust_level = "trusted"
+
+[projects."/Users/donaldsilveira/Documents/Codex/2026-08-12/let-s-set-up-a-scheduled"]
+trust_level = "trusted"
+
+[projects."/Users/donaldsilveira/Documents/Codex/2026-08-12/let-s-set-up-a-scheduled-2"]
+trust_level = "trusted"
+
+[projects."/Users/donaldsilveira/Documents/Codex/2026-08-12/let-s-set-up-a-scheduled-3"]
+trust_level = "trusted"
+
+[projects."/Users/donaldsilveira/Documents/Codex/2026-08-12/plugin-creator-users-donaldsilveira-codex-skills"]
+trust_level = "trusted"
+
+[projects."/Users/donaldsilveira/Documents/Codex/2026-08-16/let-s-set-up-a-scheduled"]
+trust_level = "trusted"
+
+[projects."/Users/donaldsilveira/Git/codemode-studio/influencers"]
+trust_level = "trusted"
+
+[projects."/Users/donaldsilveira/Git/codemode-studio/socia"]
+trust_level = "trusted"
+
+[tui.model_availability_nux]
+"gpt-5.5" = 4
+
+[marketplaces.openai-bundled]
+last_updated = "2026-08-16T15:59:01Z"
+source_type = "local"
+source = "/Users/donaldsilveira/.codex/.tmp/bundled-marketplaces/openai-bundled"
+
+[marketplaces.openai-primary-runtime]
+last_updated = "2026-08-16T16:00:06Z"
+source_type = "local"
+source = "/Users/donaldsilveira/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[plugins."pdf@openai-primary-runtime"]
+enabled = true
+
+[plugins."computer-use@openai-bundled"]
+enabled = true
+
+[plugins."chrome@openai-bundled"]
+enabled = true
+
+[plugins."template-creator@openai-primary-runtime"]
+enabled = true
+
+[plugins."sites@openai-bundled"]
+enabled = true
+
+[plugins."visualize@openai-bundled"]
+enabled = true
+
+[plugins."browser@openai-bundled"]
+enabled = true
+
+[mcp_servers.node_repl]
+args = []
+command = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl"
+startup_timeout_sec = 120
+
+[mcp_servers.node_repl.env]
+NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
+NODE_REPL_NODE_MODULE_DIRS = "/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules"
+NODE_REPL_NODE_PATH = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node"
+NODE_REPL_TRUSTED_CODE_PATHS = "/Users/donaldsilveira/.codex:/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules"
+CODEX_HOME = "/Users/donaldsilveira/.codex"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "8e86beb821b9afc846211798e0113bd4b9e79312dfcd135eb447bdb154f64071"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
+NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE = "Control desktop apps on macOS through Computer Use."
+BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
+BROWSER_USE_CODEX_APP_VERSION = "26.803.61601"
+SKY_CUA_SERVICE_PATH = "/Users/donaldsilveira/.codex/computer-use/Codex Computer Use.app"
+CODEX_CLI_PATH = "/Applications/ChatGPT.app/Contents/Resources/codex"
+
+[mcp_servers.computer-use]
+command = "./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
+args = ["mcp"]
+cwd = "."
+enabled = false
+
+[desktop]
+followUpQueueMode = "steer"
+conversationDetailMode = "STEPS_COMMANDS"
+ambient-suggestions-enabled = true
+git-branch-prefix = "donnes/"
+git-show-sidebar-pr-icons = true
+keepRemoteControlAwakeWhilePluggedIn = true
+git-always-force-push = false
+git-pull-request-merge-method = "squash"
+dock-icon-preference = "codex-system"
+preventSleepWhileRunning = true
+hotkey-window-projectless-default-enabled = false
+
+[desktop.open-in-target-preferences]
+global = "zed"
+
+[features]
+js_repl = false
+
+[shell_environment_policy.set]
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "8e86beb821b9afc846211798e0113bd4b9e79312dfcd135eb447bdb154f64071"
+NODE_REPL_TRUSTED_CODE_PATHS = "/Users/donaldsilveira/.codex:/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules"

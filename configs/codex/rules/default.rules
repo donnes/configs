@@ -1,0 +1,4 @@
+prefix_rule(pattern=["git", "add"], decision="allow")
+prefix_rule(pattern=["agent-browser"], decision="allow")
+prefix_rule(pattern=["git", "-c", "core.editor=true", "rebase", "--continue"], decision="allow")
+prefix_rule(pattern=["pnpm", "install", "--lockfile-only"], decision="allow")

@@ -1,0 +1,9 @@
+# Managed by syncode: only sync Codex config, not runtime data
+/*
+!/.gitignore
+!/AGENTS.md
+!/config.toml
+!/prompts/
+!/rules/
+!/skills
+/skills/.system/

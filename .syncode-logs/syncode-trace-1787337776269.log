@@ -1,0 +1,24 @@
+=== Syncode Error Trace ===
+
+Timestamp: 2026-08-21T18:42:56.272Z
+Version: unknown
+Platform: darwin arm64
+Command: push
+
+=== Error Details ===
+Type: Error
+Message: Connection to github.com closed by remote host.
+client_loop: send disconnect: Broken pipe
+send-pack: unexpected disconnect while reading sideband packet
+fatal: the remote end hung up unexpectedly
+
+=== Stack Trace ===
+Error: Connection to github.com closed by remote host.
+client_loop: send disconnect: Broken pipe
+send-pack: unexpected disconnect while reading sideband packet
+fatal: the remote end hung up unexpectedly
+    at Object.pushCommand [as push] (file:///Users/donaldsilveira/.npm/_npx/ea1ee2cfb34a490b/node_modules/@donnes/syncode/dist/index.js:4952:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async main (file:///Users/donaldsilveira/.npm/_npx/ea1ee2cfb34a490b/node_modules/@donnes/syncode/dist/index.js:5544:7)
+
+=== End of Trace ===
