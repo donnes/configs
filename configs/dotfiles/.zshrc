@@ -21,8 +21,34 @@ alias lg="lazygit"
 alias t='tmux attach || tmux new -s Work'
 alias nv="nvim"
 alias oc="opencode"
-alias cc="claude --dangerously-skip-permissions"
+alias cc="claude --dangerously-skip-permissions --mcp-config ~/.mcp-profiles/default.json --strict-mcp-config"
+alias cc-levers="CLAUDE_CONFIG_DIR=~/.claude-levers claude --dangerously-skip-permissions"
+alias cc-purpose="claude --dangerously-skip-permissions --mcp-config ~/.mcp-profiles/purpose.json --strict-mcp-config"
+alias codex-purpose="CODEX_HOME=~/.codex-purpose codex"
 alias tokens="tokscale"
+unalias copy 2>/dev/null
+
+copy() {
+  if [ "$#" -ne 2 ]; then
+    print "usage: copy <source-dir> <dest-dir>"
+    return 1
+  fi
+
+  local src="${1%/}/"
+  local dst="${2%/}/"
+
+  mkdir -p "$dst" || return 1
+  rsync -a --progress \
+    --exclude node_modules \
+    --exclude dist \
+    --exclude build \
+    --exclude .next \
+    --exclude .turbo \
+    --exclude .cache \
+    --exclude '*.log' \
+    --exclude '.DS_Store' \
+    "$src" "$dst"
+}
 
 # Language
 export LANG=en_US.UTF-8
@@ -33,11 +59,10 @@ eval "$(fnm env --use-on-cd)"
 # Zoxide
 eval "$(zoxide init zsh)"
 
-# fnm
+# Keep the fnm install directory on PATH; fnm is initialized above.
 FNM_PATH="$HOME/Library/Application Support/fnm"
 if [ -d "$FNM_PATH" ]; then
   export PATH="$HOME/Library/Application Support/fnm:$PATH"
-  eval "`fnm env`"
 fi
 
 # bun completions
@@ -47,6 +72,9 @@ fi
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 export PATH="$PATH:$HOME/.bun/bin"
+
+# Python
+export PATH="$HOME/Library/Python/3.9/bin:$PATH"
 
 # Atuin
 export ATUIN_INSTALL="$HOME/.atuin"
@@ -95,3 +123,4 @@ alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 
 # opencode
 export PATH=/Users/donaldsilveira/.opencode/bin:$PATH
+export PATH="/opt/homebrew/opt/postgresql@18/bin:$PATH"
