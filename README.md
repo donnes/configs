@@ -49,6 +49,10 @@ Always inspect `./install --dry-run` first.
 
 Ghostty, Yazi, and SSH are tracked but excluded from the default run. Atuin's config is tracked; its history, encryption key, and sessions stay local.
 
+Claude's `settings.json` and Codex's `config.toml` are profile-specific because
+both applications write machine and platform paths into them. Portable commands,
+rules, and agent instructions remain under `shared/`.
+
 Omarchy Bash sources `shared/shell/git-aliases.bash`, a Bash-compatible port of
 the commonly used Oh My Zsh Git aliases such as `gss`, `ggp`, `ggl`, `gst`,
 and `gsw`. Omarchy's existing `g`, `gcm`, `gcam`, and `gcad` meanings are

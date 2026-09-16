@@ -509,8 +509,18 @@ install_shared() {
   else
     log_action skip "skills component disabled"
   fi
-  run_component claude link_tree "$REPO_ROOT/shared/claude" "$HOME/.claude"
-  run_component codex link_tree "$REPO_ROOT/shared/codex" "$HOME/.codex"
+  if component_enabled claude; then
+    link_tree "$REPO_ROOT/shared/claude" "$HOME/.claude"
+    link_file "$REPO_ROOT/$PROFILE/claude/settings.json" "$HOME/.claude/settings.json"
+  else
+    log_action skip "claude component disabled"
+  fi
+  if component_enabled codex; then
+    link_tree "$REPO_ROOT/shared/codex" "$HOME/.codex"
+    link_file "$REPO_ROOT/$PROFILE/codex/config.toml" "$HOME/.codex/config.toml"
+  else
+    log_action skip "codex component disabled"
+  fi
   run_component atuin link_tree "$REPO_ROOT/shared/atuin" "$HOME/.config/atuin"
   run_component nvim install_nvim
 
@@ -573,8 +583,18 @@ uninstall_shared() {
   else
     log_action skip "skills component disabled"
   fi
-  run_component claude unlink_tree "$REPO_ROOT/shared/claude" "$HOME/.claude"
-  run_component codex unlink_tree "$REPO_ROOT/shared/codex" "$HOME/.codex"
+  if component_enabled claude; then
+    unlink_tree "$REPO_ROOT/shared/claude" "$HOME/.claude"
+    unlink_file "$REPO_ROOT/$PROFILE/claude/settings.json" "$HOME/.claude/settings.json"
+  else
+    log_action skip "claude component disabled"
+  fi
+  if component_enabled codex; then
+    unlink_tree "$REPO_ROOT/shared/codex" "$HOME/.codex"
+    unlink_file "$REPO_ROOT/$PROFILE/codex/config.toml" "$HOME/.codex/config.toml"
+  else
+    log_action skip "codex component disabled"
+  fi
   run_component atuin unlink_tree "$REPO_ROOT/shared/atuin" "$HOME/.config/atuin"
   run_component nvim unlink_tree "$REPO_ROOT/shared/nvim" "$HOME/.config/nvim"
 }
@@ -698,7 +718,11 @@ update_path() {
   path_exists "$source" || die "$source does not exist"
   [[ ! -L "$source" ]] || die "$source is already a symlink; edits already write through to its target"
 
-  if [[ "$source" == "$(skill_lock_path)" ]]; then
+  if [[ "$source" == "$HOME/.claude/settings.json" ]]; then
+    repo_target="$REPO_ROOT/$PROFILE/claude/settings.json"
+  elif [[ "$source" == "$HOME/.codex/config.toml" ]]; then
+    repo_target="$REPO_ROOT/$PROFILE/codex/config.toml"
+  elif [[ "$source" == "$(skill_lock_path)" ]]; then
     repo_target="$REPO_ROOT/shared/skills.lock.json"
   else
     resolve_adopt_map "$source" || die "$source is outside the managed path map"
