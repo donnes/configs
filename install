@@ -61,6 +61,7 @@ usage() {
 Usage:
   ./install [--dry-run] [--skip-packages]
   ./install [--dry-run] adopt <path>
+  ./install [--dry-run] update <path>
   ./install [--dry-run] uninstall
 
 Options:
@@ -87,6 +88,9 @@ while [[ $# -gt 0 ]]; do
     adopt)
       ACTION="adopt"
       ;;
+    update)
+      ACTION="update"
+      ;;
     -h | --help)
       usage
       exit 0
@@ -95,7 +99,7 @@ while [[ $# -gt 0 ]]; do
       die "unknown option: $1"
       ;;
     *)
-      if [[ "$ACTION" == "adopt" && -z "$ADOPT_PATH" ]]; then
+      if [[ ( "$ACTION" == "adopt" || "$ACTION" == "update" ) && -z "$ADOPT_PATH" ]]; then
         ADOPT_PATH="$1"
       else
         die "unexpected argument: $1"
@@ -105,8 +109,8 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-if [[ "$ACTION" == "adopt" && -z "$ADOPT_PATH" ]]; then
-  die "adopt requires a path"
+if [[ ( "$ACTION" == "adopt" || "$ACTION" == "update" ) && -z "$ADOPT_PATH" ]]; then
+  die "$ACTION requires a path"
 fi
 
 detect_profile() {
@@ -582,6 +586,56 @@ adopt_path() {
   fi
 }
 
+update_path() {
+  local source repo_target relative file file_relative target
+
+  source="$(absolute_existing_path "$ADOPT_PATH")" || die "cannot resolve $ADOPT_PATH"
+  path_exists "$source" || die "$source does not exist"
+  [[ ! -L "$source" ]] || die "$source is already a symlink; edits already write through to its target"
+  resolve_adopt_map "$source" || die "$source is outside the managed path map"
+
+  if [[ "$source" == "$MAP_DEST_ROOT" ]]; then
+    die "update a file or child directory, not the managed root itself"
+  fi
+
+  relative="${source#"$MAP_DEST_ROOT"/}"
+  repo_target="$MAP_REPO_ROOT/$relative"
+  path_exists "$repo_target" || die "$(pretty_path "$repo_target") does not exist; use adopt instead"
+
+  if [[ -d "$source" ]]; then
+    [[ -d "$repo_target" ]] || die "$(pretty_path "$repo_target") is not a directory"
+    while IFS= read -r -d '' file; do
+      file_relative="${file#"$source"/}"
+      target="$repo_target/$file_relative"
+      if [[ ! -f "$target" ]] || ! cmp -s "$file" "$target"; then
+        log_action update "$(pretty_path "$file") -> $(pretty_path "$target")"
+      fi
+      if [[ "$DRY_RUN" -eq 0 ]]; then
+        mkdir -p "$(dirname "$target")"
+        cp "$file" "$target"
+      fi
+      if [[ "$DRY_RUN" -eq 1 ]]; then
+        log_action link "$(pretty_path "$file") -> $(pretty_path "$target")"
+      fi
+    done < <(find "$source" -type f -print0)
+
+    if [[ "$DRY_RUN" -eq 0 ]]; then
+      link_tree "$repo_target" "$source"
+    fi
+  else
+    [[ -f "$repo_target" ]] || die "$(pretty_path "$repo_target") is not a file"
+    if ! cmp -s "$source" "$repo_target"; then
+      log_action update "$(pretty_path "$source") -> $(pretty_path "$repo_target")"
+    fi
+    if [[ "$DRY_RUN" -eq 0 ]]; then
+      cp "$source" "$repo_target"
+      link_file "$repo_target" "$source"
+    else
+      log_action link "$(pretty_path "$source") -> $(pretty_path "$repo_target")"
+    fi
+  fi
+}
+
 case "$ACTION" in
   install)
     printf 'Profile: %s\nRepo:    %s\n\n' "$PROFILE" "$REPO_ROOT"
@@ -601,5 +655,8 @@ case "$ACTION" in
     ;;
   adopt)
     adopt_path
+    ;;
+  update)
+    update_path
     ;;
 esac

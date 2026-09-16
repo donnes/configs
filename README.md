@@ -46,6 +46,18 @@ Ghostty, Yazi, and SSH are tracked but excluded from the default run. Atuin's co
 
 `adopt` moves a new file or directory into the mapped repo location and replaces source files with symlinks. It refuses an existing repo destination.
 
+## Update tracked files
+
+```sh
+./install update ~/.agents/skills/my-skill
+./install update ~/.claude/settings.json
+```
+
+`update` is the explicit local-wins operation for tracked files that are not linked
+yet. It copies local files into their mapped repo location without deleting anything,
+then replaces them with symlinks. Prefer updating one skill or file at a time; managed
+roots such as `~/.agents/skills` are rejected so foreign content is not imported.
+
 ## Omarchy maintenance
 
 `omarchy refresh tmux` can replace `~/.config/tmux/tmux.conf` and remove the managed include. Rerun `./install` to restore it.
