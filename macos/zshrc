@@ -20,8 +20,10 @@ alias cdc="z ~/.donnes/configs"
 alias lg="lazygit"
 alias t='tmux attach || tmux new -s Work'
 alias nv="nvim"
-alias oc="opencode"
-alias cc="claude --dangerously-skip-permissions"
+alias cc="claude --dangerously-skip-permissions --mcp-config ~/.mcp-profiles/default.json --strict-mcp-config"
+alias cc-levers="CLAUDE_CONFIG_DIR=~/.claude-levers claude --dangerously-skip-permissions"
+alias cc-purpose="claude --dangerously-skip-permissions --mcp-config ~/.mcp-profiles/purpose.json --strict-mcp-config"
+alias codex-purpose="CODEX_HOME=~/.codex-purpose codex"
 
 # Language
 export LANG=en_US.UTF-8
@@ -50,6 +52,8 @@ export PATH="$PATH:$HOME/.bun/bin"
 export PATH="$HOME/Library/Python/3.9/bin:$PATH"
 
 # Atuin
+export ATUIN_INSTALL="$HOME/.atuin"
+export PATH="$ATUIN_INSTALL/bin:$PATH"
 eval "$(atuin init zsh)"
 
 # Ruby

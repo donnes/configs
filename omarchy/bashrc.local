@@ -1,7 +1,6 @@
 # Personal additions layered after Omarchy's bash setup.
 alias lg="lazygit"
 alias nv="nvim"
-alias oc="opencode"
 alias cc="claude --dangerously-skip-permissions"
 
 cdc() {
