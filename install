@@ -746,6 +746,8 @@ update_path() {
     repo_target="$REPO_ROOT/$PROFILE/claude/settings.json"
   elif [[ "$source" == "$HOME/.codex/config.toml" ]]; then
     repo_target="$REPO_ROOT/$PROFILE/codex/config.toml"
+  elif [[ "$source" == "$HOME/.config/nvim/lazy-lock.json" ]]; then
+    repo_target="$REPO_ROOT/$PROFILE/nvim/lazy-lock.json"
   elif [[ "$source" == "$(skill_lock_path)" ]]; then
     repo_target="$REPO_ROOT/shared/skills.lock.json"
   else

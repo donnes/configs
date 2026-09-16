@@ -53,6 +53,10 @@ Claude's `settings.json` and Codex's `config.toml` are profile-specific because
 both applications write machine and platform paths into them. Portable commands,
 rules, and agent instructions remain under `shared/`.
 
+Neovim plugin specifications are shared, while each profile tracks its own
+`lazy-lock.json`. Run `:Lazy sync` and commit the resulting profile lockfile on
+each platform when shared plugin specifications change.
+
 Omarchy Bash sources `shared/shell/git-aliases.bash`, a Bash-compatible port of
 the commonly used Oh My Zsh Git aliases such as `gss`, `ggp`, `ggl`, `gst`,
 and `gsw`. Omarchy's existing `g`, `gcm`, `gcam`, and `gcad` meanings are
