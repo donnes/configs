@@ -207,6 +207,8 @@ link_file() {
   if [[ "$assume_missing" -eq 0 ]] && path_exists "$dest"; then
     if is_managed_symlink "$dest"; then
       log_action relink "$(pretty_path "$dest") -> $(pretty_path "$src")"
+    elif [[ -f "$src" && -f "$dest" ]] && cmp -s "$src" "$dest"; then
+      log_action relink "$(pretty_path "$dest") identical content -> $(pretty_path "$src")"
     else
       backup_once "$dest"
     fi
