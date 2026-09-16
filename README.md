@@ -16,7 +16,19 @@ Or bootstrap the canonical checkout:
 curl -fsSL https://raw.githubusercontent.com/donnes/configs/main/install | bash
 ```
 
-Review the downloaded script before piping it to Bash. An existing `~/.donnes/configs` checkout is never pulled or overwritten automatically. The profile is Omarchy when `/usr/share/omarchy` exists, otherwise macOS on Darwin. Use `--skip-packages` to omit package installation.
+Review the downloaded script before piping it to Bash. An existing `~/.donnes/configs` checkout is never pulled or overwritten automatically. The profile is Omarchy when `/usr/share/omarchy` exists, otherwise macOS on Darwin.
+
+Choose what the installer manages with repeatable `--skip` or `--only` options:
+
+```sh
+./install --interactive
+./install --skip packages --skip codex
+./install --only nvim --only atuin
+./install uninstall --only nvim
+./install --list-components
+```
+
+`--interactive` prompts for each component and defaults to installing it. Available components are `packages`, `skills`, `claude`, `codex`, `atuin`, `nvim`, `shell`, `tmux`, and `git`. `--skip-packages` remains available as an alias for `--skip packages`. Interactive mode cannot be combined with `--skip` or `--only`.
 
 ## Safety
 
