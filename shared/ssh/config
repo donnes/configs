@@ -9,7 +9,10 @@ Host github.com
   IdentityFile ~/.ssh/id_ed25519_personal
   IdentitiesOnly yes
 
-Host pc
+Host pc donnes-pc
   HostName donnes-pc
   User donnes
-  IdentityFile ~/.ssh/id_ed25519_personal
+  IdentityFile ~/.ssh/id_ed25519_donnes-pc
+  IdentitiesOnly yes
+  ServerAliveInterval 30
+  ServerAliveCountMax 4
