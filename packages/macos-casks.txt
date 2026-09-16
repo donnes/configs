@@ -1,2 +1,2 @@
 orbstack
-raycast
+abue-ammar/tinycast/tinycast

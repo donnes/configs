@@ -321,9 +321,11 @@ install_packages() {
   fi
 
   log_action package "$brew_bin install < $(pretty_path "$REPO_ROOT/packages/macos.txt")"
+  log_action package "$brew_bin trust --tap abue-ammar/tinycast"
   log_action package "$brew_bin install --cask < $(pretty_path "$REPO_ROOT/packages/macos-casks.txt")"
   if [[ "$DRY_RUN" -eq 0 ]]; then
     xargs "$brew_bin" install <"$REPO_ROOT/packages/macos.txt"
+    "$brew_bin" trust --tap abue-ammar/tinycast
     xargs "$brew_bin" install --cask <"$REPO_ROOT/packages/macos-casks.txt"
   fi
 }
