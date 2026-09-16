@@ -5,6 +5,12 @@ alias cc="claude --dangerously-skip-permissions"
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)/shared/shell/git-aliases.bash"
 
+unalias t 2>/dev/null
+t() {
+  cd "$HOME/Work" || return 1
+  tmux attach || tmux new -s Work
+}
+
 cdc() {
   local configs_root
   configs_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
