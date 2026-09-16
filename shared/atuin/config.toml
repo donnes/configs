@@ -1,0 +1,3 @@
+# Package managers own Atuin updates. Sync activates after `atuin login`.
+auto_sync = true
+update_check = false

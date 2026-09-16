@@ -1,0 +1,581 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+REPO_URL="https://github.com/donnes/configs.git"
+DEFAULT_REPO="$HOME/.donnes/configs"
+MARKER_START="# >>> donnes/configs >>>"
+MARKER_END="# <<< donnes/configs <<<"
+
+die() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+is_dry_run_arg() {
+  local arg
+  for arg in "$@"; do
+    [[ "$arg" == "--dry-run" ]] && return 0
+  done
+  return 1
+}
+
+bootstrap() {
+  if [[ -d "$DEFAULT_REPO/.git" && -x "$DEFAULT_REPO/install" ]]; then
+    exec "$DEFAULT_REPO/install" "$@"
+  fi
+
+  if [[ -e "$DEFAULT_REPO" ]]; then
+    die "$DEFAULT_REPO exists but is not an installable configs checkout"
+  fi
+
+  if is_dry_run_arg "$@"; then
+    printf '[clone] %s -> %s\n' "$REPO_URL" "$DEFAULT_REPO"
+    printf '[run]   %s/install --dry-run\n' "$DEFAULT_REPO"
+    exit 0
+  fi
+
+  command -v git >/dev/null 2>&1 || die "git is required to clone $REPO_URL"
+  mkdir -p "$(dirname "$DEFAULT_REPO")"
+  git clone "$REPO_URL" "$DEFAULT_REPO"
+  exec "$DEFAULT_REPO/install" "$@"
+}
+
+SCRIPT_PATH="${BASH_SOURCE[0]:-}"
+if [[ -z "$SCRIPT_PATH" || ! -f "$SCRIPT_PATH" ]]; then
+  bootstrap "$@"
+fi
+
+REPO_ROOT="$(cd "$(dirname "$SCRIPT_PATH")" && pwd -P)"
+if [[ ! -d "$REPO_ROOT/shared" ]]; then
+  bootstrap "$@"
+fi
+
+DRY_RUN=0
+SKIP_PACKAGES=0
+ACTION="install"
+ADOPT_PATH=""
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./install [--dry-run] [--skip-packages]
+  ./install [--dry-run] adopt <path>
+  ./install [--dry-run] uninstall
+
+Options:
+  --dry-run        Print every planned package, backup, link, and block edit.
+  --skip-packages  Configure files without installing packages.
+  -h, --help       Show this help.
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dry-run)
+      DRY_RUN=1
+      ;;
+    --skip-packages)
+      SKIP_PACKAGES=1
+      ;;
+    install)
+      ACTION="install"
+      ;;
+    uninstall)
+      ACTION="uninstall"
+      ;;
+    adopt)
+      ACTION="adopt"
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    --*)
+      die "unknown option: $1"
+      ;;
+    *)
+      if [[ "$ACTION" == "adopt" && -z "$ADOPT_PATH" ]]; then
+        ADOPT_PATH="$1"
+      else
+        die "unexpected argument: $1"
+      fi
+      ;;
+  esac
+  shift
+done
+
+if [[ "$ACTION" == "adopt" && -z "$ADOPT_PATH" ]]; then
+  die "adopt requires a path"
+fi
+
+detect_profile() {
+  if [[ -n "${DONNES_CONFIGS_PROFILE:-}" ]]; then
+    case "$DONNES_CONFIGS_PROFILE" in
+      omarchy | macos) printf '%s\n' "$DONNES_CONFIGS_PROFILE" ;;
+      *) die "DONNES_CONFIGS_PROFILE must be omarchy or macos" ;;
+    esac
+  elif [[ -d /usr/share/omarchy ]]; then
+    printf 'omarchy\n'
+  elif [[ "$(uname -s)" == "Darwin" ]]; then
+    printf 'macos\n'
+  else
+    die "unsupported system: expected Omarchy or macOS"
+  fi
+}
+
+PROFILE="$(detect_profile)"
+
+pretty_path() {
+  local path="$1"
+  case "$path" in
+    "$REPO_ROOT") printf '<repo>' ;;
+    "$REPO_ROOT"/*) printf '<repo>/%s' "${path#"$REPO_ROOT"/}" ;;
+    "$HOME") printf '~' ;;
+    "$HOME"/*) printf '~/%s' "${path#"$HOME"/}" ;;
+    *) printf '%s' "$path" ;;
+  esac
+}
+
+log_action() {
+  local kind="$1"
+  shift
+  printf '[%-7s] %s\n' "$kind" "$*"
+}
+
+path_exists() {
+  [[ -e "$1" || -L "$1" ]]
+}
+
+is_repo_symlink() {
+  local path="$1"
+  local target
+  [[ -L "$path" ]] || return 1
+  target="$(readlink "$path")"
+  [[ "$target" == "$REPO_ROOT" || "$target" == "$REPO_ROOT/"* ]]
+}
+
+backup_once() {
+  local path="$1"
+  local timestamp backup suffix
+
+  path_exists "$path" || return 0
+  timestamp="$(date '+%Y%m%d-%H%M%S')"
+  backup="$path.backup.$timestamp"
+  suffix=1
+  while path_exists "$backup"; do
+    backup="$path.backup.$timestamp.$suffix"
+    suffix=$((suffix + 1))
+  done
+
+  log_action backup "$(pretty_path "$path") -> $(pretty_path "$backup")"
+  if [[ "$DRY_RUN" -eq 0 ]]; then
+    mv "$path" "$backup"
+  fi
+}
+
+link_file() {
+  local src="$1"
+  local dest="$2"
+  local assume_missing="${3:-0}"
+  local current=""
+
+  if [[ "$assume_missing" -eq 0 && -L "$dest" ]]; then
+    current="$(readlink "$dest")"
+    if [[ "$current" == "$src" ]]; then
+      log_action skip "$(pretty_path "$dest") already links to $(pretty_path "$src")"
+      return 0
+    fi
+  fi
+
+  if [[ "$assume_missing" -eq 0 ]] && path_exists "$dest"; then
+    if is_repo_symlink "$dest"; then
+      log_action relink "$(pretty_path "$dest") -> $(pretty_path "$src")"
+    else
+      backup_once "$dest"
+    fi
+  else
+    log_action link "$(pretty_path "$dest") -> $(pretty_path "$src")"
+  fi
+
+  if [[ "$DRY_RUN" -eq 0 ]]; then
+    mkdir -p "$(dirname "$dest")"
+    ln -sfn "$src" "$dest"
+  fi
+}
+
+link_tree() {
+  local src="$1"
+  local dest="$2"
+  local assume_missing="${3:-0}"
+  local skip_relative="${4:-}"
+  local file relative
+
+  [[ -d "$src" ]] || return 0
+  while IFS= read -r -d '' file; do
+    relative="${file#"$src"/}"
+    [[ -n "$skip_relative" && "$relative" == "$skip_relative" ]] && continue
+    link_file "$file" "$dest/$relative" "$assume_missing"
+  done < <(find "$src" \( -type f -o -type l \) -print0)
+}
+
+file_mode() {
+  stat -c '%a' "$1" 2>/dev/null || stat -f '%Lp' "$1"
+}
+
+append_block() {
+  local file="$1"
+  local content="$2"
+  local operation="add"
+  local tmp mode
+
+  if [[ -f "$file" ]] && grep -Fq "$MARKER_START" "$file"; then
+    operation="replace"
+  fi
+  log_action append "$operation managed block in $(pretty_path "$file")"
+  [[ "$DRY_RUN" -eq 1 ]] && return 0
+
+  mkdir -p "$(dirname "$file")"
+  [[ -e "$file" ]] || : >"$file"
+  tmp="$file.donnes-configs.$$"
+  mode="$(file_mode "$file")"
+
+  awk -v start="$MARKER_START" -v end="$MARKER_END" '
+    $0 == start { skipping = 1; next }
+    skipping && $0 == end { skipping = 0; next }
+    !skipping { lines[++count] = $0 }
+    END {
+      while (count > 0 && lines[count] == "") count--
+      for (i = 1; i <= count; i++) print lines[i]
+    }
+  ' "$file" >"$tmp"
+
+  if [[ -s "$tmp" ]]; then
+    printf '\n' >>"$tmp"
+  fi
+  printf '%s\n%s\n%s\n' "$MARKER_START" "$content" "$MARKER_END" >>"$tmp"
+  chmod "$mode" "$tmp"
+  mv "$tmp" "$file"
+}
+
+remove_block() {
+  local file="$1"
+  local tmp mode
+
+  [[ -f "$file" ]] || return 0
+  grep -Fq "$MARKER_START" "$file" || return 0
+  log_action remove "managed block from $(pretty_path "$file")"
+  [[ "$DRY_RUN" -eq 1 ]] && return 0
+
+  tmp="$file.donnes-configs.$$"
+  mode="$(file_mode "$file")"
+  awk -v start="$MARKER_START" -v end="$MARKER_END" '
+    $0 == start { skipping = 1; next }
+    skipping && $0 == end { skipping = 0; next }
+    !skipping { print }
+  ' "$file" >"$tmp"
+  chmod "$mode" "$tmp"
+  mv "$tmp" "$file"
+}
+
+skill_lock_path() {
+  if [[ -n "${XDG_STATE_HOME:-}" ]]; then
+    printf '%s/skills/.skill-lock.json\n' "$XDG_STATE_HOME"
+  else
+    printf '%s/.agents/.skill-lock.json\n' "$HOME"
+  fi
+}
+
+install_packages() {
+  local brew_bin
+
+  if [[ "$SKIP_PACKAGES" -eq 1 ]]; then
+    log_action skip "package installation disabled"
+    return 0
+  fi
+
+  if [[ "$PROFILE" == "omarchy" ]]; then
+    command -v yay >/dev/null 2>&1 || die "yay is required on Omarchy"
+    log_action package "yay -S --needed - < $(pretty_path "$REPO_ROOT/packages/omarchy.txt")"
+    if [[ "$DRY_RUN" -eq 0 ]]; then
+      yay -S --needed - <"$REPO_ROOT/packages/omarchy.txt"
+    fi
+    return 0
+  fi
+
+  brew_bin="$(command -v brew 2>/dev/null || true)"
+  if [[ -z "$brew_bin" ]]; then
+    if [[ "$DRY_RUN" -eq 1 ]]; then
+      log_action package "install Homebrew"
+      brew_bin="brew"
+    else
+      NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      if [[ -x /opt/homebrew/bin/brew ]]; then
+        brew_bin="/opt/homebrew/bin/brew"
+      elif [[ -x /usr/local/bin/brew ]]; then
+        brew_bin="/usr/local/bin/brew"
+      else
+        die "Homebrew installed but brew was not found"
+      fi
+    fi
+  fi
+
+  log_action package "$brew_bin install < $(pretty_path "$REPO_ROOT/packages/macos.txt")"
+  log_action package "$brew_bin trust --tap abue-ammar/tinycast"
+  log_action package "$brew_bin install --cask < $(pretty_path "$REPO_ROOT/packages/macos-casks.txt")"
+  if [[ "$DRY_RUN" -eq 0 ]]; then
+    xargs "$brew_bin" install <"$REPO_ROOT/packages/macos.txt"
+    "$brew_bin" trust --tap abue-ammar/tinycast
+    xargs "$brew_bin" install --cask <"$REPO_ROOT/packages/macos-casks.txt"
+  fi
+}
+
+install_nvim() {
+  local dest="$HOME/.config/nvim"
+  local managed_init="$dest/init.lua"
+  local assume_empty=0
+
+  if [[ -L "$managed_init" && "$(readlink "$managed_init")" == "$REPO_ROOT/shared/nvim/init.lua" ]]; then
+    assume_empty=0
+  elif path_exists "$dest"; then
+    backup_once "$dest"
+    assume_empty=1
+  else
+    assume_empty=1
+  fi
+
+  if [[ "$PROFILE" == "omarchy" ]]; then
+    link_tree "$REPO_ROOT/shared/nvim" "$dest" "$assume_empty" "lua/plugins/theme.lua"
+    link_tree "$REPO_ROOT/omarchy/nvim" "$dest" "$assume_empty"
+    link_file "$HOME/.local/state/omarchy/current/theme/neovim.lua" "$dest/lua/plugins/theme.lua" "$assume_empty"
+  else
+    link_tree "$REPO_ROOT/shared/nvim" "$dest" "$assume_empty"
+    if [[ -d "$REPO_ROOT/macos/nvim" ]]; then
+      link_tree "$REPO_ROOT/macos/nvim" "$dest"
+    fi
+  fi
+}
+
+install_shared() {
+  local cursor_dest vscode_dest
+
+  if [[ "$PROFILE" == "macos" ]]; then
+    cursor_dest="$HOME/Library/Application Support/Cursor/User"
+    vscode_dest="$HOME/Library/Application Support/Code/User"
+  else
+    cursor_dest="$HOME/.config/Cursor/User"
+    vscode_dest="$HOME/.config/Code/User"
+  fi
+
+  link_tree "$REPO_ROOT/shared/skills" "$HOME/.agents/skills"
+  link_file "$REPO_ROOT/shared/skills.lock.json" "$(skill_lock_path)"
+  link_tree "$REPO_ROOT/shared/claude" "$HOME/.claude"
+  link_tree "$REPO_ROOT/shared/codex" "$HOME/.codex"
+  link_tree "$REPO_ROOT/shared/cursor" "$cursor_dest"
+  link_tree "$REPO_ROOT/shared/vscode" "$vscode_dest"
+  link_tree "$REPO_ROOT/shared/opencode" "$HOME/.config/opencode"
+  link_tree "$REPO_ROOT/shared/atuin" "$HOME/.config/atuin"
+  install_nvim
+
+  log_action skip "shared/ghostty is excluded from the default install"
+  log_action skip "shared/yazi is excluded from the default install"
+  log_action skip "shared/ssh is excluded from the default install"
+}
+
+install_omarchy() {
+  local tmux_config="$HOME/.config/tmux/tmux.conf"
+
+  [[ -f "$tmux_config" || "$DRY_RUN" -eq 1 ]] || die "$tmux_config is missing; restore Omarchy's tmux config first"
+  link_file "$REPO_ROOT/omarchy/tmux.local.conf" "$HOME/.config/tmux/local.conf"
+  append_block "$HOME/.bashrc" "source \"$REPO_ROOT/omarchy/bashrc.local\""
+  append_block "$tmux_config" "source-file -q ~/.config/tmux/local.conf"
+}
+
+install_macos() {
+  link_file "$REPO_ROOT/macos/zshrc" "$HOME/.zshrc"
+  link_file "$REPO_ROOT/macos/gitconfig" "$HOME/.gitconfig"
+  link_file "$REPO_ROOT/macos/tmux.conf" "$HOME/.tmux.conf"
+}
+
+unlink_file() {
+  local src="$1"
+  local dest="$2"
+
+  if [[ -L "$dest" && "$(readlink "$dest")" == "$src" ]]; then
+    log_action unlink "$(pretty_path "$dest")"
+    if [[ "$DRY_RUN" -eq 0 ]]; then
+      unlink "$dest"
+    fi
+  fi
+}
+
+unlink_tree() {
+  local src="$1"
+  local dest="$2"
+  local file relative
+
+  [[ -d "$src" ]] || return 0
+  while IFS= read -r -d '' file; do
+    relative="${file#"$src"/}"
+    unlink_file "$file" "$dest/$relative"
+  done < <(find "$src" \( -type f -o -type l \) -print0)
+}
+
+uninstall_shared() {
+  local cursor_dest vscode_dest
+
+  if [[ "$PROFILE" == "macos" ]]; then
+    cursor_dest="$HOME/Library/Application Support/Cursor/User"
+    vscode_dest="$HOME/Library/Application Support/Code/User"
+  else
+    cursor_dest="$HOME/.config/Cursor/User"
+    vscode_dest="$HOME/.config/Code/User"
+  fi
+
+  unlink_tree "$REPO_ROOT/shared/skills" "$HOME/.agents/skills"
+  unlink_file "$REPO_ROOT/shared/skills.lock.json" "$(skill_lock_path)"
+  unlink_tree "$REPO_ROOT/shared/claude" "$HOME/.claude"
+  unlink_tree "$REPO_ROOT/shared/codex" "$HOME/.codex"
+  unlink_tree "$REPO_ROOT/shared/cursor" "$cursor_dest"
+  unlink_tree "$REPO_ROOT/shared/vscode" "$vscode_dest"
+  unlink_tree "$REPO_ROOT/shared/opencode" "$HOME/.config/opencode"
+  unlink_tree "$REPO_ROOT/shared/atuin" "$HOME/.config/atuin"
+  unlink_tree "$REPO_ROOT/shared/nvim" "$HOME/.config/nvim"
+}
+
+uninstall_profile() {
+  if [[ "$PROFILE" == "omarchy" ]]; then
+    remove_block "$HOME/.bashrc"
+    remove_block "$HOME/.config/tmux/tmux.conf"
+    unlink_file "$REPO_ROOT/omarchy/tmux.local.conf" "$HOME/.config/tmux/local.conf"
+    unlink_tree "$REPO_ROOT/omarchy/nvim" "$HOME/.config/nvim"
+  else
+    unlink_file "$REPO_ROOT/macos/zshrc" "$HOME/.zshrc"
+    unlink_file "$REPO_ROOT/macos/gitconfig" "$HOME/.gitconfig"
+    unlink_file "$REPO_ROOT/macos/tmux.conf" "$HOME/.tmux.conf"
+    if [[ -d "$REPO_ROOT/macos/nvim" ]]; then
+      unlink_tree "$REPO_ROOT/macos/nvim" "$HOME/.config/nvim"
+    fi
+  fi
+}
+
+MAP_REPO_ROOT=""
+MAP_DEST_ROOT=""
+
+map_directory() {
+  local path="$1"
+  local dest_root="$2"
+  local repo_root="$3"
+  if [[ "$path" == "$dest_root" || "$path" == "$dest_root/"* ]]; then
+    MAP_DEST_ROOT="$dest_root"
+    MAP_REPO_ROOT="$repo_root"
+    return 0
+  fi
+  return 1
+}
+
+resolve_adopt_map() {
+  local path="$1"
+  local cursor_dest vscode_dest ghostty_dest
+
+  MAP_REPO_ROOT=""
+  MAP_DEST_ROOT=""
+
+  if [[ "$PROFILE" == "macos" ]]; then
+    cursor_dest="$HOME/Library/Application Support/Cursor/User"
+    vscode_dest="$HOME/Library/Application Support/Code/User"
+    ghostty_dest="$HOME/Library/Application Support/com.mitchellh.ghostty"
+  else
+    cursor_dest="$HOME/.config/Cursor/User"
+    vscode_dest="$HOME/.config/Code/User"
+    ghostty_dest="$HOME/.config/ghostty"
+  fi
+
+  map_directory "$path" "$HOME/.agents/skills" "$REPO_ROOT/shared/skills" && return 0
+  map_directory "$path" "$HOME/.claude" "$REPO_ROOT/shared/claude" && return 0
+  map_directory "$path" "$HOME/.codex" "$REPO_ROOT/shared/codex" && return 0
+  map_directory "$path" "$HOME/.config/opencode" "$REPO_ROOT/shared/opencode" && return 0
+  map_directory "$path" "$HOME/.config/nvim" "$REPO_ROOT/shared/nvim" && return 0
+  map_directory "$path" "$HOME/.config/atuin" "$REPO_ROOT/shared/atuin" && return 0
+  map_directory "$path" "$cursor_dest" "$REPO_ROOT/shared/cursor" && return 0
+  map_directory "$path" "$vscode_dest" "$REPO_ROOT/shared/vscode" && return 0
+  map_directory "$path" "$ghostty_dest" "$REPO_ROOT/shared/ghostty" && return 0
+  map_directory "$path" "$HOME/.config/yazi" "$REPO_ROOT/shared/yazi" && return 0
+  map_directory "$path" "$HOME/.ssh" "$REPO_ROOT/shared/ssh" && return 0
+  return 1
+}
+
+absolute_existing_path() {
+  local input="$1"
+  local parent base
+
+  case "$input" in
+    "~/"*) input="$HOME/${input#\~/}" ;;
+  esac
+  if [[ "$input" != /* ]]; then
+    input="$PWD/$input"
+  fi
+  parent="$(cd "$(dirname "$input")" && pwd -P)" || return 1
+  base="$(basename "$input")"
+  printf '%s/%s\n' "$parent" "$base"
+}
+
+adopt_path() {
+  local source repo_target relative file file_relative
+
+  source="$(absolute_existing_path "$ADOPT_PATH")" || die "cannot resolve $ADOPT_PATH"
+  path_exists "$source" || die "$source does not exist"
+  [[ ! -L "$source" ]] || die "$source is already a symlink"
+  resolve_adopt_map "$source" || die "$source is outside the managed path map"
+
+  if [[ "$source" == "$MAP_DEST_ROOT" ]]; then
+    die "adopt a file or child directory, not the managed root itself"
+  fi
+
+  relative="${source#"$MAP_DEST_ROOT"/}"
+  repo_target="$MAP_REPO_ROOT/$relative"
+  path_exists "$repo_target" && die "$(pretty_path "$repo_target") already exists"
+
+  log_action adopt "$(pretty_path "$source") -> $(pretty_path "$repo_target")"
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    if [[ -d "$source" ]]; then
+      while IFS= read -r -d '' file; do
+        file_relative="${file#"$source"/}"
+        log_action link "$(pretty_path "$source/$file_relative") -> $(pretty_path "$repo_target/$file_relative")"
+      done < <(find "$source" \( -type f -o -type l \) -print0)
+    else
+      log_action link "$(pretty_path "$source") -> $(pretty_path "$repo_target")"
+    fi
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$repo_target")"
+  mv "$source" "$repo_target"
+  if [[ -d "$repo_target" ]]; then
+    link_tree "$repo_target" "$source" 1
+  else
+    link_file "$repo_target" "$source" 1
+  fi
+}
+
+case "$ACTION" in
+  install)
+    printf 'Profile: %s\nRepo:    %s\n\n' "$PROFILE" "$REPO_ROOT"
+    install_packages
+    install_shared
+    if [[ "$PROFILE" == "omarchy" ]]; then
+      install_omarchy
+    else
+      install_macos
+    fi
+    ;;
+  uninstall)
+    printf 'Profile: %s\nRepo:    %s\n\n' "$PROFILE" "$REPO_ROOT"
+    uninstall_profile
+    uninstall_shared
+    log_action note "packages and backups were left untouched"
+    ;;
+  adopt)
+    adopt_path
+    ;;
+esac
