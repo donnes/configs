@@ -16,39 +16,12 @@ source $ZSH/oh-my-zsh.sh
 # User configuration
 
 # Aliases
-alias cdc="z ~/.syncode/repo"
+alias cdc="z ~/.donnes/configs"
 alias lg="lazygit"
 alias t='tmux attach || tmux new -s Work'
 alias nv="nvim"
 alias oc="opencode"
-alias cc="claude --dangerously-skip-permissions --mcp-config ~/.mcp-profiles/default.json --strict-mcp-config"
-alias cc-levers="CLAUDE_CONFIG_DIR=~/.claude-levers claude --dangerously-skip-permissions"
-alias cc-purpose="claude --dangerously-skip-permissions --mcp-config ~/.mcp-profiles/purpose.json --strict-mcp-config"
-alias codex-purpose="CODEX_HOME=~/.codex-purpose codex"
-alias tokens="tokscale"
-unalias copy 2>/dev/null
-
-copy() {
-  if [ "$#" -ne 2 ]; then
-    print "usage: copy <source-dir> <dest-dir>"
-    return 1
-  fi
-
-  local src="${1%/}/"
-  local dst="${2%/}/"
-
-  mkdir -p "$dst" || return 1
-  rsync -a --progress \
-    --exclude node_modules \
-    --exclude dist \
-    --exclude build \
-    --exclude .next \
-    --exclude .turbo \
-    --exclude .cache \
-    --exclude '*.log' \
-    --exclude '.DS_Store' \
-    "$src" "$dst"
-}
+alias cc="claude --dangerously-skip-permissions"
 
 # Language
 export LANG=en_US.UTF-8
@@ -77,8 +50,6 @@ export PATH="$PATH:$HOME/.bun/bin"
 export PATH="$HOME/Library/Python/3.9/bin:$PATH"
 
 # Atuin
-export ATUIN_INSTALL="$HOME/.atuin"
-export PATH="$ATUIN_INSTALL/bin:$PATH"
 eval "$(atuin init zsh)"
 
 # Ruby
@@ -110,17 +81,7 @@ export EDITOR="c --wait"
 # bob
 export PATH="/Users/$USER/.local/share/bob/nvim-bin/:$PATH"
 
-# opencode
-export PATH="$HOME/.opencode/bin:$PATH"
-alias ocs-start="launchctl load ~/Library/LaunchAgents/com.opencode.server.plist"
-alias ocs-stop="launchctl unload ~/Library/LaunchAgents/com.opencode.server.plist"
-alias ocs-restart="launchctl unload ~/Library/LaunchAgents/com.opencode.server.plist && launchctl load ~/Library/LaunchAgents/com.opencode.server.plist"
-alias ocs-status="launchctl list | grep opencode"
-alias ocs-logs="tail -f /tmp/opencode.log /tmp/opencode.error.log"
-
 # tailscale
 alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 
-# opencode
-export PATH=/Users/donaldsilveira/.opencode/bin:$PATH
 export PATH="/opt/homebrew/opt/postgresql@18/bin:$PATH"

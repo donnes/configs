@@ -1,7 +1,7 @@
 [pull]
 	rebase = true
 [push]
-	autoSetupRemove = true
+	autoSetupRemote = true
 	default = current
 [alias]
 	undo = reset --soft HEAD^
@@ -10,5 +10,3 @@
 	process = git-lfs filter-process
 	required = true
   clean = git-lfs clean -- %f
-[url "git@github.com:"]
-	insteadOf = https://github.com/
