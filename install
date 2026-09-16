@@ -312,6 +312,25 @@ backup_once() {
   fi
 }
 
+snapshot_once() {
+  local path="$1"
+  local timestamp backup suffix
+
+  path_exists "$path" || return 0
+  timestamp="$(date '+%Y%m%d-%H%M%S')"
+  backup="$path.backup.$timestamp"
+  suffix=1
+  while path_exists "$backup"; do
+    backup="$path.backup.$timestamp.$suffix"
+    suffix=$((suffix + 1))
+  done
+
+  log_action backup "$(pretty_path "$path") -> $(pretty_path "$backup")"
+  if [[ "$DRY_RUN" -eq 0 ]]; then
+    cp -p "$path" "$backup"
+  fi
+}
+
 link_file() {
   local src="$1"
   local dest="$2"
@@ -371,6 +390,9 @@ append_block() {
 
   if [[ -f "$file" ]] && grep -Fq "$MARKER_START" "$file"; then
     operation="replace"
+  fi
+  if [[ "$operation" == "add" ]] && path_exists "$file"; then
+    snapshot_once "$file"
   fi
   log_action append "$operation managed block in $(pretty_path "$file")"
   [[ "$DRY_RUN" -eq 1 ]] && return 0
