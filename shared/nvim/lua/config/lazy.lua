@@ -21,7 +21,7 @@ require("lazy").setup({
     -- import LazyVim extras first
     { import = "lazyvim.plugins.extras.lang.typescript" },
     { import = "lazyvim.plugins.extras.lang.json" },
-    { import = "lazyvim.plugins.extras.formatting.biome" },
+    { import = "lazyvim.plugins.extras.lang.typescript.biome" },
     -- import/override with your plugins
     { import = "plugins" },
   },
