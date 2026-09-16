@@ -3,6 +3,8 @@ alias lg="lazygit"
 alias nv="nvim"
 alias cc="claude --dangerously-skip-permissions"
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)/shared/shell/git-aliases.bash"
+
 cdc() {
   local configs_root
   configs_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
