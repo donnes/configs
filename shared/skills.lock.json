@@ -6,18 +6,18 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/shadcn/improve.git",
       "skillPath": "skills/improve/SKILL.md",
-      "skillFolderHash": "0f346be8222b1afd7b95b2692953f520a11b82ae",
+      "skillFolderHash": "7d77d76815e6deb704427f17f6e393f55e3cb6da",
       "installedAt": "2026-06-10T15:02:55.090Z",
-      "updatedAt": "2026-06-10T15:02:55.090Z"
+      "updatedAt": "2026-09-16T03:50:23.701Z"
     },
     "unslop": {
       "source": "cursor/plugins",
       "sourceType": "github",
       "sourceUrl": "https://github.com/cursor/plugins.git",
       "skillPath": "pstack/skills/unslop/SKILL.md",
-      "skillFolderHash": "6161508c5c7959b156ff0e4e10b510863b51f9cc",
+      "skillFolderHash": "e19dcc9c531f4609df38bc86c62cf0e8b6d8f444",
       "installedAt": "2026-08-19T20:50:21.938Z",
-      "updatedAt": "2026-08-19T20:50:21.938Z"
+      "updatedAt": "2026-09-16T03:50:31.249Z"
     },
     "code-review": {
       "source": "mattpocock/skills",
@@ -64,10 +64,9 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/mattpocock/skills.git",
       "skillPath": "skills/productivity/grilling/SKILL.md",
-      "skillFolderHash": "0d40d978f1a588971a11ea7ae85b208e78102dc3",
-      "pluginName": "mattpocock-skills",
+      "skillFolderHash": "f0732035b8b1b60ae39454e4191caef32fa91903",
       "installedAt": "2026-08-19T22:52:24.694Z",
-      "updatedAt": "2026-08-19T22:52:24.694Z"
+      "updatedAt": "2026-09-16T03:50:34.726Z"
     },
     "handoff": {
       "source": "mattpocock/skills",
@@ -154,81 +153,109 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/emilkowalski/skills.git",
       "skillPath": "skills/animate-expo/SKILL.md",
-      "skillFolderHash": "2daf5ab8f4d3db7690e46d3d6d63e7ebae89a090",
+      "skillFolderHash": "6874701c790c7e74926ccd0a8716647a81424c85",
       "installedAt": "2026-08-21T18:34:17.647Z",
-      "updatedAt": "2026-08-21T18:38:29.941Z"
+      "updatedAt": "2026-09-16T03:50:38.243Z"
     },
     "emil-design-eng": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "sourceUrl": "https://github.com/emilkowalski/skills.git",
       "skillPath": "skills/emil-design-eng/SKILL.md",
-      "skillFolderHash": "175725745e70946d891b93a1694d7c9ebb71b69d",
+      "skillFolderHash": "db7a20dc1d8ad26a0307dcb45ebc79fc372f5c69",
       "installedAt": "2026-08-21T18:34:45.733Z",
-      "updatedAt": "2026-08-21T18:38:29.943Z"
+      "updatedAt": "2026-09-16T03:50:41.743Z"
     },
     "animate": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "sourceUrl": "https://github.com/emilkowalski/skills.git",
       "skillPath": "skills/animate/SKILL.md",
-      "skillFolderHash": "adf23358fac7bdce5febcb85d7fd985407ead56f",
+      "skillFolderHash": "a92e36f28d741aee4ff77d1a001300d7e86e07fe",
       "installedAt": "2026-08-21T18:38:29.939Z",
-      "updatedAt": "2026-08-21T18:38:29.939Z"
+      "updatedAt": "2026-09-16T03:50:45.168Z"
     },
     "animation-vocabulary": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "sourceUrl": "https://github.com/emilkowalski/skills.git",
       "skillPath": "skills/animation-vocabulary/SKILL.md",
-      "skillFolderHash": "e6dc24ca1ff1e70c9677df9a1d2d1c80415cbb3c",
+      "skillFolderHash": "d49565744427887a1f719de1ceee04d941d4e681",
       "installedAt": "2026-08-21T18:38:29.941Z",
-      "updatedAt": "2026-08-21T18:38:29.941Z"
+      "updatedAt": "2026-09-16T03:50:49.541Z"
     },
     "apple-design": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "sourceUrl": "https://github.com/emilkowalski/skills.git",
       "skillPath": "skills/apple-design/SKILL.md",
-      "skillFolderHash": "e9f5b472dfb28d8cf29f64001b6c01ef94b8168b",
+      "skillFolderHash": "cd509ae729c86487d352e17a26651217a4c25711",
       "installedAt": "2026-08-21T18:38:29.942Z",
-      "updatedAt": "2026-08-21T18:38:29.942Z"
+      "updatedAt": "2026-09-16T03:50:54.371Z"
     },
     "find-animation-opportunities": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "sourceUrl": "https://github.com/emilkowalski/skills.git",
       "skillPath": "skills/find-animation-opportunities/SKILL.md",
-      "skillFolderHash": "502f891c05c9cade7e7bd815e3f228fdd20b61b6",
+      "skillFolderHash": "e6443880f38e33cf78e5d678471eed35e8566763",
       "installedAt": "2026-08-21T18:38:29.944Z",
-      "updatedAt": "2026-08-21T18:38:29.944Z"
+      "updatedAt": "2026-09-16T03:50:57.691Z"
     },
     "improve-animations": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "sourceUrl": "https://github.com/emilkowalski/skills.git",
       "skillPath": "skills/improve-animations/SKILL.md",
-      "skillFolderHash": "2ff93ddb9833df45f5e83080de838bb668530820",
+      "skillFolderHash": "cf1f7aabac34c08f2cf833f039fa99af2f415183",
       "installedAt": "2026-08-21T18:38:29.945Z",
-      "updatedAt": "2026-08-21T18:38:29.945Z"
+      "updatedAt": "2026-09-16T03:51:01.164Z"
     },
     "prototype": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "sourceUrl": "https://github.com/emilkowalski/skills.git",
       "skillPath": "skills/prototype/SKILL.md",
-      "skillFolderHash": "564cf82ef5b17f5e018b439dc7fd1e392dcf6188",
+      "skillFolderHash": "34cd3a303aef0a975fcce3ac906d6b293e600399",
       "installedAt": "2026-08-21T18:38:29.946Z",
-      "updatedAt": "2026-08-21T18:38:29.946Z"
+      "updatedAt": "2026-09-16T03:51:05.165Z"
     },
     "review-animations": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "sourceUrl": "https://github.com/emilkowalski/skills.git",
       "skillPath": "skills/review-animations/SKILL.md",
-      "skillFolderHash": "82571acae75a97764fa7899f10bd21d93a4f1414",
+      "skillFolderHash": "0e0d3cb3e07ca307fe946ccaf57f6c82eb75124a",
       "installedAt": "2026-08-21T18:38:29.947Z",
-      "updatedAt": "2026-08-21T18:38:29.947Z"
+      "updatedAt": "2026-09-16T03:51:08.564Z"
+    },
+    "ui-density": {
+      "source": "dembrandt/dembrandt-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/dembrandt/dembrandt-skills.git",
+      "skillPath": "skills/ui-density/SKILL.md",
+      "skillFolderHash": "7903038ae52009c86492cc947143ef4ae4e42535",
+      "installedAt": "2026-08-21T23:42:15.950Z",
+      "updatedAt": "2026-08-21T23:42:15.950Z"
+    },
+    "authentic-product-representation": {
+      "source": "dembrandt/dembrandt-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/dembrandt/dembrandt-skills.git",
+      "skillPath": "skills/authentic-product-representation/SKILL.md",
+      "skillFolderHash": "f50c305dcedb81b6e486ba664bafbaca21287ac9",
+      "installedAt": "2026-08-21T23:42:31.705Z",
+      "updatedAt": "2026-08-21T23:42:31.705Z"
+    },
+    "codebase-design": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/mattpocock/skills.git",
+      "skillPath": "skills/engineering/codebase-design/SKILL.md",
+      "skillFolderHash": "344e3efc88ee60663b2e989555c2efdb548fbd42",
+      "pluginName": "mattpocock-skills",
+      "installedAt": "2026-09-06T22:19:18.066Z",
+      "updatedAt": "2026-09-06T22:19:18.066Z"
     }
   },
   "dismissed": {
@@ -236,14 +263,13 @@
   },
   "lastSelectedAgents": [
     "amp",
-    "antigravity",
-    "antigravity-cli",
     "cline",
     "codex",
     "cursor",
-    "deepagents",
+    "droid",
     "gemini-cli",
     "github-copilot",
+    "kilo",
     "kimi-code-cli",
     "opencode",
     "warp",
