@@ -8,6 +8,7 @@
 *.tmp
 *.bak
 *.backup
+*.bak-*
 
 # Node modules (if any configs have dependencies)
 node_modules/

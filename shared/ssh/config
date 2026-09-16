@@ -9,8 +9,9 @@ Host github.com
   IdentityFile ~/.ssh/id_ed25519_personal
   IdentitiesOnly yes
 
-Host pc donnes-pc
-  HostName donnes-pc
+Host pc donnes-pc donnes-pc.* 100.110.174.118 192.168.1.21
+  HostName donnes-pc.tail24bc37.ts.net
+  HostKeyAlias donnes-pc
   User donnes
   IdentityFile ~/.ssh/id_ed25519_donnes-pc
   IdentitiesOnly yes

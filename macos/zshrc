@@ -85,7 +85,10 @@ export EDITOR="c --wait"
 # bob
 export PATH="/Users/$USER/.local/share/bob/nvim-bin/:$PATH"
 
-# tailscale
-alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
-
 export PATH="/opt/homebrew/opt/postgresql@18/bin:$PATH"
+
+# Added by px0 installer
+export PATH="/Users/donaldsilveira/.local/bin:$PATH"
+
+# Opt out of anonymous telemetry (px0 and other tools honor this)
+export DO_NOT_TRACK=1

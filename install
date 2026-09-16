@@ -570,6 +570,7 @@ install_omarchy() {
 
 install_macos() {
   run_component shell link_file "$REPO_ROOT/macos/zshrc" "$HOME/.zshrc"
+  run_component shell link_tree "$REPO_ROOT/macos/bin" "$HOME/.local/bin"
   run_component git link_file "$REPO_ROOT/macos/gitconfig" "$HOME/.gitconfig"
   run_component tmux link_file "$REPO_ROOT/macos/tmux.conf" "$HOME/.tmux.conf"
 }
@@ -633,6 +634,7 @@ uninstall_profile() {
     run_component nvim unlink_tree "$REPO_ROOT/omarchy/nvim" "$HOME/.config/nvim"
   else
     run_component shell unlink_file "$REPO_ROOT/macos/zshrc" "$HOME/.zshrc"
+    run_component shell unlink_tree "$REPO_ROOT/macos/bin" "$HOME/.local/bin"
     run_component git unlink_file "$REPO_ROOT/macos/gitconfig" "$HOME/.gitconfig"
     run_component tmux unlink_file "$REPO_ROOT/macos/tmux.conf" "$HOME/.tmux.conf"
     if component_enabled nvim && [[ -d "$REPO_ROOT/macos/nvim" ]]; then

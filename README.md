@@ -44,7 +44,7 @@ Always inspect `./install --dry-run` first.
 
 - `shared/`: agent, editor, Neovim, Atuin, and tool overlays
 - `omarchy/`: bash/tmux deltas and vendored Omarchy Neovim keepers
-- `macos/`: full zsh, git, and tmux configuration
+- `macos/`: full zsh, git, and tmux configuration, plus `macos/bin` scripts linked into `~/.local/bin`
 - `packages/`: platform package lists
 
 Ghostty, Yazi, and SSH are tracked but excluded from the default run. Atuin's config is tracked; its history, encryption key, and sessions stay local.
