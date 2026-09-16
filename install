@@ -390,23 +390,10 @@ install_nvim() {
 }
 
 install_shared() {
-  local cursor_dest vscode_dest
-
-  if [[ "$PROFILE" == "macos" ]]; then
-    cursor_dest="$HOME/Library/Application Support/Cursor/User"
-    vscode_dest="$HOME/Library/Application Support/Code/User"
-  else
-    cursor_dest="$HOME/.config/Cursor/User"
-    vscode_dest="$HOME/.config/Code/User"
-  fi
-
   link_tree "$REPO_ROOT/shared/skills" "$HOME/.agents/skills"
   link_file "$REPO_ROOT/shared/skills.lock.json" "$(skill_lock_path)"
   link_tree "$REPO_ROOT/shared/claude" "$HOME/.claude"
   link_tree "$REPO_ROOT/shared/codex" "$HOME/.codex"
-  link_tree "$REPO_ROOT/shared/cursor" "$cursor_dest"
-  link_tree "$REPO_ROOT/shared/vscode" "$vscode_dest"
-  link_tree "$REPO_ROOT/shared/opencode" "$HOME/.config/opencode"
   link_tree "$REPO_ROOT/shared/atuin" "$HOME/.config/atuin"
   install_nvim
 
@@ -455,23 +442,10 @@ unlink_tree() {
 }
 
 uninstall_shared() {
-  local cursor_dest vscode_dest
-
-  if [[ "$PROFILE" == "macos" ]]; then
-    cursor_dest="$HOME/Library/Application Support/Cursor/User"
-    vscode_dest="$HOME/Library/Application Support/Code/User"
-  else
-    cursor_dest="$HOME/.config/Cursor/User"
-    vscode_dest="$HOME/.config/Code/User"
-  fi
-
   unlink_tree "$REPO_ROOT/shared/skills" "$HOME/.agents/skills"
   unlink_file "$REPO_ROOT/shared/skills.lock.json" "$(skill_lock_path)"
   unlink_tree "$REPO_ROOT/shared/claude" "$HOME/.claude"
   unlink_tree "$REPO_ROOT/shared/codex" "$HOME/.codex"
-  unlink_tree "$REPO_ROOT/shared/cursor" "$cursor_dest"
-  unlink_tree "$REPO_ROOT/shared/vscode" "$vscode_dest"
-  unlink_tree "$REPO_ROOT/shared/opencode" "$HOME/.config/opencode"
   unlink_tree "$REPO_ROOT/shared/atuin" "$HOME/.config/atuin"
   unlink_tree "$REPO_ROOT/shared/nvim" "$HOME/.config/nvim"
 }
@@ -509,29 +483,22 @@ map_directory() {
 
 resolve_adopt_map() {
   local path="$1"
-  local cursor_dest vscode_dest ghostty_dest
+  local ghostty_dest
 
   MAP_REPO_ROOT=""
   MAP_DEST_ROOT=""
 
   if [[ "$PROFILE" == "macos" ]]; then
-    cursor_dest="$HOME/Library/Application Support/Cursor/User"
-    vscode_dest="$HOME/Library/Application Support/Code/User"
     ghostty_dest="$HOME/Library/Application Support/com.mitchellh.ghostty"
   else
-    cursor_dest="$HOME/.config/Cursor/User"
-    vscode_dest="$HOME/.config/Code/User"
     ghostty_dest="$HOME/.config/ghostty"
   fi
 
   map_directory "$path" "$HOME/.agents/skills" "$REPO_ROOT/shared/skills" && return 0
   map_directory "$path" "$HOME/.claude" "$REPO_ROOT/shared/claude" && return 0
   map_directory "$path" "$HOME/.codex" "$REPO_ROOT/shared/codex" && return 0
-  map_directory "$path" "$HOME/.config/opencode" "$REPO_ROOT/shared/opencode" && return 0
   map_directory "$path" "$HOME/.config/nvim" "$REPO_ROOT/shared/nvim" && return 0
   map_directory "$path" "$HOME/.config/atuin" "$REPO_ROOT/shared/atuin" && return 0
-  map_directory "$path" "$cursor_dest" "$REPO_ROOT/shared/cursor" && return 0
-  map_directory "$path" "$vscode_dest" "$REPO_ROOT/shared/vscode" && return 0
   map_directory "$path" "$ghostty_dest" "$REPO_ROOT/shared/ghostty" && return 0
   map_directory "$path" "$HOME/.config/yazi" "$REPO_ROOT/shared/yazi" && return 0
   map_directory "$path" "$HOME/.ssh" "$REPO_ROOT/shared/ssh" && return 0

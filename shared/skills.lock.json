@@ -10,15 +10,6 @@
       "installedAt": "2026-06-10T15:02:55.090Z",
       "updatedAt": "2026-09-16T03:50:23.701Z"
     },
-    "unslop": {
-      "source": "cursor/plugins",
-      "sourceType": "github",
-      "sourceUrl": "https://github.com/cursor/plugins.git",
-      "skillPath": "pstack/skills/unslop/SKILL.md",
-      "skillFolderHash": "e19dcc9c531f4609df38bc86c62cf0e8b6d8f444",
-      "installedAt": "2026-08-19T20:50:21.938Z",
-      "updatedAt": "2026-09-16T03:50:31.249Z"
-    },
     "code-review": {
       "source": "mattpocock/skills",
       "sourceType": "github",
@@ -265,13 +256,11 @@
     "amp",
     "cline",
     "codex",
-    "cursor",
     "droid",
     "gemini-cli",
     "github-copilot",
     "kilo",
     "kimi-code-cli",
-    "opencode",
     "warp",
     "zed",
     "claude-code"
