@@ -147,12 +147,28 @@ path_exists() {
   [[ -e "$1" || -L "$1" ]]
 }
 
-is_repo_symlink() {
+is_managed_symlink() {
   local path="$1"
   local target
   [[ -L "$path" ]] || return 1
   target="$(readlink "$path")"
-  [[ "$target" == "$REPO_ROOT" || "$target" == "$REPO_ROOT/"* ]]
+  [[ "$target" == "$REPO_ROOT" ||
+    "$target" == "$REPO_ROOT/"* ||
+    "$target" == "$HOME/.syncode/repo" ||
+    "$target" == "$HOME/.syncode/repo/"* ||
+    "$target" == "~/.syncode/repo" ||
+    "$target" == "~/.syncode/repo/"* ]]
+}
+
+is_legacy_syncode_symlink() {
+  local path="$1"
+  local target
+  [[ -L "$path" ]] || return 1
+  target="$(readlink "$path")"
+  [[ "$target" == "$HOME/.syncode/repo" ||
+    "$target" == "$HOME/.syncode/repo/"* ||
+    "$target" == "~/.syncode/repo" ||
+    "$target" == "~/.syncode/repo/"* ]]
 }
 
 backup_once() {
@@ -189,7 +205,7 @@ link_file() {
   fi
 
   if [[ "$assume_missing" -eq 0 ]] && path_exists "$dest"; then
-    if is_repo_symlink "$dest"; then
+    if is_managed_symlink "$dest"; then
       log_action relink "$(pretty_path "$dest") -> $(pretty_path "$src")"
     else
       backup_once "$dest"
@@ -337,6 +353,12 @@ install_nvim() {
 
   if [[ -L "$managed_init" && "$(readlink "$managed_init")" == "$REPO_ROOT/shared/nvim/init.lua" ]]; then
     assume_empty=0
+  elif is_legacy_syncode_symlink "$dest"; then
+    log_action relink "$(pretty_path "$dest") legacy syncode tree -> per-file links"
+    if [[ "$DRY_RUN" -eq 0 ]]; then
+      unlink "$dest"
+    fi
+    assume_empty=1
   elif path_exists "$dest"; then
     backup_once "$dest"
     assume_empty=1
