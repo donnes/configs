@@ -32,6 +32,11 @@ bootstrap() {
   if is_dry_run_arg "$@"; then
     printf '[clone] %s -> %s\n' "$REPO_URL" "$DEFAULT_REPO"
     printf '[run]   %s/install --dry-run\n' "$DEFAULT_REPO"
+    # When invoked through curl | bash, consume the rest of the script before
+    # exiting so curl does not report a broken output pipe.
+    if [[ -z "${BASH_SOURCE[0]:-}" ]]; then
+      cat >/dev/null
+    fi
     exit 0
   fi
 
