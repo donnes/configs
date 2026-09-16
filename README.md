@@ -50,6 +50,7 @@ Ghostty, Yazi, and SSH are tracked but excluded from the default run. Atuin's co
 
 ```sh
 ./install update ~/.agents/skills/my-skill
+./install update ~/.agents/.skill-lock.json
 ./install update ~/.claude/settings.json
 ```
 
