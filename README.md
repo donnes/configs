@@ -22,13 +22,13 @@ Choose what the installer manages with repeatable `--skip` or `--only` options:
 
 ```sh
 ./install --interactive
-./install --skip packages --skip codex
+./install --skip packages --skip nvim
 ./install --only nvim --only atuin
 ./install uninstall --only nvim
 ./install --list-components
 ```
 
-`--interactive` prompts for each component and defaults to installing it. Available components are `packages`, `skills`, `claude`, `codex`, `atuin`, `nvim`, `shell`, `tmux`, and `git`. `--skip-packages` remains available as an alias for `--skip packages`. Interactive mode cannot be combined with `--skip` or `--only`.
+`--interactive` prompts for each component and defaults to installing it. Available components are `packages`, `skills`, `atuin`, `nvim`, `shell`, `tmux`, and `git`. `--skip-packages` remains available as an alias for `--skip packages`. Interactive mode cannot be combined with `--skip` or `--only`.
 
 ## Safety
 
@@ -49,9 +49,8 @@ Always inspect `./install --dry-run` first.
 
 Ghostty, Yazi, and SSH are tracked but excluded from the default run. Atuin's config is tracked; its history, encryption key, and sessions stay local.
 
-Claude's `settings.json` and Codex's `config.toml` are profile-specific because
-both applications write machine and platform paths into them. Portable commands,
-rules, and agent instructions remain under `shared/`.
+Claude (`~/.claude`) and Codex (`~/.codex`) configs are intentionally not tracked;
+they stay local on each machine.
 
 Neovim plugin specifications are shared, while each profile tracks its own
 `lazy-lock.json`. Run `:Lazy sync` and commit the resulting profile lockfile on
@@ -65,7 +64,7 @@ preserved.
 ## Adopt new files
 
 ```sh
-./install adopt ~/.claude/commands/example.md
+./install adopt ~/.config/atuin/example.toml
 ./install adopt ~/.agents/skills/my-skill
 ```
 
@@ -76,7 +75,6 @@ preserved.
 ```sh
 ./install update ~/.agents/skills/my-skill
 ./install update ~/.agents/.skill-lock.json
-./install update ~/.claude/settings.json
 ```
 
 `update` is the explicit local-wins operation for tracked files that are not linked

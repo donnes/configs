@@ -16,3 +16,7 @@ node_modules/
 # sensitive
 credentials/
 .syncode-logs/
+
+# AI agent configs stay local
+claude/
+codex/

@@ -63,7 +63,7 @@ ADOPT_PATH=""
 INTERACTIVE=0
 SKIP_COMPONENTS=","
 ONLY_COMPONENTS=","
-VALID_COMPONENTS="packages skills claude codex atuin nvim shell tmux git"
+VALID_COMPONENTS="packages skills atuin nvim shell tmux git"
 
 usage() {
   cat <<'EOF'
@@ -86,7 +86,7 @@ Options:
   -h, --help       Show this help.
 
 Components:
-  packages skills claude codex atuin nvim shell tmux git
+  packages skills atuin nvim shell tmux git
 EOF
 }
 
@@ -531,18 +531,6 @@ install_shared() {
   else
     log_action skip "skills component disabled"
   fi
-  if component_enabled claude; then
-    link_tree "$REPO_ROOT/shared/claude" "$HOME/.claude"
-    link_file "$REPO_ROOT/$PROFILE/claude/settings.json" "$HOME/.claude/settings.json"
-  else
-    log_action skip "claude component disabled"
-  fi
-  if component_enabled codex; then
-    link_tree "$REPO_ROOT/shared/codex" "$HOME/.codex"
-    link_file "$REPO_ROOT/$PROFILE/codex/config.toml" "$HOME/.codex/config.toml"
-  else
-    log_action skip "codex component disabled"
-  fi
   run_component atuin link_tree "$REPO_ROOT/shared/atuin" "$HOME/.config/atuin"
   run_component nvim install_nvim
 
@@ -606,18 +594,6 @@ uninstall_shared() {
   else
     log_action skip "skills component disabled"
   fi
-  if component_enabled claude; then
-    unlink_tree "$REPO_ROOT/shared/claude" "$HOME/.claude"
-    unlink_file "$REPO_ROOT/$PROFILE/claude/settings.json" "$HOME/.claude/settings.json"
-  else
-    log_action skip "claude component disabled"
-  fi
-  if component_enabled codex; then
-    unlink_tree "$REPO_ROOT/shared/codex" "$HOME/.codex"
-    unlink_file "$REPO_ROOT/$PROFILE/codex/config.toml" "$HOME/.codex/config.toml"
-  else
-    log_action skip "codex component disabled"
-  fi
   run_component atuin unlink_tree "$REPO_ROOT/shared/atuin" "$HOME/.config/atuin"
   run_component nvim unlink_tree "$REPO_ROOT/shared/nvim" "$HOME/.config/nvim"
 }
@@ -672,8 +648,6 @@ resolve_adopt_map() {
   fi
 
   map_directory "$path" "$HOME/.agents/skills" "$REPO_ROOT/shared/skills" && return 0
-  map_directory "$path" "$HOME/.claude" "$REPO_ROOT/shared/claude" && return 0
-  map_directory "$path" "$HOME/.codex" "$REPO_ROOT/shared/codex" && return 0
   map_directory "$path" "$HOME/.config/nvim" "$REPO_ROOT/shared/nvim" && return 0
   map_directory "$path" "$HOME/.config/atuin" "$REPO_ROOT/shared/atuin" && return 0
   map_directory "$path" "$ghostty_dest" "$REPO_ROOT/shared/ghostty" && return 0
@@ -742,11 +716,7 @@ update_path() {
   path_exists "$source" || die "$source does not exist"
   [[ ! -L "$source" ]] || die "$source is already a symlink; edits already write through to its target"
 
-  if [[ "$source" == "$HOME/.claude/settings.json" ]]; then
-    repo_target="$REPO_ROOT/$PROFILE/claude/settings.json"
-  elif [[ "$source" == "$HOME/.codex/config.toml" ]]; then
-    repo_target="$REPO_ROOT/$PROFILE/codex/config.toml"
-  elif [[ "$source" == "$HOME/.config/nvim/lazy-lock.json" ]]; then
+  if [[ "$source" == "$HOME/.config/nvim/lazy-lock.json" ]]; then
     repo_target="$REPO_ROOT/$PROFILE/nvim/lazy-lock.json"
   elif [[ "$source" == "$(skill_lock_path)" ]]; then
     repo_target="$REPO_ROOT/shared/skills.lock.json"
