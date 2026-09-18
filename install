@@ -378,6 +378,56 @@ link_tree() {
   done < <(find "$src" \( -type f -o -type l \) -print0)
 }
 
+# Codex skips symlinked SKILL.md files but follows symlinked directories, so
+# each skill is linked as one directory instead of file by file.
+link_skill_dir() {
+  local src="$1"
+  local dest="$2"
+  local assume_missing="${3:-0}"
+  local file relative
+  local remaining=0
+
+  # Clear a previous file-by-file install so the directory link needs no backup.
+  if [[ "$assume_missing" -eq 0 && -d "$dest" && ! -L "$dest" ]]; then
+    while IFS= read -r -d '' file; do
+      relative="${file#"$dest"/}"
+      if is_managed_symlink "$file" || [[ "$(basename "$file")" == ".DS_Store" ]] ||
+        { [[ ! -L "$file" && -f "$src/$relative" ]] && cmp -s "$file" "$src/$relative"; }; then
+        [[ "$DRY_RUN" -eq 1 ]] || rm -f "$file"
+      else
+        remaining=$((remaining + 1))
+      fi
+    done < <(find "$dest" \( -type f -o -type l \) -print0)
+
+    if [[ "$remaining" -eq 0 ]]; then
+      log_action relink "$(pretty_path "$dest") directory -> $(pretty_path "$src")"
+      if [[ "$DRY_RUN" -eq 0 ]]; then
+        find "$dest" -depth -type d -empty -delete
+        ln -sfn "$src" "$dest"
+      fi
+      return 0
+    fi
+  fi
+
+  link_file "$src" "$dest" "$assume_missing"
+}
+
+link_skills() {
+  local src="$1"
+  local dest="$2"
+  local entry
+
+  [[ -d "$src" ]] || return 0
+  for entry in "$src"/*; do
+    path_exists "$entry" || continue
+    if [[ -d "$entry" ]]; then
+      link_skill_dir "$entry" "$dest/$(basename "$entry")"
+    else
+      link_file "$entry" "$dest/$(basename "$entry")"
+    fi
+  done
+}
+
 file_mode() {
   stat -c '%a' "$1" 2>/dev/null || stat -f '%Lp' "$1"
 }
@@ -526,7 +576,7 @@ install_nvim() {
 
 install_shared() {
   if component_enabled skills; then
-    link_tree "$REPO_ROOT/shared/skills" "$HOME/.agents/skills"
+    link_skills "$REPO_ROOT/shared/skills" "$HOME/.agents/skills"
     link_file "$REPO_ROOT/shared/skills.lock.json" "$(skill_lock_path)"
   else
     log_action skip "skills component disabled"
@@ -587,9 +637,21 @@ unlink_tree() {
   done < <(find "$src" \( -type f -o -type l \) -print0)
 }
 
+unlink_skills() {
+  local src="$1"
+  local dest="$2"
+  local entry
+
+  [[ -d "$src" ]] || return 0
+  for entry in "$src"/*; do
+    unlink_file "$entry" "$dest/$(basename "$entry")"
+  done
+}
+
 uninstall_shared() {
   if component_enabled skills; then
     unlink_tree "$REPO_ROOT/shared/skills" "$HOME/.agents/skills"
+    unlink_skills "$REPO_ROOT/shared/skills" "$HOME/.agents/skills"
     unlink_file "$REPO_ROOT/shared/skills.lock.json" "$(skill_lock_path)"
   else
     log_action skip "skills component disabled"
@@ -671,6 +733,10 @@ absolute_existing_path() {
   printf '%s/%s\n' "$parent" "$base"
 }
 
+is_skill_dir() {
+  [[ -d "$1" && "$(dirname "$1")" == "$REPO_ROOT/shared/skills" ]]
+}
+
 adopt_path() {
   local source repo_target relative file file_relative
 
@@ -689,7 +755,7 @@ adopt_path() {
 
   log_action adopt "$(pretty_path "$source") -> $(pretty_path "$repo_target")"
   if [[ "$DRY_RUN" -eq 1 ]]; then
-    if [[ -d "$source" ]]; then
+    if [[ -d "$source" && "$(dirname "$repo_target")" != "$REPO_ROOT/shared/skills" ]]; then
       while IFS= read -r -d '' file; do
         file_relative="${file#"$source"/}"
         log_action link "$(pretty_path "$source/$file_relative") -> $(pretty_path "$repo_target/$file_relative")"
@@ -702,7 +768,9 @@ adopt_path() {
 
   mkdir -p "$(dirname "$repo_target")"
   mv "$source" "$repo_target"
-  if [[ -d "$repo_target" ]]; then
+  if is_skill_dir "$repo_target"; then
+    link_skill_dir "$repo_target" "$source" 1
+  elif [[ -d "$repo_target" ]]; then
     link_tree "$repo_target" "$source" 1
   else
     link_file "$repo_target" "$source" 1
@@ -743,12 +811,14 @@ update_path() {
         mkdir -p "$(dirname "$target")"
         cp "$file" "$target"
       fi
-      if [[ "$DRY_RUN" -eq 1 ]]; then
+      if [[ "$DRY_RUN" -eq 1 ]] && ! is_skill_dir "$repo_target"; then
         log_action link "$(pretty_path "$file") -> $(pretty_path "$target")"
       fi
     done < <(find "$source" -type f -print0)
 
-    if [[ "$DRY_RUN" -eq 0 ]]; then
+    if is_skill_dir "$repo_target"; then
+      link_skill_dir "$repo_target" "$source"
+    elif [[ "$DRY_RUN" -eq 0 ]]; then
       link_tree "$repo_target" "$source"
     fi
   else

@@ -33,6 +33,7 @@ Choose what the installer manages with repeatable `--skip` or `--only` options:
 ## Safety
 
 - Files are linked individually with absolute symlinks; live state and foreign files remain untouched.
+- Skills are the exception: each `shared/skills/<name>` is linked as one directory, because Codex ignores a symlinked `SKILL.md` but follows a symlinked skill directory. Untracked skills in `~/.agents/skills` remain untouched.
 - Conflicts receive timestamped backups that are never overwritten.
 - The installer never mirror-deletes and never writes below `/usr/share/omarchy`.
 - Omarchy's bashrc and tmux config receive one replaceable marker block each.
@@ -68,7 +69,7 @@ preserved.
 ./install adopt ~/.agents/skills/my-skill
 ```
 
-`adopt` moves a new file or directory into the mapped repo location and replaces source files with symlinks. It refuses an existing repo destination.
+`adopt` moves a new file or directory into the mapped repo location and replaces source files with symlinks (a skill directory becomes a single directory symlink). It refuses an existing repo destination.
 
 ## Update tracked files
 
