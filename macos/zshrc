@@ -32,9 +32,8 @@ alias codex-purpose="CODEX_HOME=~/.codex-purpose codex"
 export LANG=en_US.UTF-8
 
 # fnm
-# --resolve-env reuses the fnm Multishell dir for non-interactive/app shells;
 # --use-on-cd switches node versions when you cd into a project.
-eval "$(fnm env --use-on-cd --resolve-env)"
+eval "$(fnm env --use-on-cd)"
 
 # Zoxide
 eval "$(zoxide init zsh)"
