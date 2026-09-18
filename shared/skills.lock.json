@@ -247,6 +247,15 @@
       "pluginName": "mattpocock-skills",
       "installedAt": "2026-09-06T22:19:18.066Z",
       "updatedAt": "2026-09-06T22:19:18.066Z"
+    },
+    "typesafe-ai": {
+      "source": "typesafe-ai/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/typesafe-ai/skills.git",
+      "skillPath": "skills/typesafe-ai/SKILL.md",
+      "skillFolderHash": "678c375b883794bf4292715a43acbba5c84681aa",
+      "installedAt": "2026-09-18T14:13:28.152Z",
+      "updatedAt": "2026-09-18T14:13:28.152Z"
     }
   },
   "dismissed": {
@@ -256,11 +265,13 @@
     "amp",
     "cline",
     "codex",
+    "cursor",
     "droid",
     "gemini-cli",
     "github-copilot",
     "kilo",
     "kimi-code-cli",
+    "opencode",
     "warp",
     "zed",
     "claude-code"
