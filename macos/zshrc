@@ -99,3 +99,6 @@ esac
 
 # Opt out of anonymous telemetry (px0 and other tools honor this)
 export DO_NOT_TRACK=1
+
+# Local secrets (untracked)
+[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"
