@@ -594,6 +594,7 @@ install_omarchy() {
 
   if component_enabled shell; then
     append_block "$HOME/.bashrc" "source \"$REPO_ROOT/omarchy/bashrc.local\""
+    link_tree "$REPO_ROOT/omarchy/uwsm" "$HOME/.config/uwsm"
   else
     log_action skip "shell component disabled"
   fi
@@ -608,6 +609,7 @@ install_omarchy() {
 
 install_macos() {
   run_component shell link_file "$REPO_ROOT/macos/zshrc" "$HOME/.zshrc"
+  run_component shell append_block "$HOME/.zshenv" "source \"$REPO_ROOT/macos/zshenv\""
   run_component shell link_tree "$REPO_ROOT/macos/bin" "$HOME/.local/bin"
   run_component git link_file "$REPO_ROOT/macos/gitconfig" "$HOME/.gitconfig"
   run_component tmux link_file "$REPO_ROOT/macos/tmux.conf" "$HOME/.tmux.conf"
@@ -663,6 +665,7 @@ uninstall_shared() {
 uninstall_profile() {
   if [[ "$PROFILE" == "omarchy" ]]; then
     run_component shell remove_block "$HOME/.bashrc"
+    run_component shell unlink_tree "$REPO_ROOT/omarchy/uwsm" "$HOME/.config/uwsm"
     if component_enabled tmux; then
       remove_block "$HOME/.config/tmux/tmux.conf"
       unlink_file "$REPO_ROOT/omarchy/tmux.local.conf" "$HOME/.config/tmux/local.conf"
@@ -672,6 +675,7 @@ uninstall_profile() {
     run_component nvim unlink_tree "$REPO_ROOT/omarchy/nvim" "$HOME/.config/nvim"
   else
     run_component shell unlink_file "$REPO_ROOT/macos/zshrc" "$HOME/.zshrc"
+    run_component shell remove_block "$HOME/.zshenv"
     run_component shell unlink_tree "$REPO_ROOT/macos/bin" "$HOME/.local/bin"
     run_component git unlink_file "$REPO_ROOT/macos/gitconfig" "$HOME/.gitconfig"
     run_component tmux unlink_file "$REPO_ROOT/macos/tmux.conf" "$HOME/.tmux.conf"

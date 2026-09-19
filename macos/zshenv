@@ -1,0 +1,5 @@
+# Sourced by every zsh, including the non-interactive `zsh -c` and `zsh -lc`
+# shells that GUI apps and AI agents spawn. Keep this fast and output-free.
+
+# Local secrets (untracked)
+[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"

@@ -36,7 +36,7 @@ Choose what the installer manages with repeatable `--skip` or `--only` options:
 - Skills are the exception: each `shared/skills/<name>` is linked as one directory, because Codex ignores a symlinked `SKILL.md` but follows a symlinked skill directory. Untracked skills in `~/.agents/skills` remain untouched.
 - Conflicts receive timestamped backups that are never overwritten.
 - The installer never mirror-deletes and never writes below `/usr/share/omarchy`.
-- Omarchy's bashrc and tmux config receive one replaceable marker block each.
+- Omarchy's bashrc and tmux config, and macOS's `~/.zshenv`, receive one replaceable marker block each.
 - `./install uninstall` removes only managed links and marker blocks. Packages, backups, directories, and foreign files remain.
 
 Always inspect `./install --dry-run` first.
@@ -56,6 +56,13 @@ they stay local on each machine.
 Neovim plugin specifications are shared, while each profile tracks its own
 `lazy-lock.json`. Run `:Lazy sync` and commit the resulting profile lockfile on
 each platform when shared plugin specifications change.
+
+Untracked secrets live in `~/.secrets` as `export NAME=value` lines. They are
+sourced where non-interactive processes can see them, because GUI apps and the
+AI agents they spawn never run an interactive shell: macOS sources them from
+`macos/zshenv` (every zsh, via the `~/.zshenv` block), and Omarchy from
+`omarchy/uwsm/env.d/90-secrets` (the whole graphical session, after the next
+login) as well as `omarchy/bashrc.local` for interactive shells.
 
 Omarchy Bash sources `shared/shell/git-aliases.bash`, a Bash-compatible port of
 the commonly used Oh My Zsh Git aliases such as `gss`, `ggp`, `ggl`, `gst`,
