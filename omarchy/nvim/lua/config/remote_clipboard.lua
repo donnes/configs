@@ -2,9 +2,40 @@
 -- every copy is emitted as OSC 52 (inside tmux this becomes a tmux buffer,
 -- rebroadcast to every attached client, local or SSH). Paste prefers the
 -- local Wayland clipboard when one is available, so content copied in other
--- apps remains pasteable; without a display, paste is an OSC 52 query that
--- tmux (or the terminal) answers.
+-- apps remains pasteable; without a display, or when the session is being
+-- driven over SSH, paste is an OSC 52 query that tmux (get-clipboard request)
+-- forwards to the remote terminal, so `p` pastes what was copied over there.
 local M = {}
+
+local function proc_has_env(pid, name)
+  local file = io.open("/proc/" .. pid .. "/environ", "rb")
+  if not file then
+    return false
+  end
+
+  local environ = "\0" .. (file:read("*a") or "")
+  file:close()
+  return environ:find("\0" .. name .. "=", 1, true) ~= nil
+end
+
+-- A tmux pane's own environment goes stale as clients come and go, so ask
+-- tmux which client was used last and check whether that one came in over SSH.
+local function tmux_active_client_is_ssh()
+  local clients = vim.fn.systemlist({ "tmux", "list-clients", "-F", "#{client_activity} #{client_pid}" })
+  if vim.v.shell_error ~= 0 then
+    return false
+  end
+
+  local latest, latest_pid = -1, nil
+  for _, line in ipairs(clients) do
+    local activity, pid = line:match("^(%d+) (%d+)$")
+    if activity and tonumber(activity) > latest then
+      latest, latest_pid = tonumber(activity), pid
+    end
+  end
+
+  return latest_pid ~= nil and proc_has_env(latest_pid, "SSH_CONNECTION")
+end
 
 local function proc_lines(pid, file)
   local ok, lines = pcall(vim.fn.readfile, "/proc/" .. pid .. "/" .. file)
@@ -73,11 +104,20 @@ function M.setup()
   end
 
   local function paste(register)
+    local query = osc52.paste(register)
     if not has_wayland then
-      return osc52.paste(register)
+      return query
     end
 
     return function()
+      local remote = in_ssh
+      if in_tmux then
+        remote = tmux_active_client_is_ssh()
+      end
+      if remote then
+        return query()
+      end
+
       local cmd = { "wl-paste", "--no-newline" }
       if register == "*" then
         cmd[#cmd + 1] = "--primary"
@@ -94,6 +134,10 @@ function M.setup()
     paste = { ["+"] = paste("+"), ["*"] = paste("*") },
     cache_enabled = 0,
   }
+
+  -- LazyVim leaves 'clipboard' empty under SSH; this provider is the OSC 52
+  -- path it defers to, so plain y/p should use it.
+  vim.opt.clipboard = "unnamedplus"
 end
 
 return M

@@ -2,3 +2,8 @@
 font-family = JetBrainsMono Nerd Font Mono
 font-feature = +liga
 theme = Ultra Dark
+
+# Clipboard
+# Let programs read the clipboard via OSC 52 without a prompt (nvim `p` over SSH).
+clipboard-read = allow
+clipboard-write = allow
