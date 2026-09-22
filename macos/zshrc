@@ -23,10 +23,13 @@ alias cdc="z ~/.donnes/configs"
 alias lg="lazygit"
 alias t='tmux attach || tmux new -s Work'
 alias nv="nvim"
+# Explicit agent profiles. Claude aliases use the current Claude login.
 alias cc="claude --dangerously-skip-permissions --mcp-config ~/.mcp-profiles/default.json --strict-mcp-config"
-alias cc-levers="CLAUDE_CONFIG_DIR=~/.claude-levers claude --dangerously-skip-permissions"
+alias cc-levers="claude --dangerously-skip-permissions --mcp-config ~/.mcp-profiles/levers.json --strict-mcp-config"
 alias cc-purpose="claude --dangerously-skip-permissions --mcp-config ~/.mcp-profiles/purpose.json --strict-mcp-config"
-alias codex-purpose="CODEX_HOME=~/.codex-purpose codex"
+alias codex-levers="CODEX_HOME=~/.codex-levers codex --dangerously-bypass-approvals-and-sandbox"
+alias codex-purpose="CODEX_HOME=~/.codex-purpose codex --dangerously-bypass-approvals-and-sandbox"
+alias oc-levers="OPENCODE_CONFIG_DIR=~/.config/opencode-levers opencode"
 
 # Language
 export LANG=en_US.UTF-8
