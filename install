@@ -577,6 +577,7 @@ install_nvim() {
 install_shared() {
   if component_enabled skills; then
     link_skills "$REPO_ROOT/shared/skills" "$HOME/.agents/skills"
+    link_skills "$REPO_ROOT/shared/skills" "$HOME/.claude/skills"
     link_file "$REPO_ROOT/shared/skills.lock.json" "$(skill_lock_path)"
   else
     log_action skip "skills component disabled"
@@ -654,6 +655,7 @@ uninstall_shared() {
   if component_enabled skills; then
     unlink_tree "$REPO_ROOT/shared/skills" "$HOME/.agents/skills"
     unlink_skills "$REPO_ROOT/shared/skills" "$HOME/.agents/skills"
+    unlink_skills "$REPO_ROOT/shared/skills" "$HOME/.claude/skills"
     unlink_file "$REPO_ROOT/shared/skills.lock.json" "$(skill_lock_path)"
   else
     log_action skip "skills component disabled"

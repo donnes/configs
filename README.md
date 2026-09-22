@@ -33,7 +33,7 @@ Choose what the installer manages with repeatable `--skip` or `--only` options:
 ## Safety
 
 - Files are linked individually with absolute symlinks; live state and foreign files remain untouched.
-- Skills are the exception: each `shared/skills/<name>` is linked as one directory, because Codex ignores a symlinked `SKILL.md` but follows a symlinked skill directory. Untracked skills in `~/.agents/skills` remain untouched.
+- Skills are the exception: each `shared/skills/<name>` is linked as one directory, because Codex ignores a symlinked `SKILL.md` but follows a symlinked skill directory. Skills are linked into both `~/.agents/skills` (Codex and others) and `~/.claude/skills` (Claude Code, which does not read `~/.agents`). Untracked skills in either directory remain untouched.
 - Conflicts receive timestamped backups that are never overwritten.
 - The installer never mirror-deletes and never writes below `/usr/share/omarchy`.
 - Omarchy's bashrc and tmux config, and macOS's `~/.zshenv`, receive one replaceable marker block each.
