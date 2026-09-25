@@ -427,6 +427,25 @@ link_skills() {
   done
 }
 
+# Remove dangling skill links left behind when a skill is deleted from the repo.
+# Only links into the repo or ~/.agents/skills are touched.
+prune_skill_links() {
+  local dest="$1"
+  local entry target target_dir
+
+  [[ -d "$dest" ]] || return 0
+  for entry in "$dest"/*; do
+    [[ -L "$entry" && ! -e "$entry" ]] || continue
+    target="$(readlink "$entry")"
+    [[ "$target" == /* ]] || target="$(dirname "$entry")/$target"
+    target_dir="$(cd "$(dirname "$target")" 2>/dev/null && pwd)" || target_dir=""
+    if is_managed_symlink "$entry" || [[ "$target_dir" == "$HOME/.agents/skills" ]]; then
+      log_action prune "$(pretty_path "$entry") (target missing)"
+      [[ "$DRY_RUN" -eq 1 ]] || unlink "$entry"
+    fi
+  done
+}
+
 file_mode() {
   stat -c '%a' "$1" 2>/dev/null || stat -f '%Lp' "$1"
 }
@@ -582,6 +601,9 @@ install_nvim() {
 
 install_shared() {
   if component_enabled skills; then
+    # ~/.claude/skills can link through ~/.agents/skills, so prune that first.
+    prune_skill_links "$HOME/.agents/skills"
+    prune_skill_links "$HOME/.claude/skills"
     link_skills "$REPO_ROOT/shared/skills" "$HOME/.agents/skills"
     link_skills "$REPO_ROOT/shared/skills" "$HOME/.claude/skills"
     link_file "$REPO_ROOT/shared/skills.lock.json" "$(skill_lock_path)"
