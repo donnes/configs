@@ -28,7 +28,7 @@ Choose what the installer manages with repeatable `--skip` or `--only` options:
 ./install --list-components
 ```
 
-`--interactive` prompts for each component and defaults to installing it. Available components are `packages`, `skills`, `atuin`, `nvim`, `shell`, `tmux`, and `git`. `--skip-packages` remains available as an alias for `--skip packages`. Interactive mode cannot be combined with `--skip` or `--only`.
+`--interactive` prompts for each component and defaults to installing it. Available components are `packages`, `skills`, `atuin`, `nvim`, `shell`, `tmux`, `git`, and `session` (Omarchy only). `--skip-packages` remains available as an alias for `--skip packages`. Interactive mode cannot be combined with `--skip` or `--only`.
 
 ## Safety
 
@@ -36,7 +36,7 @@ Choose what the installer manages with repeatable `--skip` or `--only` options:
 - Skills are the exception: each `shared/skills/<name>` is linked as one directory, because Codex ignores a symlinked `SKILL.md` but follows a symlinked skill directory. Skills are linked into both `~/.agents/skills` (Codex and others) and `~/.claude/skills` (Claude Code, which does not read `~/.agents`). Untracked skills in either directory remain untouched.
 - Conflicts receive timestamped backups that are never overwritten.
 - The installer never mirror-deletes and never writes below `/usr/share/omarchy`.
-- Omarchy's bashrc and tmux config, and macOS's `~/.zshenv`, receive one replaceable marker block each.
+- Omarchy's bashrc, tmux config, and `hypr/hyprland.lua`, and macOS's `~/.zshenv`, receive one replaceable marker block each.
 - `./install uninstall` removes only managed links and marker blocks. Packages, backups, directories, and foreign files remain.
 
 Always inspect `./install --dry-run` first.
@@ -44,7 +44,7 @@ Always inspect `./install --dry-run` first.
 ## Layout
 
 - `shared/`: agent, editor, Neovim, Atuin, and tool overlays
-- `omarchy/`: bash/tmux deltas and vendored Omarchy Neovim keepers
+- `omarchy/`: bash/tmux deltas, vendored Omarchy Neovim keepers, `omarchy/bin` scripts linked into `~/.local/bin`, and the Hyprland session files (`hypr/`, `systemd/user/`)
 - `macos/`: full zsh, git, and tmux configuration, plus `macos/bin` scripts linked into `~/.local/bin`
 - `packages/`: platform package lists
 
@@ -69,6 +69,17 @@ the commonly used Oh My Zsh Git aliases such as `gss`, `ggp`, `ggl`, `gst`,
 and `gsw`. Omarchy's existing `g`, `gcm`, `gcam`, and `gcad` meanings are
 preserved.
 
+## Hyprland session restore
+
+The Omarchy `session` component brings windows back after a crash or power cut.
+`hypr-session` (from `omarchy/bin`) saves which apps are open, how to relaunch
+them, and where their windows sit; `hypr-session-autosave.timer` snapshots the
+session every minute; and `hypr/session.lua`, required from `hyprland.lua`,
+runs `hypr-session resume` at login and binds Super+Shift+Alt+L (save) and
+Super+Alt+L (restore). Snapshots live in `~/.local/state/hypr-session/`.
+Unattended recovery also needs the firmware set to power on after AC loss and
+a disk that unlocks without a passphrase prompt.
+
 ## Adopt new files
 
 ```sh
@@ -76,7 +87,7 @@ preserved.
 ./install adopt ~/.agents/skills/my-skill
 ```
 
-`adopt` moves a new file or directory into the mapped repo location and replaces source files with symlinks (a skill directory becomes a single directory symlink). It refuses an existing repo destination.
+On Omarchy, `~/.local/bin`, `~/.config/hypr`, and `~/.config/systemd/user` also map into `omarchy/`. `adopt` moves a new file or directory into the mapped repo location and replaces source files with symlinks (a skill directory becomes a single directory symlink). It refuses an existing repo destination.
 
 ## Update tracked files
 

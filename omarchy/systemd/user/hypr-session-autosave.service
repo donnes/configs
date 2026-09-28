@@ -1,0 +1,8 @@
+[Unit]
+Description=Snapshot the Hyprland session for crash/power-cut recovery
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/hypr-session autosave

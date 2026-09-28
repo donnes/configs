@@ -1,0 +1,12 @@
+[Unit]
+Description=Snapshot the Hyprland session every minute
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Timer]
+OnActiveSec=1min
+OnUnitActiveSec=1min
+AccuracySec=5s
+
+[Install]
+WantedBy=graphical-session.target

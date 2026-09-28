@@ -1,0 +1,670 @@
+#!/usr/bin/python3
+"""Save and restore the Hyprland session: which apps are open, and where.
+
+Usage:
+  hypr-session save     [profile]   Snapshot windows (layout + how to relaunch them)
+  hypr-session restore  [profile]   Re-arrange the windows that are open now
+  hypr-session resume   [profile]   Relaunch missing apps, then restore (default: autosave)
+  hypr-session autosave             Silent periodic snapshot into the "autosave" profile
+  hypr-session list
+
+Profiles default to "default" and live in ~/.local/state/hypr-session/.
+The "autosave" profile is written by hypr-session-autosave.timer and replayed at
+login by `resume`, so the session survives a crash or power cut.
+"""
+
+import json
+import os
+import shutil
+import subprocess
+import sys
+import time
+
+STATE_DIR = os.path.expanduser("~/.local/state/hypr-session")
+AUTOSAVE = "autosave"
+SETTLE = 0.06  # seconds to let Hyprland apply a dispatch before re-reading
+LAUNCH_TIMEOUT = 45  # seconds to wait for relaunched apps to map their windows
+
+# Autosave stays off until `resume` has run in this boot, so the timer can't
+# overwrite the last good snapshot with a half-started session. XDG_RUNTIME_DIR
+# is a tmpfs, so the marker never survives a reboot.
+READY_MARKER = os.path.join(
+    os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"), "hypr-session.ready"
+)
+
+SHELLS = {"bash", "zsh", "fish", "sh", "nu", "dash", "xonsh"}
+
+
+SESSION_VARS = (
+    "HYPRLAND_INSTANCE_SIGNATURE",
+    "WAYLAND_DISPLAY",
+    "DISPLAY",
+    "XDG_CURRENT_DESKTOP",
+    "XDG_SESSION_TYPE",
+    "XDG_SESSION_DESKTOP",
+)
+
+
+def ensure_hyprland_env():
+    """Borrow the graphical session's env when started outside it (e.g. from SSH).
+
+    uwsm manages the session and exports these to the systemd user manager, and
+    apps launched through uwsm-app inherit our env, so they need them too.
+    """
+    if not os.environ.get("WAYLAND_DISPLAY"):
+        out = subprocess.run(
+            ["systemctl", "--user", "show-environment"], capture_output=True, text=True
+        )
+        for line in out.stdout.splitlines():
+            key, sep, value = line.partition("=")
+            if sep and key in SESSION_VARS and not value.startswith("$'"):
+                os.environ.setdefault(key, value)
+
+    if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        return
+    base = os.path.join(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"), "hypr")
+    try:
+        live = [
+            os.path.join(base, d)
+            for d in os.listdir(base)
+            if os.path.exists(os.path.join(base, d, ".socket.sock"))
+        ]
+    except OSError:
+        return
+    if live:
+        newest = max(live, key=os.path.getmtime)
+        os.environ["HYPRLAND_INSTANCE_SIGNATURE"] = os.path.basename(newest)
+
+
+def hyprctl_json(*args):
+    out = subprocess.run(["hyprctl", "-j", *args], capture_output=True, text=True)
+    try:
+        return json.loads(out.stdout or "null")
+    except ValueError:
+        return None  # Hyprland not reachable; hyprctl printed an error instead
+
+
+def dispatch(lua):
+    subprocess.run(["hyprctl", "dispatch", lua], capture_output=True, text=True)
+    time.sleep(SETTLE)
+
+
+GLYPH = "󱂬"  # same workspace-layout glyph the Omarchy menu uses
+NOTIFY_ID_FILE = os.path.join(STATE_DIR, ".notify-id")
+
+
+def notify(headline, body="", urgency="low", timeout=3000):
+    """One toast that replaces itself, so repeated presses don't stack up."""
+    try:
+        with open(NOTIFY_ID_FILE) as f:
+            last_id = str(int(f.read().strip()))
+    except (OSError, ValueError):
+        last_id = "0"
+
+    out = subprocess.run(
+        [
+            "omarchy-notification-send",
+            "-g", GLYPH,
+            "-u", urgency,
+            "-t", str(timeout),
+            "-r", last_id,
+            "-p",
+            headline,
+            body,
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+    new_id = out.stdout.strip()
+    if new_id.isdigit():
+        try:
+            os.makedirs(STATE_DIR, exist_ok=True)
+            with open(NOTIFY_ID_FILE, "w") as f:
+                f.write(new_id)
+        except OSError:
+            pass
+
+
+def plural(n, word):
+    return f"{n} {word}" + ("" if n == 1 else "s")
+
+
+def label(profile):
+    if profile == "default":
+        return "Window layout"
+    if profile == AUTOSAVE:
+        return "Session"
+    return f"Layout '{profile}'"
+
+
+def clients():
+    """Mapped, non-special windows, in a stable order."""
+    return [
+        c
+        for c in (hyprctl_json("clients") or [])
+        if c.get("mapped") and not str(c["workspace"]["name"]).startswith("special:")
+    ]
+
+
+# --- launch commands ----------------------------------------------------
+
+
+def read_proc(pid, name):
+    try:
+        with open(f"/proc/{pid}/{name}", "rb") as f:
+            return f.read()
+    except OSError:
+        return b""
+
+
+def proc_argv(pid):
+    return [a.decode(errors="replace") for a in read_proc(pid, "cmdline").split(b"\0") if a]
+
+
+def proc_env(pid):
+    env = {}
+    for item in read_proc(pid, "environ").split(b"\0"):
+        key, sep, value = item.decode(errors="replace").partition("=")
+        if sep:
+            env[key] = value
+    return env
+
+
+def proc_cwd(pid):
+    try:
+        return os.readlink(f"/proc/{pid}/cwd")
+    except OSError:
+        return None
+
+
+def child_pids(pid):
+    try:
+        with open(f"/proc/{pid}/task/{pid}/children") as f:
+            return [int(p) for p in f.read().split()]
+    except (OSError, ValueError):
+        return []
+
+
+def appimage_argv(argv0):
+    """AppImages run from a throwaway /tmp/.mount_* dir; recover the real launch command.
+
+    Electron apps wipe their environ (no $APPIMAGE) and rewrite their argv into one
+    string. The FUSE mount's type names the image file, and the AppImage runtime
+    process that owns the mount still has the original, properly split argv.
+    """
+    mount = None
+    try:
+        with open("/proc/mounts") as f:
+            for line in f:
+                src, target, fstype = line.split()[:3]
+                if argv0.startswith(target + "/") and fstype.startswith("fuse."):
+                    mount = fstype[len("fuse."):]
+                    break
+    except OSError:
+        return None
+    if not mount:
+        return None
+    for entry in os.listdir("/proc"):
+        if not entry.isdigit():
+            continue
+        try:
+            exe = os.readlink(f"/proc/{entry}/exe")
+        except OSError:
+            continue
+        if os.path.basename(exe) == mount:
+            argv = proc_argv(int(entry))
+            return [exe, *argv[1:]] if argv else [exe]
+    return None
+
+
+def webapp_url(cls):
+    """Chromium --app windows get a class like chrome-web.whatsapp.com__-Default."""
+    if not cls.startswith("chrome-") or "__" not in cls:
+        return None
+    body = cls[len("chrome-"):].rsplit("-", 1)[0]  # drop the "-<Profile>" suffix
+    host, _, path = body.partition("__")
+    return f"https://{host}/{path.replace('_', '/')}"
+
+
+def launch_of(c):
+    """How to start this window's app again, or None if we can't tell."""
+    url = webapp_url(c.get("initialClass") or c.get("class") or "")
+    if url:
+        # Web app windows belong to the browser's process, so its argv is useless here.
+        return {"argv": ["omarchy-launch-webapp", url]}
+
+    pid = c.get("pid") or 0
+    if pid <= 0:
+        return None
+    argv = proc_argv(pid)
+    if not argv:
+        return None
+
+    env = proc_env(pid)
+    if env.get("FLATPAK_ID"):
+        return {"argv": ["flatpak", "run", env["FLATPAK_ID"]]}
+
+    if argv[0].startswith("/tmp/.mount_"):
+        argv = appimage_argv(argv[0])
+        if not argv:
+            return None
+
+    # A browser first started by a web app keeps that --app flag on its main process.
+    argv = [a for a in argv if not a.startswith(("--app=", "--app-id="))]
+
+    # Terminals: reopen in the directory the shell was in, not where the terminal started.
+    cwd = proc_cwd(pid)
+    shells = [p for p in child_pids(pid) if read_proc(p, "comm").decode().strip() in SHELLS]
+    if len(shells) == 1:
+        cwd = proc_cwd(shells[0]) or cwd
+
+    launch = {"argv": argv}
+    if cwd and os.path.isdir(cwd):
+        launch["cwd"] = cwd
+    return launch
+
+
+def snapshot_of(c):
+    return {
+        "address": c["address"],
+        "class": c.get("class", ""),
+        "initialClass": c.get("initialClass", ""),
+        "initialTitle": c.get("initialTitle", ""),
+        "title": c.get("title", ""),
+        "workspace": str(c["workspace"]["name"]),
+        "monitor": c.get("monitor"),
+        "at": c["at"],
+        "size": c["size"],
+        "floating": bool(c.get("floating")),
+        "launch": launch_of(c),
+    }
+
+
+def state_file(profile):
+    return os.path.join(STATE_DIR, f"{profile}.json")
+
+
+# --- save ---------------------------------------------------------------
+
+
+def write_durably(path, data):
+    """Atomic and fsynced: a power cut leaves either the old file or the new one."""
+    os.makedirs(STATE_DIR, exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(data, f, indent=2)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
+    dir_fd = os.open(STATE_DIR, os.O_DIRECTORY)
+    try:
+        os.fsync(dir_fd)
+    finally:
+        os.close(dir_fd)
+
+
+def comparable(windows):
+    """Snapshot content minus the parts that churn without meaning anything."""
+    return [{k: v for k, v in w.items() if k not in ("address", "title")} for w in windows]
+
+
+def save(profile, quiet=False):
+    windows = [snapshot_of(c) for c in clients()]
+    if not windows:
+        # Never replace a real snapshot with an empty one.
+        if not quiet:
+            print("No windows to save.", file=sys.stderr)
+        return 1
+
+    path = state_file(profile)
+    if quiet:
+        try:
+            with open(path) as f:
+                if comparable(json.load(f)["windows"]) == comparable(windows):
+                    return 0  # unchanged; skip the disk write
+        except (OSError, ValueError, KeyError):
+            pass
+
+    write_durably(path, {"profile": profile, "saved_at": time.time(), "windows": windows})
+
+    if not quiet:
+        notify(
+            f"{label(profile)} saved",
+            f"{plural(len(windows), 'window')} · Super + Alt + L to restore",
+        )
+        print(f"Saved {len(windows)} windows to {path}")
+    return 0
+
+
+def autosave():
+    if not os.path.exists(READY_MARKER):
+        return 0
+    save(AUTOSAVE, quiet=True)
+    return 0
+
+
+# --- matching -----------------------------------------------------------
+
+
+def match_windows(saved, live):
+    """Pair each saved entry with a live window, most specific match first."""
+    remaining = {c["address"]: c for c in live}
+    pairs = []
+    unmatched = list(saved)
+
+    def take(key):
+        nonlocal unmatched
+        still = []
+        for s in unmatched:
+            hit = next(
+                (c for c in remaining.values() if key(s) is not None and key(s) == key(c)),
+                None,
+            )
+            if hit:
+                pairs.append((s, hit))
+                del remaining[hit["address"]]
+            else:
+                still.append(s)
+        unmatched = still
+
+    take(lambda w: w.get("address"))
+    take(lambda w: (w.get("initialClass"), w.get("initialTitle")) if w.get("initialClass") else None)
+    take(lambda w: (w.get("class"), w.get("title")) if w.get("class") else None)
+    take(lambda w: w.get("initialClass") or None)
+    take(lambda w: w.get("class") or None)
+    return pairs
+
+
+# --- restore ------------------------------------------------------------
+
+
+def sel(address):
+    return f'address:{address}'
+
+
+def place_and_float(pairs):
+    for s, c in pairs:
+        if str(c["workspace"]["name"]) != s["workspace"]:
+            dispatch(
+                f'hl.dsp.window.move({{ window = "{sel(c["address"])}", '
+                f'workspace = "{s["workspace"]}", follow = false }})'
+            )
+        if bool(c.get("floating")) != s["floating"]:
+            action = "on" if s["floating"] else "off"
+            dispatch(f'hl.dsp.window.float({{ window = "{sel(c["address"])}", action = "{action}" }})')
+
+
+def order_key(at):
+    """Reading order, tolerant of a few pixels of drift."""
+    return (round(at[1] / 40), round(at[0] / 40))
+
+
+def fix_order(pairs):
+    """Re-sort tiled windows on each workspace into their saved reading order."""
+    targets = {c["address"]: s for s, c in pairs if not s["floating"]}
+    by_ws = {}
+    for s, c in pairs:
+        if not s["floating"]:
+            by_ws.setdefault(s["workspace"], []).append(c["address"])
+
+    for ws, addrs in by_ws.items():
+        if len(addrs) < 2:
+            continue
+        desired = [a for a in sorted(addrs, key=lambda a: order_key(targets[a]["at"]))]
+
+        for _ in range(len(desired) * len(desired)):
+            live = {c["address"]: c for c in clients()}
+            present = [a for a in desired if a in live and not live[a].get("floating")]
+            if len(present) < 2:
+                break
+            actual = sorted(present, key=lambda a: order_key(live[a]["at"]))
+            want = [a for a in desired if a in present]
+            if actual == want:
+                break
+
+            i = next(k for k in range(len(want)) if actual[k] != want[k])
+            j = actual.index(want[i])  # window that belongs at slot i, currently at slot j
+            mover, other = want[i], actual[j - 1]
+            dx = live[other]["at"][0] - live[mover]["at"][0]
+            dy = live[other]["at"][1] - live[mover]["at"][1]
+            direction = ("r" if dx > 0 else "l") if abs(dx) >= abs(dy) else ("d" if dy > 0 else "u")
+
+            dispatch(f'hl.dsp.focus({{ window = "{sel(mover)}" }})')
+            dispatch(f'hl.dsp.window.swap({{ direction = "{direction}" }})')
+
+
+def apply_geometry(pairs, passes=3):
+    """Tiled windows: exact resize drives dwindle split ratios, so iterate to converge."""
+    tiled = [(s, c) for s, c in pairs if not s["floating"]]
+    floated = [(s, c) for s, c in pairs if s["floating"]]
+
+    for _ in range(passes):
+        live = {c["address"]: c for c in clients()}
+        drift = 0
+        for s, c in tiled:
+            cur = live.get(c["address"])
+            if not cur or cur.get("floating"):
+                continue
+            w, h = s["size"]
+            if abs(cur["size"][0] - w) <= 2 and abs(cur["size"][1] - h) <= 2:
+                continue
+            drift += 1
+            dispatch(
+                f'hl.dsp.window.resize({{ window = "{sel(c["address"])}", '
+                f"x = {w}, y = {h}, relative = false }})"
+            )
+        if not drift:
+            break
+
+    for s, c in floated:
+        w, h = s["size"]
+        x, y = s["at"]
+        # Resize first: a floating resize keeps the window centred, so move must come last.
+        dispatch(
+            f'hl.dsp.window.resize({{ window = "{sel(c["address"])}", '
+            f"x = {w}, y = {h}, relative = false }})"
+        )
+        dispatch(
+            f'hl.dsp.window.move({{ window = "{sel(c["address"])}", '
+            f"x = {x}, y = {y}, relative = false }})"
+        )
+
+
+def load_profile(profile):
+    path = state_file(profile)
+    if not os.path.exists(path):
+        return None
+    with open(path) as f:
+        return json.load(f)["windows"]
+
+
+def arrange(saved, focus_back=None):
+    """Put open windows where `saved` says. Returns how many were placed."""
+    pairs = match_windows(saved, clients())
+    if not pairs:
+        return 0
+
+    place_and_float(pairs)
+    fix_order(pairs)
+    apply_geometry(pairs)
+
+    if focus_back:
+        dispatch(f'hl.dsp.focus({{ window = "{sel(focus_back)}" }})')
+    return len(pairs)
+
+
+def restore(profile):
+    saved = load_profile(profile)
+    if saved is None:
+        notify(
+            f"No {label(profile).lower()} saved yet",
+            "Arrange your windows, then press Super + Shift + Alt + L",
+            urgency="critical",
+        )
+        print(f"No layout saved at {state_file(profile)}", file=sys.stderr)
+        return 1
+
+    active = hyprctl_json("activewindow") or {}
+    placed = arrange(saved, active.get("address"))
+    if not placed:
+        notify(
+            "Nothing to restore",
+            f"None of the {plural(len(saved), 'saved window')} are open",
+            urgency="critical",
+        )
+        return 1
+
+    missing = len(saved) - placed
+    body = f"{plural(placed, 'window')} placed"
+    if missing > 0:
+        body += f" · {missing} not open"
+    notify(f"{label(profile)} restored", body)
+    print(body)
+    return 0
+
+
+# --- resume -------------------------------------------------------------
+
+
+def window_class(w):
+    return w.get("initialClass") or w.get("class") or ""
+
+
+def spawn(launch):
+    argv = launch["argv"]
+    if argv[0] != "omarchy-launch-webapp":  # that one already goes through uwsm-app
+        argv = ["uwsm-app", "--", *argv]
+    cwd = launch.get("cwd")
+    try:
+        subprocess.Popen(
+            argv,
+            cwd=cwd if cwd and os.path.isdir(cwd) else os.path.expanduser("~"),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+        return True
+    except OSError as e:
+        print(f"Could not launch {argv}: {e}", file=sys.stderr)
+        return False
+
+
+def launch_missing(windows):
+    """Start each app that has no open window yet, then wait for the windows to map.
+
+    Apps that own several windows (browsers, single-instance terminals) are started
+    once and left to reopen their own windows. Web apps go last, since a browser
+    restoring its session may bring them back on its own.
+    """
+    open_classes = {window_class(c) for c in clients()}
+    groups = {}  # launch argv -> (launch, expected classes)
+    skipped = 0
+    for w in windows:
+        cls = window_class(w)
+        if cls in open_classes:
+            continue
+        launch = w.get("launch")
+        if not launch or not launch.get("argv"):
+            skipped += 1
+            continue
+        key = tuple(launch["argv"])
+        groups.setdefault(key, (launch, set()))[1].add(cls)
+
+    apps = [g for k, g in groups.items() if k[0] != "omarchy-launch-webapp"]
+    webapps = [g for k, g in groups.items() if k[0] == "omarchy-launch-webapp"]
+
+    started = 0
+    for batch in (apps, webapps):
+        pending = set()
+        for launch, classes in batch:
+            if classes & {window_class(c) for c in clients()}:
+                continue  # came back with an earlier batch
+            if spawn(launch):
+                started += 1
+                pending |= classes
+        deadline = time.time() + LAUNCH_TIMEOUT
+        while pending and time.time() < deadline:
+            time.sleep(0.5)
+            pending -= {window_class(c) for c in clients()}
+    return started, skipped
+
+
+def mark_ready():
+    try:
+        with open(READY_MARKER, "w"):
+            pass
+    except OSError:
+        pass
+
+
+def resume(profile):
+    try:
+        saved = load_profile(profile)
+        if not saved:
+            if profile != AUTOSAVE:
+                notify(f"No {label(profile).lower()} saved yet", urgency="critical")
+            return 1
+
+        started, skipped = launch_missing(saved)
+        time.sleep(1.5)  # let freshly mapped windows finish their first layout pass
+        placed = arrange(saved)
+
+        body = f"{plural(started, 'app')} relaunched · {plural(placed, 'window')} placed"
+        if skipped:
+            body += f" · {skipped} unknown"
+        notify(f"{label(profile)} resumed", body)
+        print(body)
+        return 0
+    finally:
+        # Even when there was nothing to resume, from here on autosave is safe.
+        mark_ready()
+
+
+def list_profiles():
+    if not os.path.isdir(STATE_DIR):
+        print("No layouts saved yet.")
+        return 0
+    names = sorted(f[:-5] for f in os.listdir(STATE_DIR) if f.endswith(".json"))
+    if not names:
+        print("No layouts saved yet.")
+        return 0
+    for name in names:
+        with open(state_file(name)) as f:
+            data = json.load(f)
+        when = time.strftime("%Y-%m-%d %H:%M", time.localtime(data.get("saved_at", 0)))
+        print(f"{name:20} {len(data['windows'])} windows   saved {when}")
+    return 0
+
+
+def migrate_legacy_state():
+    """Carry profiles over from the old omarchy-window-layout location."""
+    legacy = os.path.expanduser("~/.local/state/omarchy/window-layouts")
+    if os.path.isdir(legacy) and not os.path.exists(STATE_DIR):
+        shutil.move(legacy, STATE_DIR)
+
+
+def main():
+    ensure_hyprland_env()
+    migrate_legacy_state()
+    args = sys.argv[1:]
+    action = args[0] if args else ""
+
+    if action == "save":
+        return save(args[1] if len(args) > 1 else "default")
+    if action == "restore":
+        return restore(args[1] if len(args) > 1 else "default")
+    if action == "resume":
+        return resume(args[1] if len(args) > 1 else AUTOSAVE)
+    if action == "autosave":
+        return autosave()
+    if action == "list":
+        return list_profiles()
+
+    print(__doc__.strip(), file=sys.stderr)
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

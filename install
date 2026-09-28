@@ -4,8 +4,7 @@ set -Eeuo pipefail
 
 REPO_URL="https://github.com/donnes/configs.git"
 DEFAULT_REPO="$HOME/.donnes/configs"
-MARKER_START="# >>> donnes/configs >>>"
-MARKER_END="# <<< donnes/configs <<<"
+MARKER_LABEL="donnes/configs"
 
 die() {
   printf 'error: %s\n' "$*" >&2
@@ -63,7 +62,7 @@ ADOPT_PATH=""
 INTERACTIVE=0
 SKIP_COMPONENTS=","
 ONLY_COMPONENTS=","
-VALID_COMPONENTS="packages skills atuin nvim shell tmux git"
+VALID_COMPONENTS="packages skills atuin nvim shell tmux git session"
 
 usage() {
   cat <<'EOF'
@@ -86,7 +85,7 @@ Options:
   -h, --help       Show this help.
 
 Components:
-  packages skills atuin nvim shell tmux git
+  packages skills atuin nvim shell tmux git session
 EOF
 }
 
@@ -432,13 +431,17 @@ file_mode() {
   stat -c '%a' "$1" 2>/dev/null || stat -f '%Lp' "$1"
 }
 
+# Optional third argument: the target file's comment prefix (default "#").
 append_block() {
   local file="$1"
   local content="$2"
+  local comment="${3:-#}"
+  local marker_start="$comment >>> $MARKER_LABEL >>>"
+  local marker_end="$comment <<< $MARKER_LABEL <<<"
   local operation="add"
   local tmp mode
 
-  if [[ -f "$file" ]] && grep -Fq "$MARKER_START" "$file"; then
+  if [[ -f "$file" ]] && grep -Fq -e "$marker_start" "$file"; then
     operation="replace"
   fi
   if [[ "$operation" == "add" ]] && path_exists "$file"; then
@@ -452,7 +455,7 @@ append_block() {
   tmp="$file.donnes-configs.$$"
   mode="$(file_mode "$file")"
 
-  awk -v start="$MARKER_START" -v end="$MARKER_END" '
+  awk -v start="$marker_start" -v end="$marker_end" '
     $0 == start { skipping = 1; next }
     skipping && $0 == end { skipping = 0; next }
     !skipping { lines[++count] = $0 }
@@ -465,23 +468,26 @@ append_block() {
   if [[ -s "$tmp" ]]; then
     printf '\n' >>"$tmp"
   fi
-  printf '%s\n%s\n%s\n' "$MARKER_START" "$content" "$MARKER_END" >>"$tmp"
+  printf '%s\n%s\n%s\n' "$marker_start" "$content" "$marker_end" >>"$tmp"
   chmod "$mode" "$tmp"
   mv "$tmp" "$file"
 }
 
 remove_block() {
   local file="$1"
+  local comment="${2:-#}"
+  local marker_start="$comment >>> $MARKER_LABEL >>>"
+  local marker_end="$comment <<< $MARKER_LABEL <<<"
   local tmp mode
 
   [[ -f "$file" ]] || return 0
-  grep -Fq "$MARKER_START" "$file" || return 0
+  grep -Fq -e "$marker_start" "$file" || return 0
   log_action remove "managed block from $(pretty_path "$file")"
   [[ "$DRY_RUN" -eq 1 ]] && return 0
 
   tmp="$file.donnes-configs.$$"
   mode="$(file_mode "$file")"
-  awk -v start="$MARKER_START" -v end="$MARKER_END" '
+  awk -v start="$marker_start" -v end="$marker_end" '
     $0 == start { skipping = 1; next }
     skipping && $0 == end { skipping = 0; next }
     !skipping { print }
@@ -596,9 +602,11 @@ install_omarchy() {
   if component_enabled shell; then
     append_block "$HOME/.bashrc" "source \"$REPO_ROOT/omarchy/bashrc.local\""
     link_tree "$REPO_ROOT/omarchy/uwsm" "$HOME/.config/uwsm"
+    link_tree "$REPO_ROOT/omarchy/bin" "$HOME/.local/bin"
   else
     log_action skip "shell component disabled"
   fi
+  run_component session install_session
   if component_enabled tmux; then
     [[ -f "$tmux_config" || "$DRY_RUN" -eq 1 ]] || die "$tmux_config is missing; restore Omarchy's tmux config first"
     link_file "$REPO_ROOT/omarchy/tmux.local.conf" "$HOME/.config/tmux/local.conf"
@@ -606,6 +614,35 @@ install_omarchy() {
   else
     log_action skip "tmux component disabled"
   fi
+}
+
+SESSION_TIMER="hypr-session-autosave.timer"
+
+# Hyprland session save/restore: hypr-session (linked by the shell component),
+# its autosave timer, and hypr/session.lua required from hyprland.lua.
+install_session() {
+  local hyprland_config="$HOME/.config/hypr/hyprland.lua"
+
+  [[ -f "$hyprland_config" || "$DRY_RUN" -eq 1 ]] || die "$hyprland_config is missing; restore Omarchy's Hyprland config first"
+  link_tree "$REPO_ROOT/omarchy/hypr" "$HOME/.config/hypr"
+  link_tree "$REPO_ROOT/omarchy/systemd/user" "$HOME/.config/systemd/user"
+  append_block "$hyprland_config" 'require("hypr.session")' "--"
+  log_action enable "systemd user timer $SESSION_TIMER"
+  if [[ "$DRY_RUN" -eq 0 ]]; then
+    systemctl --user daemon-reload
+    systemctl --user enable --now "$SESSION_TIMER"
+  fi
+}
+
+uninstall_session() {
+  log_action disable "systemd user timer $SESSION_TIMER"
+  if [[ "$DRY_RUN" -eq 0 ]]; then
+    systemctl --user disable --now "$SESSION_TIMER" 2>/dev/null || true
+  fi
+  remove_block "$HOME/.config/hypr/hyprland.lua" "--"
+  unlink_tree "$REPO_ROOT/omarchy/hypr" "$HOME/.config/hypr"
+  unlink_tree "$REPO_ROOT/omarchy/systemd/user" "$HOME/.config/systemd/user"
+  [[ "$DRY_RUN" -eq 1 ]] || systemctl --user daemon-reload
 }
 
 install_macos() {
@@ -666,8 +703,10 @@ uninstall_shared() {
 
 uninstall_profile() {
   if [[ "$PROFILE" == "omarchy" ]]; then
+    run_component session uninstall_session
     run_component shell remove_block "$HOME/.bashrc"
     run_component shell unlink_tree "$REPO_ROOT/omarchy/uwsm" "$HOME/.config/uwsm"
+    run_component shell unlink_tree "$REPO_ROOT/omarchy/bin" "$HOME/.local/bin"
     if component_enabled tmux; then
       remove_block "$HOME/.config/tmux/tmux.conf"
       unlink_file "$REPO_ROOT/omarchy/tmux.local.conf" "$HOME/.config/tmux/local.conf"
@@ -721,6 +760,11 @@ resolve_adopt_map() {
   map_directory "$path" "$ghostty_dest" "$REPO_ROOT/shared/ghostty" && return 0
   map_directory "$path" "$HOME/.config/yazi" "$REPO_ROOT/shared/yazi" && return 0
   map_directory "$path" "$HOME/.ssh" "$REPO_ROOT/shared/ssh" && return 0
+  map_directory "$path" "$HOME/.local/bin" "$REPO_ROOT/$PROFILE/bin" && return 0
+  if [[ "$PROFILE" == "omarchy" ]]; then
+    map_directory "$path" "$HOME/.config/hypr" "$REPO_ROOT/omarchy/hypr" && return 0
+    map_directory "$path" "$HOME/.config/systemd/user" "$REPO_ROOT/omarchy/systemd/user" && return 0
+  fi
   return 1
 }
 
