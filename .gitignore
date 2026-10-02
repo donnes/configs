@@ -9,6 +9,7 @@
 *.bak
 *.backup
 *.bak-*
+__pycache__/
 
 # Node modules (if any configs have dependencies)
 node_modules/

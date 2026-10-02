@@ -101,6 +101,46 @@ yet. It copies local files into their mapped repo location without deleting anyt
 then replaces them with symlinks. Prefer updating one skill or file at a time; managed
 roots such as `~/.agents/skills` are rejected so foreign content is not imported.
 
+The installer symlinks the local skills lockfile to `shared/skills.lock.json`,
+just as it symlinks skill directories. Edits through that link reach the repo.
+A CLI that saves by replacing the file can replace the symlink with a regular file.
+
+Skills lockfiles use a merge instead. `./install update ~/.agents/.skill-lock.json` retains entries
+from both `shared/skills.lock.json` and the local lockfile, uses local values for
+conflicting entries, backs up the detached local file, and restores its symlink.
+Skills installation also runs this sync. An
+existing managed symlink needs no changes. Run the command after a skills CLI
+update if its file replacement detached the symlink, then review and commit the
+repo diff. Entries absent from the local file remain in the repo; remove unwanted
+entries explicitly from the linked lockfile.
+
+The local path is `~/.agents/.skill-lock.json`, or
+`$XDG_STATE_HOME/skills/.skill-lock.json` when `XDG_STATE_HOME` is set. Merging a
+detached lockfile requires Python 3. Invalid JSON and mismatched lockfile versions
+stop the sync before either file changes. Use `--dry-run` to validate and preview
+the merge, backup, and link operations.
+
+## Remove tracked skills
+
+```sh
+./install remove-skill
+./install remove-skill --dry-run my-skill
+./install remove-skill my-skill another-skill
+```
+
+Without names, the command lists tracked skills, accepts one or more numbers,
+and asks for confirmation before deletion. Enter or Ctrl-C cancels. With
+`--dry-run`, it previews the selected removals without deleting anything.
+
+`remove-skill` deletes the tracked skill directories, removes agent symlinks that
+point to them, and removes their entries from the repo and local skills lockfiles.
+It also accepts stale lockfile entries whose directories are already gone.
+Unmanaged copies in `~/.agents/skills` or `~/.claude/skills` must be synced first.
+Names and lockfiles are checked before deletion begins. Python 3 is required.
+Backups remain untouched. Unlike `npx skills remove`, this command handles our
+symlinked skill directories and removes the repo copy so reinstalling cannot
+restore a deleted skill.
+
 ## Omarchy maintenance
 
 `omarchy refresh tmux` can replace `~/.config/tmux/tmux.conf` and remove the managed include. Rerun `./install` to restore it.

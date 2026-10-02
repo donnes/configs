@@ -59,6 +59,7 @@ DRY_RUN=0
 SKIP_PACKAGES=0
 ACTION="install"
 ADOPT_PATH=""
+REMOVE_SKILLS=()
 INTERACTIVE=0
 SKIP_COMPONENTS=","
 ONLY_COMPONENTS=","
@@ -71,6 +72,7 @@ Usage:
   ./install [--dry-run] [--skip COMPONENT]... [--only COMPONENT]...
   ./install [--dry-run] adopt <path>
   ./install [--dry-run] update <path>
+  ./install [--dry-run] remove-skill [name...]
   ./install [--dry-run] uninstall
 
 Options:
@@ -185,6 +187,9 @@ while [[ $# -gt 0 ]]; do
     update)
       ACTION="update"
       ;;
+    remove-skill)
+      ACTION="remove-skill"
+      ;;
     -h | --help)
       usage
       exit 0
@@ -193,7 +198,9 @@ while [[ $# -gt 0 ]]; do
       die "unknown option: $1"
       ;;
     *)
-      if [[ ( "$ACTION" == "adopt" || "$ACTION" == "update" ) && -z "$ADOPT_PATH" ]]; then
+      if [[ "$ACTION" == "remove-skill" ]]; then
+        REMOVE_SKILLS+=("$1")
+      elif [[ ( "$ACTION" == "adopt" || "$ACTION" == "update" ) && -z "$ADOPT_PATH" ]]; then
         ADOPT_PATH="$1"
       else
         die "unexpected argument: $1"
@@ -215,7 +222,7 @@ if [[ "$INTERACTIVE" -eq 1 && ( "$SKIP_COMPONENTS" != "," || "$ONLY_COMPONENTS" 
   die "--interactive cannot be combined with --skip, --only, or --skip-packages"
 fi
 
-if [[ ( "$ACTION" == "adopt" || "$ACTION" == "update" ) &&
+if [[ ( "$ACTION" == "adopt" || "$ACTION" == "update" || "$ACTION" == "remove-skill" ) &&
   ( "$SKIP_COMPONENTS" != "," || "$ONLY_COMPONENTS" != "," ) ]]; then
   die "--skip and --only apply only to install and uninstall"
 fi
@@ -242,9 +249,11 @@ detect_profile() {
 PROFILE="$(detect_profile)"
 
 if [[ "$INTERACTIVE" -eq 1 ]]; then
-  [[ "$ACTION" == "install" || "$ACTION" == "uninstall" ]] ||
-    die "--interactive applies only to install and uninstall"
-  choose_components
+  if [[ "$ACTION" == "install" || "$ACTION" == "uninstall" ]]; then
+    choose_components
+  elif [[ "$ACTION" != "remove-skill" ]]; then
+    die "--interactive applies only to install, uninstall, and remove-skill"
+  fi
 fi
 
 pretty_path() {
@@ -523,6 +532,31 @@ skill_lock_path() {
   fi
 }
 
+sync_skills_lock() {
+  local repo_lock="$REPO_ROOT/shared/skills.lock.json"
+  local local_lock
+  local_lock="$(skill_lock_path)"
+
+  if [[ -L "$local_lock" && "$(readlink "$local_lock")" == "$repo_lock" ]]; then
+    log_action skip "$(pretty_path "$local_lock") already links to $(pretty_path "$repo_lock")"
+    return 0
+  fi
+  if path_exists "$local_lock"; then
+    [[ -f "$local_lock" ]] || die "$local_lock is not a readable lockfile"
+    command -v python3 >/dev/null 2>&1 || die "python3 is required to merge skills lockfiles"
+    log_action sync "merge $(pretty_path "$local_lock") into $(pretty_path "$repo_lock") (local values win)"
+    if [[ "$DRY_RUN" -eq 1 ]]; then
+      python3 "$REPO_ROOT/scripts/merge-skills-lock.py" "$repo_lock" "$local_lock" --dry-run
+    else
+      python3 "$REPO_ROOT/scripts/merge-skills-lock.py" "$repo_lock" "$local_lock"
+    fi
+    backup_once "$local_lock"
+    link_file "$repo_lock" "$local_lock" 1
+  else
+    link_file "$repo_lock" "$local_lock"
+  fi
+}
+
 install_packages() {
   local brew_bin
 
@@ -606,7 +640,7 @@ install_shared() {
     prune_skill_links "$HOME/.claude/skills"
     link_skills "$REPO_ROOT/shared/skills" "$HOME/.agents/skills"
     link_skills "$REPO_ROOT/shared/skills" "$HOME/.claude/skills"
-    link_file "$REPO_ROOT/shared/skills.lock.json" "$(skill_lock_path)"
+    sync_skills_lock
   else
     log_action skip "skills component disabled"
   fi
@@ -854,12 +888,14 @@ update_path() {
 
   source="$(absolute_existing_path "$ADOPT_PATH")" || die "cannot resolve $ADOPT_PATH"
   path_exists "$source" || die "$source does not exist"
+  if [[ "$source" == "$(skill_lock_path)" ]]; then
+    sync_skills_lock
+    return 0
+  fi
   [[ ! -L "$source" ]] || die "$source is already a symlink; edits already write through to its target"
 
   if [[ "$source" == "$HOME/.config/nvim/lazy-lock.json" ]]; then
     repo_target="$REPO_ROOT/$PROFILE/nvim/lazy-lock.json"
-  elif [[ "$source" == "$(skill_lock_path)" ]]; then
-    repo_target="$REPO_ROOT/shared/skills.lock.json"
   else
     resolve_adopt_map "$source" || die "$source is outside the managed path map"
     if [[ "$source" == "$MAP_DEST_ROOT" ]]; then
@@ -929,5 +965,22 @@ case "$ACTION" in
     ;;
   update)
     update_path
+    ;;
+  remove-skill)
+    command -v python3 >/dev/null 2>&1 || die "python3 is required to remove skills"
+    # Bash 3.2 with nounset cannot expand an empty array.
+    if [[ ${#REMOVE_SKILLS[@]} -eq 0 ]]; then
+      if [[ "$DRY_RUN" -eq 1 ]]; then
+        python3 "$REPO_ROOT/scripts/remove-skills.py" "$REPO_ROOT" --dry-run
+      else
+        python3 "$REPO_ROOT/scripts/remove-skills.py" "$REPO_ROOT"
+      fi
+      exit
+    fi
+    if [[ "$DRY_RUN" -eq 1 ]]; then
+      python3 "$REPO_ROOT/scripts/remove-skills.py" "$REPO_ROOT" --dry-run "${REMOVE_SKILLS[@]}"
+    else
+      python3 "$REPO_ROOT/scripts/remove-skills.py" "$REPO_ROOT" "${REMOVE_SKILLS[@]}"
+    fi
     ;;
 esac

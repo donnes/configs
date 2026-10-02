@@ -1,0 +1,25 @@
+#!/bin/sh
+# Runs the real `gh` as the account named by `git config github.user` for the
+# current checkout, so folders can pin accounts the way includeIf pins SSH keys.
+# An explicit GH_TOKEN (including one T3 Code sets) and `gh auth` commands pass through.
+self=$(cd "$(dirname "$0")" && pwd -P)/$(basename "$0")
+real=
+IFS=:
+for dir in $PATH; do
+  candidate=$dir/gh
+  [ -x "$candidate" ] || continue
+  [ "$(cd "$(dirname "$candidate")" && pwd -P)/gh" = "$self" ] && continue
+  real=$candidate
+  break
+done
+unset IFS
+[ -n "$real" ] || { echo "gh: real gh not found on PATH" >&2; exit 127; }
+
+if [ -z "$GH_TOKEN" ] && [ -z "$GITHUB_TOKEN" ] && [ "$1" != auth ]; then
+  user=$(git config --get github.user 2>/dev/null)
+  if [ -n "$user" ]; then
+    token=$("$real" auth token --hostname github.com --user "$user" 2>/dev/null)
+    [ -n "$token" ] && export GH_TOKEN="$token"
+  fi
+fi
+exec "$real" "$@"
