@@ -126,6 +126,15 @@
       "skillFolderHash": "678c375b883794bf4292715a43acbba5c84681aa",
       "installedAt": "2026-09-18T14:13:28.152Z",
       "updatedAt": "2026-09-18T14:13:28.152Z"
+    },
+    "test-audit": {
+      "source": "donnes/donnes",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/donnes/donnes.git",
+      "skillPath": ".agents/skills/test-audit/SKILL.md",
+      "skillFolderHash": "2481b19e286dd2d258a0b423d94cd6c56e7e77b2",
+      "installedAt": "2026-10-03T21:22:56.288Z",
+      "updatedAt": "2026-10-03T21:22:56.288Z"
     }
   },
   "dismissed": {
