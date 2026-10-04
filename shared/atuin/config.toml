@@ -1,3 +1,6 @@
+# Exclude T3 Code worktree setup commands.
+history_filter = ['__T3_SETUP_DONE__']
+
 ## where to store your database, default is your system data directory
 ## linux/mac: ~/.local/share/atuin/history.db
 ## windows: %USERPROFILE%/.local/share/atuin/history.db
