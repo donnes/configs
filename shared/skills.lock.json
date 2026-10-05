@@ -135,6 +135,16 @@
       "skillFolderHash": "2481b19e286dd2d258a0b423d94cd6c56e7e77b2",
       "installedAt": "2026-10-03T21:22:56.288Z",
       "updatedAt": "2026-10-03T21:22:56.288Z"
+    },
+    "retro": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/mattpocock/skills.git",
+      "skillPath": "skills/engineering/retro/SKILL.md",
+      "skillFolderHash": "335c1862a43da9d629abafdb79ca0c0de118be08",
+      "pluginName": "mattpocock-skills",
+      "installedAt": "2026-10-05T03:16:21.810Z",
+      "updatedAt": "2026-10-05T03:16:21.810Z"
     }
   },
   "dismissed": {
