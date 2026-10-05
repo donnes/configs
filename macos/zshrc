@@ -43,6 +43,7 @@ eval "$(fnm env --use-on-cd)"
 
 # Zoxide
 eval "$(zoxide init zsh)"
+alias cd='z'
 
 # Keep the fnm install directory on PATH; fnm is initialized above.
 FNM_PATH="$HOME/Library/Application Support/fnm"
