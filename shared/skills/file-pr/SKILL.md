@@ -17,15 +17,35 @@ A request to open a PR includes the relevant commits and branch push needed to f
 
 PR titles may become commit messages. Follow the repository's title conventions, using recently merged PRs and Git history as examples. Prefer a concise, readable title that tells the reviewer what improves. Use conventional commits where the project uses them.
 
-For example, prefer `fix: apply workspace defaults to new threads` over `fix: remove buildContextualThreadOptions`. For performance changes, include a measured improvement only when the evidence supports it.
+For performance changes, include a measured improvement only when the evidence supports it.
+
+### ❌ DON'T
+
+`fix: remove buildContextualThreadOptions`
+
+This names an implementation detail without explaining what improves.
+
+### ✅ DO
+
+`fix: apply workspace defaults to new threads`
+
+This tells the reviewer what behavior changes.
 
 ## Description
 
 Open with a simple explanation of the problem, then briefly explain the solution. Write for a reviewer who has not seen the conversation. Use a concrete before-and-after example when it helps.
 
-For example:
+### ❌ DON'T
+
+> Removed buildContextualThreadOptions, moved defaults into createThread, and updated the tests.
+
+This lists implementation work without explaining the problem.
+
+### ✅ DO
 
 > Starting a new thread inside an existing worktree ignored the configured workspace defaults. New threads now use those defaults consistently.
+
+This explains the problem and the resulting behavior.
 
 Keep the detail proportional to the change. A small fix usually needs one or two sentences and relevant verification. For larger changes, explain the behavior, meaningful tradeoffs, and limitations. Follow the repository's template without filling sections with irrelevant boilerplate.
 
