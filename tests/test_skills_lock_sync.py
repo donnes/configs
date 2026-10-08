@@ -35,7 +35,7 @@ class SkillsLockSyncTests(unittest.TestCase):
             self.assertTrue(merged['dismissed']['notice'])
             self.assertTrue(local.is_symlink())
             self.assertEqual(json.loads(local.read_text()), merged)
-            self.assertTrue(list(local.parent.glob('.skill-lock.json.backup.*')))
+            self.assertFalse(list(local.parent.glob('.skill-lock.json.backup.*')))
             before = tracked.read_bytes()
             result = subprocess.run(command, env=env, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)

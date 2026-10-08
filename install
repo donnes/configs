@@ -63,7 +63,7 @@ REMOVE_SKILLS=()
 INTERACTIVE=0
 SKIP_COMPONENTS=","
 ONLY_COMPONENTS=","
-VALID_COMPONENTS="packages skills atuin nvim shell tmux git session"
+VALID_COMPONENTS="packages agents skills atuin nvim shell tmux git session"
 
 usage() {
   cat <<'EOF'
@@ -76,7 +76,7 @@ Usage:
   ./install [--dry-run] uninstall
 
 Options:
-  --dry-run        Print every planned package, backup, link, and block edit.
+  --dry-run        Print every planned package, link, and block edit.
   -i, --interactive
                    Choose components in an interactive prompt.
   --skip COMPONENT Skip a component. May be repeated.
@@ -87,7 +87,7 @@ Options:
   -h, --help       Show this help.
 
 Components:
-  packages skills atuin nvim shell tmux git session
+  packages agents skills atuin nvim shell tmux git session
 EOF
 }
 
@@ -301,42 +301,145 @@ is_legacy_syncode_symlink() {
     "$target" == "~/.syncode/repo/"* ]]
 }
 
-backup_once() {
-  local path="$1"
-  local timestamp backup suffix
-
-  path_exists "$path" || return 0
-  timestamp="$(date '+%Y%m%d-%H%M%S')"
-  backup="$path.backup.$timestamp"
-  suffix=1
-  while path_exists "$backup"; do
-    backup="$path.backup.$timestamp.$suffix"
-    suffix=$((suffix + 1))
-  done
-
-  log_action backup "$(pretty_path "$path") -> $(pretty_path "$backup")"
-  if [[ "$DRY_RUN" -eq 0 ]]; then
-    mv "$path" "$backup"
+# Canonical path of an existing file or directory, following symlinks.
+real_path() {
+  if command -v realpath >/dev/null 2>&1; then
+    realpath "$1" 2>/dev/null
+  else
+    python3 -c 'import os, sys; p = os.path.realpath(sys.argv[1]); os.stat(p); print(p)' "$1" 2>/dev/null
   fi
 }
 
-snapshot_once() {
-  local path="$1"
-  local timestamp backup suffix
+content_differs() {
+  ! diff -rq -x .DS_Store "$1" "$2" >/dev/null 2>&1
+}
 
-  path_exists "$path" || return 0
-  timestamp="$(date '+%Y%m%d-%H%M%S')"
-  backup="$path.backup.$timestamp"
-  suffix=1
-  while path_exists "$backup"; do
-    backup="$path.backup.$timestamp.$suffix"
-    suffix=$((suffix + 1))
-  done
+# Modification times (epoch seconds) of a file or every file in a directory.
+file_mtimes() {
+  local format=(-c '%Y')
+  stat -c '%Y' / >/dev/null 2>&1 || format=(-f '%m')
+  find -L "$1" -type f ! -name .DS_Store -exec stat "${format[@]}" {} + 2>/dev/null
+}
 
-  log_action backup "$(pretty_path "$path") -> $(pretty_path "$backup")"
-  if [[ "$DRY_RUN" -eq 0 ]]; then
-    cp -p "$path" "$backup"
+latest_mtime() {
+  file_mtimes "$1" | sort -n | tail -n 1
+}
+
+format_mtime() {
+  [[ -n "$1" ]] || { printf 'unknown'; return 0; }
+  date -r "$1" '+%Y-%m-%d %H:%M' 2>/dev/null || date -d "@$1" '+%Y-%m-%d %H:%M'
+}
+
+# Real paths of local copies the user chose to keep during this run, so a link
+# that leads to one (such as ~/.claude/skills/x -> ~/.agents/skills/x) is kept too.
+KEPT_PATHS=$'\n'
+
+can_prompt() {
+  [[ -t 1 && -r /dev/tty && -w /dev/tty ]]
+}
+
+# Replace whatever is at dest with a link to src. Only call once the content at
+# dest is identical to src, or the user chose to replace or update it.
+replace_with_link() {
+  local src="$1"
+  local dest="$2"
+
+  if [[ -L "$dest" || -f "$dest" ]]; then
+    rm -f "$dest"
+  elif [[ -d "$dest" ]]; then
+    rm -rf "$dest"
   fi
+  mkdir -p "$(dirname "$dest")"
+  ln -sfn "$src" "$dest"
+}
+
+copy_into_repo() {
+  local current="$1"
+  local src="$2"
+
+  if [[ -d "$current" ]]; then
+    rm -rf "$src"
+    cp -pR "$current" "$src"
+    find "$src" -name .DS_Store -delete
+  else
+    cp -p "$current" "$src"
+  fi
+}
+
+# dest holds content that differs from src. Nothing is ever backed up: the user
+# keeps the local copy, replaces it with the repo version, or copies it into the
+# repo. The most recently modified side is the default answer.
+resolve_conflict() {
+  local src="$1"
+  local dest="$2"
+  local current="$3"
+  local local_time repo_time newer default reply can_update=0
+  local choices
+
+  [[ "$src" == "$REPO_ROOT/"* ]] && can_update=1
+  local_time="$(latest_mtime "$current")"
+  repo_time="$(latest_mtime "$src")"
+  newer="same age"
+  default="k"
+  if [[ -n "$local_time" && -n "$repo_time" ]]; then
+    if [[ "$local_time" -gt "$repo_time" ]]; then
+      newer="local is newer"
+      [[ "$can_update" -eq 1 ]] && default="u"
+    elif [[ "$repo_time" -gt "$local_time" ]]; then
+      newer="repo is newer"
+      default="r"
+    fi
+  fi
+
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    log_action differs "$(pretty_path "$dest") differs from $(pretty_path "$src") ($newer); would ask"
+    return 0
+  fi
+  if ! can_prompt; then
+    log_action keep "$(pretty_path "$dest") differs from $(pretty_path "$src") ($newer); rerun in a terminal to choose"
+    KEPT_PATHS="$KEPT_PATHS$current"$'\n'
+    return 0
+  fi
+
+  printf '\n%s differs from %s\n' "$(pretty_path "$dest")" "$(pretty_path "$src")" >/dev/tty
+  printf '  local modified %s, repo modified %s (%s)\n' \
+    "$(format_mtime "$local_time")" "$(format_mtime "$repo_time")" "$newer" >/dev/tty
+  if [[ -d "$current" ]]; then
+    diff -rq -x .DS_Store "$src" "$current" 2>/dev/null |
+      sed -e "s|$src|repo|g" -e "s|$current|local|g" -e 's/^/  /' >/dev/tty || true
+  fi
+  choices='[k]eep local, [r]eplace with repo'
+  [[ "$can_update" -eq 1 ]] && choices="$choices, [u]pdate repo from local"
+  while true; do
+    printf '%s, [d]iff? [%s] ' "$choices" "$default" >/dev/tty
+    IFS= read -r reply </dev/tty || reply="k"
+    [[ -n "$reply" ]] || reply="$default"
+    case "$reply" in
+      k | K)
+        log_action keep "$(pretty_path "$dest") local copy"
+        KEPT_PATHS="$KEPT_PATHS$current"$'\n'
+        return 0
+        ;;
+      r | R)
+        log_action replace "$(pretty_path "$dest") -> $(pretty_path "$src")"
+        replace_with_link "$src" "$dest"
+        return 0
+        ;;
+      u | U)
+        if [[ "$can_update" -eq 1 ]]; then
+          log_action update "$(pretty_path "$dest") -> $(pretty_path "$src")"
+          copy_into_repo "$current" "$src"
+          replace_with_link "$src" "$dest"
+          return 0
+        fi
+        printf 'The source is outside the repo and cannot be updated.\n' >/dev/tty
+        ;;
+      d | D)
+        diff -ru -x .DS_Store "$src" "$current" >/dev/tty 2>&1 || true
+        ;;
+      *) printf 'Please choose one of the listed letters.\n' >/dev/tty ;;
+    esac
+  done
 }
 
 link_file() {
@@ -345,30 +448,35 @@ link_file() {
   local assume_missing="${3:-0}"
   local current=""
 
-  if [[ "$assume_missing" -eq 0 && -L "$dest" ]]; then
-    current="$(readlink "$dest")"
-    if [[ "$current" == "$src" ]]; then
-      log_action skip "$(pretty_path "$dest") already links to $(pretty_path "$src")"
-      return 0
-    fi
-  fi
-
-  if [[ "$assume_missing" -eq 0 ]] && path_exists "$dest"; then
-    if is_managed_symlink "$dest"; then
-      log_action relink "$(pretty_path "$dest") -> $(pretty_path "$src")"
-    elif [[ -f "$src" && -f "$dest" ]] && cmp -s "$src" "$dest"; then
-      log_action relink "$(pretty_path "$dest") identical content -> $(pretty_path "$src")"
-    else
-      backup_once "$dest"
-    fi
-  else
+  if [[ "$assume_missing" -eq 1 ]] || ! path_exists "$dest"; then
     log_action link "$(pretty_path "$dest") -> $(pretty_path "$src")"
+    if [[ "$DRY_RUN" -eq 0 ]]; then
+      mkdir -p "$(dirname "$dest")"
+      ln -sfn "$src" "$dest"
+    fi
+    return 0
   fi
 
-  if [[ "$DRY_RUN" -eq 0 ]]; then
-    mkdir -p "$(dirname "$dest")"
-    ln -sfn "$src" "$dest"
+  if [[ -L "$dest" && "$(readlink "$dest")" == "$src" ]]; then
+    log_action skip "$(pretty_path "$dest") already links to $(pretty_path "$src")"
+    return 0
   fi
+
+  if ! is_managed_symlink "$dest"; then
+    current="$(real_path "$dest")" || current=""
+  fi
+  if [[ -n "$current" && "$current" != "$(real_path "$src")" ]] && content_differs "$src" "$current"; then
+    if [[ "$KEPT_PATHS" == *$'\n'"$current"$'\n'* ]]; then
+      log_action keep "$(pretty_path "$dest") local copy"
+    else
+      resolve_conflict "$src" "$dest" "$current"
+    fi
+    return 0
+  fi
+
+  # Managed, dangling, identical, or already resolving to src.
+  log_action relink "$(pretty_path "$dest") -> $(pretty_path "$src")"
+  [[ "$DRY_RUN" -eq 1 ]] || replace_with_link "$src" "$dest"
 }
 
 link_tree() {
@@ -389,35 +497,7 @@ link_tree() {
 # Codex skips symlinked SKILL.md files but follows symlinked directories, so
 # each skill is linked as one directory instead of file by file.
 link_skill_dir() {
-  local src="$1"
-  local dest="$2"
-  local assume_missing="${3:-0}"
-  local file relative
-  local remaining=0
-
-  # Clear a previous file-by-file install so the directory link needs no backup.
-  if [[ "$assume_missing" -eq 0 && -d "$dest" && ! -L "$dest" ]]; then
-    while IFS= read -r -d '' file; do
-      relative="${file#"$dest"/}"
-      if is_managed_symlink "$file" || [[ "$(basename "$file")" == ".DS_Store" ]] ||
-        { [[ ! -L "$file" && -f "$src/$relative" ]] && cmp -s "$file" "$src/$relative"; }; then
-        [[ "$DRY_RUN" -eq 1 ]] || rm -f "$file"
-      else
-        remaining=$((remaining + 1))
-      fi
-    done < <(find "$dest" \( -type f -o -type l \) -print0)
-
-    if [[ "$remaining" -eq 0 ]]; then
-      log_action relink "$(pretty_path "$dest") directory -> $(pretty_path "$src")"
-      if [[ "$DRY_RUN" -eq 0 ]]; then
-        find "$dest" -depth -type d -empty -delete
-        ln -sfn "$src" "$dest"
-      fi
-      return 0
-    fi
-  fi
-
-  link_file "$src" "$dest" "$assume_missing"
+  link_file "$@"
 }
 
 link_skills() {
@@ -471,9 +551,6 @@ append_block() {
 
   if [[ -f "$file" ]] && grep -Fq -e "$marker_start" "$file"; then
     operation="replace"
-  fi
-  if [[ "$operation" == "add" ]] && path_exists "$file"; then
-    snapshot_once "$file"
   fi
   log_action append "$operation managed block in $(pretty_path "$file")"
   [[ "$DRY_RUN" -eq 1 ]] && return 0
@@ -550,8 +627,8 @@ sync_skills_lock() {
     else
       python3 "$REPO_ROOT/scripts/merge-skills-lock.py" "$repo_lock" "$local_lock"
     fi
-    backup_once "$local_lock"
-    link_file "$repo_lock" "$local_lock" 1
+    log_action relink "$(pretty_path "$local_lock") -> $(pretty_path "$repo_lock")"
+    [[ "$DRY_RUN" -eq 1 ]] || replace_with_link "$repo_lock" "$local_lock"
   else
     link_file "$repo_lock" "$local_lock"
   fi
@@ -614,9 +691,14 @@ install_nvim() {
       unlink "$dest"
     fi
     assume_empty=1
-  elif path_exists "$dest"; then
-    backup_once "$dest"
+  elif [[ -L "$dest" ]]; then
+    # A foreign link to a whole config directory; drop the link, not its target.
+    log_action unlink "$(pretty_path "$dest") -> $(readlink "$dest")"
+    [[ "$DRY_RUN" -eq 1 ]] || unlink "$dest"
     assume_empty=1
+  elif path_exists "$dest"; then
+    # Existing files are compared one by one; untracked ones stay in place.
+    assume_empty=0
   else
     assume_empty=1
   fi
@@ -633,7 +715,20 @@ install_nvim() {
   fi
 }
 
+install_agents() {
+  local source="$REPO_ROOT/shared/agents/global/AGENTS.md"
+  link_file "$source" "${CODEX_HOME:-$HOME/.codex}/AGENTS.md"
+  link_file "$source" "$HOME/.claude/CLAUDE.md"
+}
+
+uninstall_agents() {
+  local source="$REPO_ROOT/shared/agents/global/AGENTS.md"
+  unlink_file "$source" "${CODEX_HOME:-$HOME/.codex}/AGENTS.md"
+  unlink_file "$source" "$HOME/.claude/CLAUDE.md"
+}
+
 install_shared() {
+  run_component agents install_agents
   if component_enabled skills; then
     # ~/.claude/skills can link through ~/.agents/skills, so prune that first.
     prune_skill_links "$HOME/.agents/skills"
@@ -745,6 +840,7 @@ unlink_skills() {
 }
 
 uninstall_shared() {
+  run_component agents uninstall_agents
   if component_enabled skills; then
     unlink_tree "$REPO_ROOT/shared/skills" "$HOME/.agents/skills"
     unlink_skills "$REPO_ROOT/shared/skills" "$HOME/.agents/skills"
@@ -958,7 +1054,7 @@ case "$ACTION" in
     printf 'Profile: %s\nRepo:    %s\n\n' "$PROFILE" "$REPO_ROOT"
     uninstall_profile
     uninstall_shared
-    log_action note "packages and backups were left untouched"
+    log_action note "packages were left untouched"
     ;;
   adopt)
     adopt_path

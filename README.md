@@ -28,16 +28,16 @@ Choose what the installer manages with repeatable `--skip` or `--only` options:
 ./install --list-components
 ```
 
-`--interactive` prompts for each component and defaults to installing it. Available components are `packages`, `skills`, `atuin`, `nvim`, `shell`, `tmux`, `git`, and `session` (Omarchy only). `--skip-packages` remains available as an alias for `--skip packages`. Interactive mode cannot be combined with `--skip` or `--only`.
+`--interactive` prompts for each component and defaults to installing it. Available components are `packages`, `agents`, `skills`, `atuin`, `nvim`, `shell`, `tmux`, `git`, and `session` (Omarchy only). `--skip-packages` remains available as an alias for `--skip packages`. Interactive mode cannot be combined with `--skip` or `--only`.
 
 ## Safety
 
 - Files are linked individually with absolute symlinks; live state and foreign files remain untouched.
 - Skills are the exception: each `shared/skills/<name>` is linked as one directory, because Codex ignores a symlinked `SKILL.md` but follows a symlinked skill directory. Skills are linked into both `~/.agents/skills` (Codex and others) and `~/.claude/skills` (Claude Code, which does not read `~/.agents`). Untracked skills in either directory remain untouched.
-- Conflicts receive timestamped backups that are never overwritten.
+- Nothing is backed up. A link that already resolves to the repo copy (such as `~/.claude/skills/x -> ../../.agents/skills/x`) or a local copy with identical content is relinked. A local file, directory, or skill whose content differs prompts to keep it, replace it with the repo version, update the repo from it, or show the diff; the default is whichever side was modified most recently. Without a terminal, differing copies are kept and reported. Untracked files inside managed directories such as `~/.config/nvim` stay in place.
 - The installer never mirror-deletes and never writes below `/usr/share/omarchy`.
 - Omarchy's bashrc, tmux config, and `hypr/hyprland.lua`, and macOS's `~/.zshenv`, receive one replaceable marker block each.
-- `./install uninstall` removes only managed links and marker blocks. Packages, backups, directories, and foreign files remain.
+- `./install uninstall` removes only managed links and marker blocks. Packages, directories, and foreign files remain.
 
 Always inspect `./install --dry-run` first.
 
@@ -50,8 +50,11 @@ Always inspect `./install --dry-run` first.
 
 Ghostty, Yazi, and SSH are tracked but excluded from the default run. Atuin's config is tracked; its history, encryption key, and sessions stay local.
 
-Claude (`~/.claude`) and Codex (`~/.codex`) configs are intentionally not tracked;
-they stay local on each machine.
+The `agents` component links `shared/agents/global/AGENTS.md` to Codex's
+`~/.codex/AGENTS.md` (or `$CODEX_HOME/AGENTS.md`) and Claude Code's
+`~/.claude/CLAUDE.md`. Run `./install --only agents` to activate just these
+instructions, then start fresh sessions. See [agent setup](shared/agents/README.md).
+Other Claude and Codex settings, credentials, and runtime state stay local.
 
 Neovim plugin specifications are shared, while each profile tracks its own
 `lazy-lock.json`. Run `:Lazy sync` and commit the resulting profile lockfile on
@@ -118,7 +121,7 @@ The local path is `~/.agents/.skill-lock.json`, or
 `$XDG_STATE_HOME/skills/.skill-lock.json` when `XDG_STATE_HOME` is set. Merging a
 detached lockfile requires Python 3. Invalid JSON and mismatched lockfile versions
 stop the sync before either file changes. Use `--dry-run` to validate and preview
-the merge, backup, and link operations.
+the merge and link operations.
 
 ## Remove tracked skills
 
