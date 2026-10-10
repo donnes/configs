@@ -46,6 +46,22 @@ or `--only`, and requires a terminal. Unattended agent and SSH sessions use
 explicit commands and flags; differing local copies are preserved when no
 terminal is attached. `./cli install` is equivalent to `./cli`.
 
+## Health check
+
+`./cli health` checks the machine against the repository for the detected OS and
+changes nothing:
+
+- the configs checkout: uncommitted changes, or commits behind its upstream as of the last fetch;
+- managed files: anything `./cli` would link, relink or rewrite, taken from its own dry run;
+- packages: Homebrew formulae and casks on macOS, pacman packages and Omarchy apps on Omarchy;
+- mise: every configured tool installed, and `mise doctor` clean in a new shell;
+- tool resolution: each tool found through mise in a new terminal's shell, started with a clean environment so this process's PATH can't hide problems in startup files. Omarchy's `~/.local/bin` wrappers, which run `mise x`, count as mise;
+- leftover version managers: fnm, nvm, pyenv, rbenv, asdf or volta on PATH or in their usual directories;
+- background jobs: the launchd agents and GUI PATH on macOS, the systemd timers on Omarchy.
+
+Drift and leftovers are warnings. Missing packages, tools or jobs are failures,
+and make the command exit with status 1.
+
 ## Safety
 
 - Files are linked individually with absolute symlinks; live state and foreign files remain untouched.
