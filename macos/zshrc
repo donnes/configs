@@ -37,10 +37,6 @@ alias oc-purpose='env -u OPENCODE_CONFIG -u OPENCODE_CONFIG_CONTENT OPENCODE_CON
 # Language
 export LANG=en_US.UTF-8
 
-# Zoxide
-eval "$(zoxide init zsh)"
-alias cd='z'
-
 # bun completions
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
@@ -103,3 +99,7 @@ export DO_NOT_TRACK=1
 # Keep this last: tools prepended after activation, such as Vite+'s node shims,
 # would otherwise shadow mise's versions.
 eval "$(mise activate zsh)"
+
+# Zoxide comes from mise, so initialize it after activation.
+eval "$(zoxide init zsh)"
+alias cd='z'
