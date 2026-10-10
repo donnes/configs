@@ -37,19 +37,9 @@ alias oc-purpose='env -u OPENCODE_CONFIG -u OPENCODE_CONFIG_CONTENT OPENCODE_CON
 # Language
 export LANG=en_US.UTF-8
 
-# fnm
-# --use-on-cd switches node versions when you cd into a project.
-eval "$(fnm env --use-on-cd)"
-
 # Zoxide
 eval "$(zoxide init zsh)"
 alias cd='z'
-
-# Keep the fnm install directory on PATH; fnm is initialized above.
-FNM_PATH="$HOME/Library/Application Support/fnm"
-if [ -d "$FNM_PATH" ]; then
-  export PATH="$HOME/Library/Application Support/fnm:$PATH"
-fi
 
 # bun completions
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
@@ -67,9 +57,6 @@ export ATUIN_INSTALL="$HOME/.atuin"
 export PATH="$ATUIN_INSTALL/bin:$PATH"
 eval "$(atuin init zsh)"
 
-# Ruby
-eval "$(rbenv init -)"
-
 # Android SDK & Java SDK
 export ANDROID_SDK_ROOT="$HOME/Library/Android/sdk"
 export PATH="${PATH}:$HOME/Library/Android/sdk/platform-tools"
@@ -77,7 +64,6 @@ export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
 
 # Node
 export NODE_OPTIONS=--max-old-space-size=4096
-export NODE_BINARY=$(which node)
 
 # pnpm
 export PNPM_HOME="$HOME/Library/pnpm"
@@ -112,3 +98,8 @@ export DO_NOT_TRACK=1
 
 # Vite+ bin (https://viteplus.dev)
 . "/Users/donaldsilveira/.vite-plus/env"
+
+# mise manages language runtimes and agent CLIs, switching versions per project.
+# Keep this last: tools prepended after activation, such as Vite+'s node shims,
+# would otherwise shadow mise's versions.
+eval "$(mise activate zsh)"
