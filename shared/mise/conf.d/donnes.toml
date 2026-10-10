@@ -20,6 +20,7 @@ fzf = "latest"
 zoxide = "latest"
 lazygit = "latest"
 jj = "latest"
+vp = "latest"
 cursor-agent = { version = "latest", bin_path = "bin", strip_components = "0", url = 'https://downloads.cursor.com/lab/{{ version }}/{{ os(macos="darwin") }}/{{ arch(arm64="arm64", x64="x64") }}/agent-cli-package.tar.gz', version_list_url = "https://cursor.com/install", version_regex = 'downloads\.cursor\.com/lab/([0-9]{4}\.[0-9]{2}\.[0-9]{2}-[0-9a-f]+)/', postinstall = 'mkdir -p "$MISE_TOOL_INSTALL_PATH/bin" && ln -sfn ../dist-package/cursor-agent "$MISE_TOOL_INSTALL_PATH/bin/cursor-agent"' }
 
 [settings]
@@ -29,6 +30,10 @@ idiomatic_version_file_enable_tools = ["node", "ruby", "python"]
 # Xcode build phases, relinks every shim to itself (mise 2026.10.6). Run
 # `mise install` in the project instead.
 auto_install = false
+
+[settings.npm]
+# Install npm-backed tools such as vp with bun, matching the bun-first globals.
+package_manager = "bun"
 
 [settings.ruby]
 compile = false
