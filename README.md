@@ -37,7 +37,7 @@ Choose what the installer manages with repeatable `--skip` or `--only` options:
 
 `--interactive` opens a Clack multiselect with the default components selected.
 Use Space to toggle components and Enter to continue; Ctrl-C cancels. Available
-components are `packages`, `agents`, `skills`, `mise`, `atuin`, `nvim`, `shell`, `tmux`,
+components are `packages`, `apps` (Omarchy only), `agents`, `skills`, `mise`, `atuin`, `nvim`, `shell`, `tmux`,
 `git` (macOS only), `session` (Omarchy only), and `command-center`. The last
 component is unchecked and excluded from the default install; default uninstall
 includes it. `--skip-packages` remains an
@@ -54,7 +54,7 @@ terminal is attached. `./cli install` is equivalent to `./cli`.
 - The installer never mirror-deletes and never writes below `/usr/share/omarchy`.
 - Generated instructions offer keep, replace, and diff; edit their source documents instead of updating the generated copy from a local file.
 - Omarchy's bashrc, tmux config, and `hypr/hyprland.lua`, and macOS's `~/.zshenv` and `~/.zprofile`, receive one replaceable marker block each.
-- `./cli uninstall` removes only managed links and marker blocks. Packages, directories, and foreign files remain.
+- `./cli uninstall` removes only managed links and marker blocks. Packages, apps, mise settings, directories, and foreign files remain.
 
 Always inspect `./cli --dry-run` first.
 
@@ -209,6 +209,15 @@ The files under `omarchy/nvim/` were vendored from omarchy-nvim 2026.8.13-1. Rec
 
 The macOS gitconfig is never installed on Omarchy.
 
+## Omarchy apps
+
+The `apps` component installs Steam, MangoHud, LACT, the Logitech racing wheel
+tools, Tailscale, Zed, Zen, and Helium. Each goes through Omarchy's own
+installer where one exists, which also sets up drivers, services, or themes, or
+through Omarchy's package helpers otherwise. An app is installed only while one
+of its packages is missing, because some installers open the app or start a
+Tailscale login. Edit the list in `scripts/lib/install.ts`.
+
 ## mise
 
 mise manages language runtimes and agent CLIs on both profiles; Homebrew and
@@ -219,6 +228,12 @@ and Omarchy write there, and its values win. Projects pin versions with
 `.nvmrc`, `.node-version`, `.ruby-version`, `.python-version`, or `mise.toml`.
 Missing versions are not installed automatically; run `mise install` in the
 project.
+
+On Omarchy the CLI never edits Omarchy's files. Omarchy's `config.toml` replaces
+the shared list of version files mise reads, so the component appends the
+missing tools with `mise settings add`. Omarchy's other settings stay, including
+`upgrade.auto_prune = false`, which keeps `mise up` from deleting a version a
+running session uses; the daily prune does the cleanup instead.
 
 `mise prune` runs daily (a launchd agent on macOS, `mise-prune.timer` on
 Omarchy). It deletes versions that no tracked config selects and keeps those a

@@ -26,13 +26,21 @@ class CliInstallTests(unittest.TestCase):
         fake_bin = self.repo.parent / 'fake-bin'
         fake_bin.mkdir()
         self.log = self.repo.parent / 'commands.jsonl'
-        for command in ['brew', 'yay', 'systemctl', 'launchctl']:
+        # FAKE_PRESENT lists installed Omarchy packages; FAKE_MISE_SETTING is what
+        # `mise settings get` prints.
+        for command in ['brew', 'yay', 'systemctl', 'launchctl', 'mise', 'omarchy-pkg-present', 'omarchy-pkg-add',
+                        'omarchy-pkg-aur-add', 'omarchy-install-gaming-steam', 'omarchy-install-browser']:
             executable = fake_bin / command
             executable.write_text('#!/usr/bin/env python3\nimport json, os, sys\n'
                                   'from pathlib import Path\n'
-                                  'name = Path(sys.argv[0]).name\n'
+                                  'name, args = Path(sys.argv[0]).name, sys.argv[1:]\n'
+                                  'if name == "omarchy-pkg-present":\n'
+                                  '    sys.exit(0 if set(args) <= set(os.environ.get("FAKE_PRESENT", "").split()) else 1)\n'
+                                  'if name == "mise" and args[:2] == ["settings", "get"]:\n'
+                                  '    print(os.environ.get("FAKE_MISE_SETTING", ""))\n'
+                                  '    sys.exit()\n'
                                   'with open(os.environ["COMMAND_LOG"], "a") as log:\n'
-                                  '    log.write(json.dumps([name, sys.argv[1:], '
+                                  '    log.write(json.dumps([name, args, '
                                   'sys.stdin.read() if name == "yay" else ""]) + "\\n")\n')
             executable.chmod(0o755)
         self.env.update(PATH=str(fake_bin) + os.pathsep + self.env['PATH'], COMMAND_LOG=str(self.log))
@@ -452,6 +460,19 @@ class CliInstallTests(unittest.TestCase):
         self.assertFalse((self.home / '.config/hypr/session.lua').is_symlink())
         self.assertFalse((self.home / '.config/systemd/user/hypr-session-autosave.timer').is_symlink())
 
+    def test_omarchy_apps_install_only_when_missing(self):
+        self.env.update(DONNES_CONFIGS_PROFILE='omarchy', FAKE_PRESENT='steam mangohud lact tailscale zed omazed '
+                        'helium-browser-bin oversteer usb_modeswitch')
+        self.run_cli('--only', 'apps', '--dry-run')
+        self.assertFalse(self.log.exists())
+        self.run_cli('--only', 'apps')
+        self.assertEqual([json.loads(line)[:2] for line in self.log.read_text().splitlines()], [
+            ['omarchy-pkg-add', ['mangohud', 'lib32-mangohud']],
+            ['omarchy-pkg-aur-add', ['oversteer', 'new-lg4ff-dkms-git', 'usb_modeswitch']],
+            ['omarchy-install-browser', ['zen']],
+        ])
+        self.env['DONNES_CONFIGS_PROFILE'] = 'macos'
+        self.assertNotIn('apps', interactive_cli(self.repo, self.env, ['--interactive'], [('Select components', '\x03')], 130))
 
     def test_mise_links_shared_fragment_and_schedules_pruning(self):
         log = self.log
@@ -479,11 +500,15 @@ class CliInstallTests(unittest.TestCase):
 
         log.write_text('')
         self.env['DONNES_CONFIGS_PROFILE'] = 'omarchy'
+        # Omarchy's config.toml replaces the shared list, so the CLI appends what it lacks.
+        self.write('shared/mise/conf.d/donnes.toml', '[settings]\nidiomatic_version_file_enable_tools = ["node", "ruby"]\n')
+        self.env['FAKE_MISE_SETTING'] = '["ruby"]'
         timer = self.write('omarchy/mise/mise-prune.timer', '[Timer]')
         self.write('omarchy/mise/mise-prune.service', '[Service]')
         self.run_cli('--only', 'mise')
         self.assertEqual((self.home / '.config/systemd/user/mise-prune.timer').resolve(), timer)
         self.assertEqual([json.loads(line)[:2] for line in log.read_text().splitlines()], [
+            ['mise', ['settings', 'add', 'idiomatic_version_file_enable_tools', 'node']],
             ['systemctl', ['--user', 'daemon-reload']],
             ['systemctl', ['--user', 'enable', '--now', 'mise-prune.timer']],
         ])

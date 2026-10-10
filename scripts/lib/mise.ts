@@ -91,6 +91,18 @@ export class Mise {
     }
   }
 
+  // Omarchy's config.toml sets its own idiomatic version file list, which replaces
+  // the shared one. Append the missing tools through mise instead of editing it.
+  private idiomatic(fragment: string) {
+    const setting = 'idiomatic_version_file_enable_tools';
+    const wanted = fs.readFileSync(fragment, 'utf8').match(new RegExp(`^${setting} = \\[(.*)\\]`, 'm'))?.[1]?.match(/[\w-]+/g) ?? [];
+    const current = spawnSync('mise', ['settings', 'get', setting], { encoding: 'utf8' }).stdout ?? '';
+    for (const tool of wanted.filter(tool => !current.includes(`"${tool}"`))) {
+      this.files.log('setting', `mise settings add ${setting} ${tool}`);
+      if (!this.files.dryRun) run('mise', ['settings', 'add', setting, tool]);
+    }
+  }
+
   private async omarchy(uninstall: boolean) {
     const units = path.join(this.files.home, '.config/systemd/user');
     if (uninstall) {
@@ -114,6 +126,7 @@ export class Mise {
     const destination = path.join(this.files.home, '.config/mise/conf.d/donnes.toml');
     if (uninstall) this.files.unlink(fragment, destination);
     else await this.files.link(fragment, destination);
+    if (this.profile === 'omarchy' && !uninstall) this.idiomatic(fragment);
     await (this.profile === 'macos' ? this.macos(uninstall) : this.omarchy(uninstall));
   }
 }

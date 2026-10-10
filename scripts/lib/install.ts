@@ -6,9 +6,14 @@ import { Skills } from './skills.ts';
 import { Agents } from './agents.ts';
 import { Mise } from './mise.ts';
 
-export const components = ['packages', 'agents', 'skills', 'mise', 'atuin', 'nvim', 'shell', 'tmux', 'git', 'session', 'command-center'] as const;
+export const components = ['packages', 'apps', 'agents', 'skills', 'mise', 'atuin', 'nvim', 'shell', 'tmux', 'git', 'session', 'command-center'] as const;
 export type Component = typeof components[number];
 export type Profile = 'macos' | 'omarchy';
+
+export function available(profile: Profile) {
+  const exclusive: Component[] = profile === 'macos' ? ['apps', 'session'] : ['git'];
+  return components.filter(component => !exclusive.includes(component));
+}
 
 export function detectProfile(): Profile {
   const profile = process.env.DONNES_CONFIGS_PROFILE;
@@ -20,6 +25,22 @@ export function detectProfile(): Profile {
 }
 
 const timer = 'hypr-session-autosave.timer';
+
+// Omarchy's installers also set up what a bare package install skips, such as
+// Steam's 32-bit GPU drivers, the Tailscale service and Zed's theme. Some open
+// the app or start a Tailscale login, so each runs only while a package is missing.
+// Apps without an installer go through Omarchy's package helpers instead.
+type App = { name: string, packages: string[], installer?: [string, ...string[]], aur?: boolean };
+const apps: App[] = [
+  { name: 'Steam', packages: ['steam'], installer: ['omarchy-install-gaming-steam'] },
+  { name: 'MangoHud', packages: ['mangohud', 'lib32-mangohud'] },
+  { name: 'LACT', packages: ['lact'] },
+  { name: 'racing wheel tools', packages: ['oversteer', 'new-lg4ff-dkms-git', 'usb_modeswitch'], aur: true },
+  { name: 'Tailscale', packages: ['tailscale'], installer: ['omarchy-install-service-tailscale'] },
+  { name: 'Zed', packages: ['zed', 'omazed'], installer: ['omarchy-install-editor-zed'] },
+  { name: 'Zen', packages: ['zen-browser-bin'], installer: ['omarchy-install-browser', 'zen'] },
+  { name: 'Helium', packages: ['helium-browser-bin'], aur: true },
+];
 
 export class Installer {
   readonly skills: Skills;
@@ -79,6 +100,15 @@ export class Installer {
       run(brew, ['install', ...fs.readFileSync(this.source('packages/macos.txt'), 'utf8').split(/\s+/).filter(Boolean)]);
       run(brew, ['trust', '--tap', 'abue-ammar/tinycast']);
       run(brew, ['install', '--cask', ...fs.readFileSync(this.source('packages/macos-casks.txt'), 'utf8').split(/\s+/).filter(Boolean)]);
+    }
+  }
+
+  private apps() {
+    for (const { name, packages, installer, aur } of apps) {
+      const present = spawnSync('omarchy-pkg-present', packages, { stdio: 'ignore' }).status === 0;
+      const [command, ...args] = installer ?? [aur ? 'omarchy-pkg-aur-add' : 'omarchy-pkg-add', ...packages];
+      this.files.log(present ? 'skip' : 'app', present ? `${name}: already installed` : `${name}: ${[command, ...args].join(' ')}`);
+      if (!present && !this.files.dryRun) run(command, args);
     }
   }
 
@@ -156,12 +186,13 @@ export class Installer {
     console.log(`Profile: ${this.profile}\nRepo:    ${this.files.repo}\n`);
     if (!uninstall) {
       await this.component('packages', () => this.packages());
+      if (this.profile === 'omarchy') await this.component('apps', () => this.apps());
       await this.shared(false);
       await this.platform(false);
     } else {
       await this.platform(true);
       await this.shared(true);
-      this.files.log('note', 'packages were left untouched');
+      this.files.log('note', 'packages and apps were left untouched');
     }
   }
 

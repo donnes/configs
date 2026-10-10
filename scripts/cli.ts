@@ -4,7 +4,7 @@ import { homedir } from 'node:os';
 import { parseArgs } from 'node:util';
 import * as p from '@clack/prompts';
 import { Files } from './lib/files.ts';
-import { components, detectProfile, Installer, type Component } from './lib/install.ts';
+import { available, components, detectProfile, Installer, type Component } from './lib/install.ts';
 import { answer, Cancelled, canPrompt } from './lib/prompts.ts';
 
 const help = `Usage:
@@ -66,9 +66,8 @@ async function main() {
     p.intro(`donnes · ${action} · ${profile}`);
     enabled = new Set(answer(await p.multiselect({
       message: `Select components to ${action}`,
-      options: components.filter(component => profile === 'macos' ? component !== 'session' : component !== 'git')
-        .map(value => ({ value, label: value })),
-      initialValues: defaults.filter(component => profile === 'macos' ? component !== 'session' : component !== 'git'),
+      options: available(profile).map(value => ({ value, label: value })),
+      initialValues: defaults.filter(component => available(profile).includes(component)),
       required: false,
     })));
   }
