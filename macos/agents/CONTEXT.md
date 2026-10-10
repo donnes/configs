@@ -17,6 +17,3 @@ My longer-term goal is to move general development to Linux and reserve the MacB
 primarily for iOS development. This is a direction, not today's operating restriction.
 Don't assume another computer is reachable or move work there without a configured
 and authorized workflow.
-
-This file is source context for future profile integration. It is not automatically
-loaded by an agent simply because it exists in this repository.

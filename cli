@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+REPO_URL="https://github.com/donnes/configs.git"
+DEFAULT_REPO="$HOME/.donnes/configs"
+
+die() { printf 'error: %s\n' "$*" >&2; exit 1; }
+
+bootstrap() {
+  if [[ -d "$DEFAULT_REPO/.git" && -x "$DEFAULT_REPO/cli" ]]; then
+    exec "$DEFAULT_REPO/cli" "$@"
+  fi
+  [[ ! -e "$DEFAULT_REPO" ]] || die "$DEFAULT_REPO exists but is not a runnable configs checkout"
+  for arg in "$@"; do
+    if [[ "$arg" == "--dry-run" ]]; then
+      printf '[clone] %s -> %s\n[run]   %s/cli --dry-run\n' "$REPO_URL" "$DEFAULT_REPO" "$DEFAULT_REPO"
+      [[ -n "${BASH_SOURCE[0]:-}" ]] || cat >/dev/null
+      exit 0
+    fi
+  done
+  command -v git >/dev/null 2>&1 || die "git is required to clone $REPO_URL"
+  mkdir -p "$(dirname "$DEFAULT_REPO")"
+  git clone "$REPO_URL" "$DEFAULT_REPO"
+  exec "$DEFAULT_REPO/cli" "$@"
+}
+
+SCRIPT_PATH="${BASH_SOURCE[0]:-}"
+if [[ -z "$SCRIPT_PATH" || ! -f "$SCRIPT_PATH" ]]; then
+  bootstrap "$@"
+fi
+REPO_ROOT="$(cd "$(dirname "$SCRIPT_PATH")" && pwd -P)"
+[[ -f "$REPO_ROOT/scripts/cli.ts" ]] || bootstrap "$@"
+
+command -v node >/dev/null 2>&1 || die "Node.js >=20.12.0 is required; install Node and rerun ./cli"
+node -e 'const [major, minor] = process.versions.node.split(".").map(Number); process.exit(major > 20 || (major === 20 && minor >= 12) ? 0 : 1)' ||
+  die "Node.js >=20.12.0 is required"
+
+if [[ ! -f "$REPO_ROOT/node_modules/tsx/dist/cli.mjs" || ! -d "$REPO_ROOT/node_modules/@clack/prompts" ]]; then
+  command -v npm >/dev/null 2>&1 || die "npm is required to install the CLI dependencies"
+  printf '[setup  ] Installing CLI dependencies in %s\n' "$REPO_ROOT" >&2
+  npm ci --prefix "$REPO_ROOT" --no-audit --no-fund >&2
+fi
+# A piped bootstrap still needs the controlling terminal for Clack prompts.
+if [[ ! -t 0 && -t 1 ]]; then
+  { exec </dev/tty; } 2>/dev/null || true
+fi
+exec node "$REPO_ROOT/node_modules/tsx/dist/cli.mjs" "$REPO_ROOT/scripts/cli.ts" "$@"

@@ -1,0 +1,4 @@
+# Sourced by login shells after /etc/zprofile's path_helper and Homebrew's
+# shellenv. Non-interactive login shells, such as the `zsh -lc` that agents
+# run, use mise's shims; .zshrc activates mise fully for interactive shells.
+command -v mise >/dev/null && eval "$(mise activate zsh --shims)"
