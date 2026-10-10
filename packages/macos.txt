@@ -1,17 +1,12 @@
 atuin
-awscli
 bat
-biome
 btop
 ca-certificates
 curl
-eza
 fastlane
 fd
-fzf
 gh
 git
-lazygit
 mise
 neovim
 ripgrep
@@ -19,4 +14,3 @@ starship
 tmux
 tree-sitter
 unzip
-zoxide
