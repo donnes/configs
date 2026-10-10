@@ -4,6 +4,7 @@ import { homedir } from 'node:os';
 import { parseArgs } from 'node:util';
 import * as p from '@clack/prompts';
 import { Files } from './lib/files.ts';
+import { Health } from './lib/health.ts';
 import { available, components, detectProfile, Installer, type Component } from './lib/install.ts';
 import { answer, Cancelled, canPrompt } from './lib/prompts.ts';
 
@@ -13,6 +14,7 @@ const help = `Usage:
   ./cli [--dry-run] adopt <path>
   ./cli [--dry-run] update <path>
   ./cli [--dry-run] remove-skill [name...]
+  ./cli health
 
 Options:
   --dry-run          Preview changes without modifying managed files.
@@ -22,6 +24,11 @@ Options:
   --skip-packages    Alias for --skip packages.
   --list-components  List selectable components and exit.
   -h, --help         Show this help.
+
+health checks this machine against the repository for its detected OS:
+managed files, packages, mise tools and their resolution in a new shell,
+leftover version managers, and background jobs. It changes nothing and
+exits 1 when a check fails.
 
 Components:
   ${components.join(' ')}
@@ -41,9 +48,9 @@ async function main() {
   if (values.help) { console.log(help); return; }
   if (values['list-components']) { console.log(components.join('\n')); return; }
   const action = positionals[0] ?? 'install';
-  if (!['install', 'uninstall', 'adopt', 'update', 'remove-skill'].includes(action)) throw new Error(`unknown command: ${action}`);
+  if (!['install', 'uninstall', 'adopt', 'update', 'remove-skill', 'health'].includes(action)) throw new Error(`unknown command: ${action}`);
   const args = positionals.slice(1);
-  if (['install', 'uninstall'].includes(action) && args.length) throw new Error(`unexpected argument: ${args[0]}`);
+  if (['install', 'uninstall', 'health'].includes(action) && args.length) throw new Error(`unexpected argument: ${args[0]}`);
   if (['adopt', 'update'].includes(action) && args.length !== 1) throw new Error(`${action} requires exactly one path`);
   function selection(names: string[]): Component[] {
     return names.flatMap(name => name.split(',')).map(name => {
@@ -57,7 +64,8 @@ async function main() {
   if (skip.length && only.length) throw new Error('--skip and --only cannot be used together');
   if (values.interactive && (skip.length || only.length)) throw new Error('--interactive cannot be combined with --skip, --only, or --skip-packages');
   if (!['install', 'uninstall'].includes(action) && (skip.length || only.length)) throw new Error('--skip and --only apply only to install and uninstall');
-  if (values.interactive && ['adopt', 'update'].includes(action)) throw new Error('--interactive applies only to install, uninstall, and remove-skill');
+  if (values.interactive && ['adopt', 'update', 'health'].includes(action)) throw new Error('--interactive applies only to install, uninstall, and remove-skill');
+  if (values['dry-run'] && action === 'health') throw new Error('health never changes anything; run it without --dry-run');
   const profile = detectProfile();
   const defaults = components.filter(component => action === 'uninstall' || component !== 'command-center');
   let enabled = new Set<Component>((only.length ? only : defaults).filter(component => !skip.includes(component)));
@@ -72,8 +80,15 @@ async function main() {
     })));
   }
   const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+  if (action === 'health') {
+    if (!await new Health(repo, homedir(), profile).run()) process.exitCode = 1;
+    return;
+  }
   const installer = new Installer(new Files(repo, homedir(), Boolean(values['dry-run'])), profile, enabled);
-  if (action === 'install' || action === 'uninstall') await installer.apply(action === 'uninstall');
+  if (action === 'install' || action === 'uninstall') {
+    console.log(`Profile: ${profile}\nRepo:    ${repo}\n`);
+    await installer.apply(action === 'uninstall');
+  }
   else if (action === 'remove-skill') await installer.skills.remove(args);
   else {
     const input = args[0];

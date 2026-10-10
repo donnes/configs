@@ -22,20 +22,39 @@ class CliInstallTests(unittest.TestCase):
         self.env.pop('XDG_STATE_HOME', None)
         self.env.pop('CODEX_HOME', None)
         self.env.pop('CLAUDE_CONFIG_DIR', None)
+        for name in ['MISE_DATA_DIR', 'XDG_DATA_HOME']:
+            self.env.pop(name, None)
         # Default selections reach launchd and systemd; never touch the real ones.
         fake_bin = self.repo.parent / 'fake-bin'
         fake_bin.mkdir()
         self.log = self.repo.parent / 'commands.jsonl'
         # FAKE_PRESENT lists installed Omarchy packages; FAKE_MISE_SETTING is what
-        # `mise settings get` prints.
-        for command in ['brew', 'yay', 'systemctl', 'launchctl', 'mise', 'omarchy-pkg-present', 'omarchy-pkg-add',
+        # `mise settings get` prints. The other FAKE_ variables describe the state
+        # that `./cli health` queries.
+        for command in ['brew', 'yay', 'pacman', 'systemctl', 'launchctl', 'mise', 'omarchy-pkg-present', 'omarchy-pkg-add',
                         'omarchy-pkg-aur-add', 'omarchy-install-gaming-steam', 'omarchy-install-browser']:
             executable = fake_bin / command
             executable.write_text('#!/usr/bin/env python3\nimport json, os, sys\n'
                                   'from pathlib import Path\n'
                                   'name, args = Path(sys.argv[0]).name, sys.argv[1:]\n'
+                                  'env = lambda key: os.environ.get(key, "")\n'
                                   'if name == "omarchy-pkg-present":\n'
-                                  '    sys.exit(0 if set(args) <= set(os.environ.get("FAKE_PRESENT", "").split()) else 1)\n'
+                                  '    sys.exit(0 if set(args) <= set(env("FAKE_PRESENT").split()) else 1)\n'
+                                  'if name == "pacman" and args[:1] == ["-T"]:\n'
+                                  '    missing = [arg for arg in args[1:] if arg not in env("FAKE_PRESENT").split()]\n'
+                                  '    print("\\n".join(missing))\n'
+                                  '    sys.exit(127 if missing else 0)\n'
+                                  'if name == "brew" and args[:1] == ["list"]:\n'
+                                  '    print("\\n".join(env("FAKE_CASKS" if "--cask" in args else "FAKE_FORMULAE").split()))\n'
+                                  '    sys.exit()\n'
+                                  'if name == "mise" and args[:1] in (["ls"], ["doctor"], ["--version"]):\n'
+                                  '    print(env("FAKE_MISE_LS") or "{}" if args[0] == "ls" else "")\n'
+                                  '    sys.exit(int(env("FAKE_MISE_DOCTOR") or 0) if args[0] == "doctor" else 0)\n'
+                                  'if name == "launchctl" and args[:1] in (["print"], ["getenv"]):\n'
+                                  '    print(env("FAKE_GUI_PATH"))\n'
+                                  '    sys.exit(0 if args[0] == "getenv" or args[1].split("/")[-1] in env("FAKE_LOADED").split() else 113)\n'
+                                  'if name == "systemctl" and "is-active" in args:\n'
+                                  '    sys.exit(0 if args[-1] in env("FAKE_LOADED").split() else 3)\n'
                                   'if name == "mise" and args[:2] == ["settings", "get"]:\n'
                                   '    print(os.environ.get("FAKE_MISE_SETTING", ""))\n'
                                   '    sys.exit()\n'
@@ -512,6 +531,60 @@ class CliInstallTests(unittest.TestCase):
             ['systemctl', ['--user', 'daemon-reload']],
             ['systemctl', ['--user', 'enable', '--now', 'mise-prune.timer']],
         ])
+
+    def health(self, expected_code):
+        result = subprocess.run(['bash', str(self.repo / 'cli'), 'health'], env=self.env,
+                                capture_output=True, text=True, timeout=120)
+        self.assertEqual(result.returncode, expected_code, result.stdout + result.stderr)
+        return result.stdout
+
+    def test_health_reports_drift_and_failures_on_the_detected_profile(self):
+        fake_bin = self.repo.parent / 'fake-bin'
+        shims = self.home / '.local/share/mise/shims'
+        shadow = self.repo.parent / 'shadow'
+        for directory, names in [(shims, ['node', 'jj']), (shadow, ['jj'])]:
+            directory.mkdir(parents=True)
+            for name in names:
+                (directory / name).write_text('#!/bin/sh\n')
+                (directory / name).chmod(0o755)
+        # health starts the user's real shell with a clean environment, so its
+        # startup file is what puts the fakes and mise's shims on PATH. zsh reads
+        # the managed ~/.zshrc link; bash reads an unmanaged ~/.bashrc.
+        def startup(extra=''):
+            content = f'export PATH="{fake_bin}:{shims}:$PATH"\n' + extra
+            self.write('macos/zshrc', content)
+            self.write('.bashrc', content, home=True)
+        startup()
+        self.write('shared/agents/global/AGENTS.md', 'instructions')
+        self.write('packages/macos.txt', 'git\nmise\n')
+        self.write('packages/macos-casks.txt', 'abue-ammar/tinycast/tinycast\n')
+        self.run_cli('--skip', 'packages')
+        self.env.update(FAKE_FORMULAE='git mise', FAKE_CASKS='tinycast', FAKE_GUI_PATH=f'{shims}:/usr/bin',
+                        FAKE_LOADED='dev.dstech.guipath dev.dstech.mise-prune',
+                        FAKE_MISE_LS=json.dumps({'node': [{'installed': True}], 'jj': [{'installed': True}]}))
+        output = self.health(0)
+        self.assertIn('managed files match the repository', output)
+        self.assertIn('2 tools resolve through mise', output)
+        self.assertNotIn('[fail', output)
+
+        (self.home / '.zshenv').write_text('')
+        (self.home / '.pyenv').mkdir()
+        startup(f'export PATH="{shadow}:$PATH"\nexport FAKE_MISE_DOCTOR=1\n')
+        self.env.update(FAKE_FORMULAE='git', FAKE_LOADED='dev.dstech.guipath',
+                        FAKE_MISE_LS=json.dumps({'node': [{'installed': False}], 'jj': [{'installed': True}]}))
+        output = self.health(1)
+        for expected in ['append: add managed block in ~/.zshenv', 'missing Homebrew formulae: mise',
+                         'not installed: node', 'mise doctor found problems', f'jj resolves to {shadow}/jj',
+                         '~/.pyenv is left over from pyenv', 'dev.dstech.mise-prune is not loaded']:
+            self.assertIn(expected, output)
+
+        self.env.update(DONNES_CONFIGS_PROFILE='omarchy', FAKE_PRESENT='atuin steam', FAKE_LOADED='mise-prune.timer')
+        self.write('packages/omarchy.txt', 'atuin\n')
+        output = self.health(1)
+        self.assertIn('1 listed packages installed', output)
+        self.assertIn('missing apps: MangoHud (mangohud lib32-mangohud)', output)
+        self.assertIn('hypr-session-autosave.timer is not active', output)
+
 
 if __name__ == '__main__':
     unittest.main()

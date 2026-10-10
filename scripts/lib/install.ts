@@ -31,7 +31,7 @@ const timer = 'hypr-session-autosave.timer';
 // the app or start a Tailscale login, so each runs only while a package is missing.
 // Apps without an installer go through Omarchy's package helpers instead.
 type App = { name: string, packages: string[], installer?: [string, ...string[]], aur?: boolean };
-const apps: App[] = [
+export const apps: App[] = [
   { name: 'Steam', packages: ['steam'], installer: ['omarchy-install-gaming-steam'] },
   { name: 'MangoHud', packages: ['mangohud', 'lib32-mangohud'] },
   { name: 'LACT', packages: ['lact'] },
@@ -183,7 +183,6 @@ export class Installer {
   }
 
   async apply(uninstall: boolean) {
-    console.log(`Profile: ${this.profile}\nRepo:    ${this.files.repo}\n`);
     if (!uninstall) {
       await this.component('packages', () => this.packages());
       if (this.profile === 'omarchy') await this.component('apps', () => this.apps());

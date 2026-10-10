@@ -184,8 +184,6 @@ export class Files {
     const start = `${comment} >>> donnes/configs >>>`, end = `${comment} <<< donnes/configs <<<`;
     const original = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
     if (content === undefined && !original.includes(start)) return;
-    this.log(content === undefined ? 'remove' : 'append', `${content === undefined ? 'managed block from' : `${original.includes(start) ? 'replace' : 'add'} managed block in`} ${this.pretty(file)}`);
-    if (this.dryRun) return;
     let skipping = false;
     const lines = original.split('\n').filter(line => {
       if (line === start) { skipping = true; return false; }
@@ -197,6 +195,12 @@ export class Files {
       if (lines.length) lines.push('');
       lines.push(start, content, end, '');
     }
+    if (lines.join('\n') === original) {
+      this.log('skip', `managed block in ${this.pretty(file)} is current`);
+      return;
+    }
+    this.log(content === undefined ? 'remove' : 'append', `${content === undefined ? 'managed block from' : `${original.includes(start) ? 'replace' : 'add'} managed block in`} ${this.pretty(file)}`);
+    if (this.dryRun) return;
     fs.mkdirSync(path.dirname(file), { recursive: true });
     const temporary = `${file}.donnes-configs.${process.pid}`;
     const mode = fs.existsSync(file) ? fs.statSync(file).mode & 0o777 : 0o666 & ~process.umask();
