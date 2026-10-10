@@ -21,3 +21,7 @@ credentials/
 # AI agent configs stay local
 claude/
 codex/
+
+# Generated host instructions and private machine connection records
+/.generated/
+/COMPUTERS.local.md

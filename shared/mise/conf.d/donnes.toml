@@ -1,0 +1,26 @@
+# Shared mise defaults, linked to ~/.config/mise/conf.d/donnes.toml.
+# mise loads this before ~/.config/mise/config.toml, which stays machine-owned:
+# `mise use -g` and Omarchy write there, and its values override these.
+
+[tools]
+node = "lts"
+python = "latest"
+ruby = "latest"
+go = "latest"
+bun = "latest"
+pnpm = "latest"
+claude = "latest"
+codex = "latest"
+opencode = "latest"
+cursor-agent = { version = "latest", bin_path = "bin", strip_components = "0", url = 'https://downloads.cursor.com/lab/{{ version }}/{{ os(macos="darwin") }}/{{ arch(arm64="arm64", x64="x64") }}/agent-cli-package.tar.gz', version_list_url = "https://cursor.com/install", version_regex = 'downloads\.cursor\.com/lab/([0-9]{4}\.[0-9]{2}\.[0-9]{2}-[0-9a-f]+)/', postinstall = 'mkdir -p "$MISE_TOOL_INSTALL_PATH/bin" && ln -sfn ../dist-package/cursor-agent "$MISE_TOOL_INSTALL_PATH/bin/cursor-agent"' }
+
+[settings]
+# Projects pin versions with .nvmrc, .node-version, .ruby-version and .python-version.
+idiomatic_version_file_enable_tools = ["node", "ruby", "python"]
+# A shim that installs a missing version while mise itself is off PATH, as in
+# Xcode build phases, relinks every shim to itself (mise 2026.10.6). Run
+# `mise install` in the project instead.
+auto_install = false
+
+[settings.ruby]
+compile = false

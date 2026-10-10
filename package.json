@@ -1,0 +1,20 @@
+{
+  "name": "donnes-configs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "python3 -m unittest discover -s tests -v"
+  },
+  "engines": {
+    "node": ">=20.12.0"
+  },
+  "dependencies": {
+    "@clack/prompts": "1.8.1",
+    "tsx": "4.23.15"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "typescript": "~7.0.2"
+  }
+}

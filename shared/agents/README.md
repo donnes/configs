@@ -1,7 +1,8 @@
 # Personal agent setup
 
 This directory is the starting point for Donald's shared agent instructions.
-`global/AGENTS.md` is the shared source installed by the `agents` component.
+`global/AGENTS.md` is the shared source composed by the `agents` component with
+the host's OS context.
 
 ## Existing foundation
 
@@ -19,7 +20,9 @@ entire `~/.codex` or `~/.claude` directories.
 | --- | --- | --- |
 | Personal defaults | `shared/agents/global/AGENTS.md` | Global instruction entry point for each supported runtime |
 | Shared workflows | `shared/skills/<name>/SKILL.md` | Existing skills installer |
-| OS-specific context | `macos/agents/CONTEXT.md` and `linux/agents/CONTEXT.md` | Only the matching operating system |
+| OS-specific context | `macos/agents/CONTEXT.md` and `linux/agents/CONTEXT.md` | Composed into installed instructions for the matching profile |
+| Machine inventory | Root `COMPUTERS.md` and ignored `COMPUTERS.local.md` | Portable roles in Git; connection records stay local |
+| Command-center workflows | `fleet/skills/<name>` | Explicit `command-center` component |
 | Runtime-specific instructions | Add `shared/agents/runtimes/<runtime>/` when needed | Only that runtime |
 | Specialist roles | Add `shared/agents/roles/` when a real delegated workflow needs them | Explicitly selected roles |
 | Project instructions and skills | Inside each project's repository | Travel with the project and its worktrees |
@@ -32,31 +35,37 @@ such as platform or scope does not enforce distribution by itself.
 ## Install and use
 
 ```sh
-./install --dry-run --only agents
-./install --only agents
+./cli --dry-run --only agents
+./cli --only agents
 ```
 
-The installer links the same source file to:
+The installer generates `.generated/agents/<profile>/AGENTS.md` from the shared
+preferences, matching OS context, and references to the machine inventories.
+It links that composed file to:
 
 - `${CODEX_HOME:-~/.codex}/AGENTS.md` for Codex.
-- `~/.claude/CLAUDE.md` for Claude Code.
+- `${CLAUDE_CONFIG_DIR:-~/.claude}/CLAUDE.md` for Claude Code.
 
-Edit `shared/agents/global/AGENTS.md` once to update both. Start fresh sessions
-following changes. Project instructions can refine these global preferences.
+Edit the shared source or matching `CONTEXT.md`, rerun `./cli --only agents`,
+then start fresh sessions. Generated files are ignored by Git and replaced by
+the installer; edit the sources instead. Project instructions can refine these
+global preferences. The instruction composition is identical for Codex and Claude,
+so it does not depend on a runtime-specific Markdown import mechanism.
 Codex's global `AGENTS.override.md` takes precedence over `AGENTS.md`; check
 that file if the shared instructions appear to be ignored. In Claude Code,
-use `/context` to inspect loaded memory files.
+use `/memory` to inspect loaded memory files.
 
 Existing different files use the installer's normal conflict handling. Without
 a terminal they are preserved. Uninstall only the managed instruction links with:
 
 ```sh
-./install uninstall --only agents
+./cli uninstall --only agents
 ```
 
 These entry points cover Codex and Claude Code. Other runtimes need their own
 supported adapters. Claude Cowork does not load this external user-file symlink.
-OS context files below are not yet connected to runtime instruction loading.
+Omarchy receives Linux context; macOS receives Mac context. Repeat the install
+with explicit `CODEX_HOME` and `CLAUDE_CONFIG_DIR` for other selected profiles.
 
 Verify actual loading in fresh sessions inside and outside projects and in
 worktrees. The installer verifies file distribution, not model compliance.
@@ -71,7 +80,7 @@ Official references:
 
 The global draft covers a shared personal/work computer without identifying any
 employer or client. Environment files describe macOS and Linux use. They are
-source documents awaiting installer integration, not automatically loaded overlays.
+source documents composed into the matching host's global instruction entry point.
 
 Keep account mappings, directory-based identity rules, host access details, and
 credentials local. Do not publish raw Git, SSH, or GitHub CLI configuration as part
@@ -94,12 +103,15 @@ section headings, and concise bullet points. It adapts the guidance to Donald's
 personal/work machine boundaries, directory-scoped authentication, Linux use,
 and React Native development.
 
-## First skills to consider
+## Provisioning other boxes
 
-Choose workflows that Donald repeatedly requests or corrects. Possible candidates
-are PR creation and PR monitoring, but they should be written from Donald's own
-examples and repository conventions. No new skills are installed by this starter.
+The MacBook is the command center. Install `agents,skills,command-center` there
+to expose `provision-box` to Codex and the selected Claude runtime. Ordinary
+workers use `agents,skills`; management skills are a separate collection and are
+not selected by a default install. Existing command-center links remain during a
+normal refresh; remove them explicitly when a machine changes roles.
 
-Keep descriptions focused on when to use a skill. Give its body concrete steps,
-required capabilities, expected outputs, and a clear stopping condition. Separate
-skills when their triggers or permissions differ.
+Read [the machine inventory](../../COMPUTERS.md) and the local connection records
+before remote setup. The skill reuses the CLI, checks the target's revision and
+local edits, previews explicit components, and records actual verification. It
+does not authorize provisioning unrelated machines or copying runtime credentials.

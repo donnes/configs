@@ -11,6 +11,3 @@ shared personal/work boundaries wherever they are relevant.
 Use the project's existing toolchain and the configured Linux environment. Keep
 machine-specific configuration separate from portable instructions. iOS simulator
 and Xcode work belongs on a configured Mac; don't assume a remote Mac is available.
-
-This file is source context for future profile integration. It is not automatically
-loaded by an agent simply because it exists in this repository.

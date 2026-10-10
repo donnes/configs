@@ -1,0 +1,15 @@
+#!/bin/sh
+# React Native and Expo record the resolved Node binary in ios/.xcode.env.local
+# on the first `pod install`, naming one exact mise install. That path goes stale
+# when the project's Node version changes and breaks once mise prunes it. The
+# mise shim instead picks each project's version when Xcode runs it, so point
+# every recorded NODE_BINARY there. Roots default to ~/Git and T3 worktrees.
+line="export NODE_BINARY=\"${MISE_DATA_DIR:-$HOME/.local/share/mise}/shims/node\""
+[ $# -gt 0 ] || set -- "$HOME/Git" "$HOME/.t3/worktrees"
+for root; do [ -d "$root" ] && printf '%s\0' "$root"; done |
+  xargs -0 sh -c 'find "$@" \( -name node_modules -o -name Pods -o -name .git \) -prune -o -name .xcode.env.local -type f -print' sh |
+  while IFS= read -r file; do
+    if grep -q '^export NODE_BINARY=' "$file" && ! grep -qxF "$line" "$file"; then
+      sed -i '' "s|^export NODE_BINARY=.*|$line|" "$file" && echo "updated $file"
+    fi
+  done

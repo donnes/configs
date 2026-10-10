@@ -1,0 +1,7 @@
+[Unit]
+Description=Delete mise tool versions that no config uses
+
+[Service]
+Type=oneshot
+# mise keeps versions that a running process was started from.
+ExecStart=/usr/bin/mise prune --yes
