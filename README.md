@@ -56,6 +56,7 @@ changes nothing:
 - packages: Homebrew formulae and casks on macOS, pacman packages and Omarchy apps on Omarchy, and opencode v2 on both;
 - mise: every configured tool installed, and `mise doctor` clean in a new shell;
 - tool resolution: each tool found through mise in a new terminal's shell, started with a clean environment so this process's PATH can't hide problems in startup files. Omarchy's `~/.local/bin` wrappers, which run `mise x`, count as mise;
+- global duplicates: a copy of a mise tool in bun's or pnpm's global bin directory, such as a `bun add -g` install or a standalone bun;
 - leftover version managers: fnm, nvm, pyenv, rbenv, asdf or volta on PATH or in their usual directories;
 - background jobs: the launchd agents and GUI PATH on macOS, the systemd timers on Omarchy.
 
