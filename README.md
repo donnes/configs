@@ -53,7 +53,7 @@ changes nothing:
 
 - the configs checkout: uncommitted changes, or commits behind its upstream as of the last fetch;
 - managed files: anything `./cli` would link, relink or rewrite, taken from its own dry run;
-- packages: Homebrew formulae and casks on macOS, pacman packages and Omarchy apps on Omarchy;
+- packages: Homebrew formulae and casks on macOS, pacman packages and Omarchy apps on Omarchy, and opencode v2 on both;
 - mise: every configured tool installed, and `mise doctor` clean in a new shell;
 - tool resolution: each tool found through mise in a new terminal's shell, started with a clean environment so this process's PATH can't hide problems in startup files. Omarchy's `~/.local/bin` wrappers, which run `mise x`, count as mise;
 - leftover version managers: fnm, nvm, pyenv, rbenv, asdf or volta on PATH or in their usual directories;
@@ -250,6 +250,12 @@ the shared list of version files mise reads, so the component appends the
 missing tools with `mise settings add`. Omarchy's other settings stay, including
 `upgrade.auto_prune = false`, which keeps `mise up` from deleting a version a
 running session uses; the daily prune does the cleanup instead.
+
+opencode stays outside mise, which only publishes the v1 line. The `packages`
+component runs opencode's v2 installer (`https://opencode.ai/v2/install`) while
+`~/.opencode/bin/opencode` is missing or older than v2; opencode upgrades itself
+from there. The shell startup files, the macOS GUI PATH and Omarchy's uwsm
+environment put `~/.opencode/bin` first.
 
 `mise prune` runs daily (a launchd agent on macOS, `mise-prune.timer` on
 Omarchy). It deletes versions that no tracked config selects and keeps those a

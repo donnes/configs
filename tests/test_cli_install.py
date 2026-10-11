@@ -31,7 +31,7 @@ class CliInstallTests(unittest.TestCase):
         # FAKE_PRESENT lists installed Omarchy packages; FAKE_MISE_SETTING is what
         # `mise settings get` prints. The other FAKE_ variables describe the state
         # that `./cli health` queries.
-        for command in ['brew', 'yay', 'pacman', 'systemctl', 'launchctl', 'mise', 'omarchy-pkg-present', 'omarchy-pkg-add',
+        for command in ['brew', 'curl', 'yay', 'pacman', 'systemctl', 'launchctl', 'mise', 'omarchy-pkg-present', 'omarchy-pkg-add',
                         'omarchy-pkg-aur-add', 'omarchy-install-gaming-steam', 'omarchy-install-browser']:
             executable = fake_bin / command
             executable.write_text('#!/usr/bin/env python3\nimport json, os, sys\n'
@@ -55,6 +55,8 @@ class CliInstallTests(unittest.TestCase):
                                   '    sys.exit(0 if args[0] == "getenv" or args[1].split("/")[-1] in env("FAKE_LOADED").split() else 113)\n'
                                   'if name == "systemctl" and "is-active" in args:\n'
                                   '    sys.exit(0 if args[-1] in env("FAKE_LOADED").split() else 3)\n'
+                                  'if name == "curl" and args[-1].startswith("https://opencode.ai/"):\n'
+                                  '    print(\'echo "$@" > "$HOME/opencode-installer-args"\')\n'
                                   'if name == "mise" and args[:2] == ["settings", "get"]:\n'
                                   '    print(os.environ.get("FAKE_MISE_SETTING", ""))\n'
                                   '    sys.exit()\n'
@@ -71,6 +73,11 @@ class CliInstallTests(unittest.TestCase):
         file.parent.mkdir(parents=True, exist_ok=True)
         file.write_text(content)
         return file
+
+    def opencode(self, version):
+        binary = self.write('.opencode/bin/opencode', f'#!/bin/sh\necho opencode v{version}\n', home=True)
+        binary.chmod(0o755)
+        return binary
 
     def run_cli(self, *args):
         result = subprocess.run(['bash', str(self.repo / 'cli'), *args], env=self.env,
@@ -455,8 +462,11 @@ class CliInstallTests(unittest.TestCase):
             ['brew', ['install', 'formula-one', 'formula-two'], ''],
             ['brew', ['trust', '--tap', 'abue-ammar/tinycast'], ''],
             ['brew', ['install', '--cask', 'app-one', 'app-two'], ''],
+            ['curl', ['-fsSL', 'https://opencode.ai/v2/install'], ''],
         ])
+        self.assertEqual((self.home / 'opencode-installer-args').read_text().strip(), '--no-modify-path')
         log.write_text('')
+        self.opencode('2.0.26')
         self.env['DONNES_CONFIGS_PROFILE'] = 'omarchy'
         packages = 'package-one\npackage-two\n'
         self.write('packages/omarchy.txt', packages)
@@ -565,10 +575,11 @@ class CliInstallTests(unittest.TestCase):
         # startup file is what puts the fakes and mise's shims on PATH. zsh reads
         # the managed ~/.zshrc link; bash reads an unmanaged ~/.bashrc.
         def startup(extra=''):
-            content = f'export PATH="{fake_bin}:{shims}:$PATH"\n' + extra
+            content = f'export PATH="{self.home}/.opencode/bin:{fake_bin}:{shims}:$PATH"\n' + extra
             self.write('macos/zshrc', content)
             self.write('.bashrc', content, home=True)
         startup()
+        self.opencode('2.0.26')
         self.write('shared/agents/global/AGENTS.md', 'instructions')
         self.write('packages/macos.txt', 'git\nmise\n')
         self.write('packages/macos-casks.txt', 'abue-ammar/tinycast/tinycast\n')
@@ -579,17 +590,20 @@ class CliInstallTests(unittest.TestCase):
         output = self.health(0)
         self.assertIn('managed files match the repository', output)
         self.assertIn('2 tools resolve through mise', output)
+        self.assertIn('opencode 2.0.26 installed', output)
+        self.assertIn('opencode resolves to its v2 install', output)
         self.assertNotIn('[fail', output)
 
         (self.home / '.zshenv').write_text('')
         (self.home / '.pyenv').mkdir()
+        self.opencode('1.19.0')
         startup(f'export PATH="{shadow}:$PATH"\nexport FAKE_MISE_DOCTOR=1\n')
         self.env.update(FAKE_FORMULAE='git', FAKE_LOADED='dev.dstech.guipath',
                         FAKE_MISE_LS=json.dumps({'node': [{'installed': False}], 'jj': [{'installed': True}]}))
         output = self.health(1)
         for expected in ['append: add managed block in ~/.zshenv', 'missing Homebrew formulae: mise',
                          'not installed: node', 'mise doctor found problems', f'jj resolves to {shadow}/jj',
-                         '~/.pyenv is left over from pyenv', 'dev.dstech.mise-prune is not loaded']:
+                         '~/.pyenv is left over from pyenv', 'opencode 1.19.0 is not v2', 'dev.dstech.mise-prune is not loaded']:
             self.assertIn(expected, output)
 
         self.env.update(DONNES_CONFIGS_PROFILE='omarchy', FAKE_PRESENT='atuin steam', FAKE_LOADED='mise-prune.timer')
