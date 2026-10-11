@@ -3,7 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { spawnSync, type SpawnSyncOptions } from 'node:child_process';
 import { Files, within } from './files.ts';
-import { apps, components, Installer, type Component, type Profile } from './install.ts';
+import { apps, components, Installer, opencodeVersion, type Component, type Profile } from './install.ts';
 
 type Status = 'ok' | 'warn' | 'fail';
 
@@ -85,6 +85,9 @@ export class Health {
 
   private packages() {
     this.section('Packages');
+    const opencode = opencodeVersion(this.home);
+    if (opencode?.startsWith('2.')) this.report('ok', `opencode ${opencode} installed`);
+    else this.report('fail', `${opencode ? `opencode ${opencode} is not v2` : 'opencode v2 is not installed'}; run ./cli --only packages`);
     if (this.profile === 'omarchy') {
       const wanted = fs.readFileSync(path.join(this.repo, 'packages/omarchy.txt'), 'utf8').split(/\s+/).filter(Boolean);
       const missing = capture('pacman', ['-T', ...wanted]).stdout.split('\n').filter(Boolean);
@@ -141,6 +144,7 @@ export class Health {
       '__donnes_path() { if [ -n "$ZSH_VERSION" ]; then whence -p "$1"; else type -P "$1"; fi; }',
       'mise doctor >/dev/null 2>&1; printf "\\n@@doctor %s\\n" "$?"',
       `for name in ${names.join(' ')}; do printf "@@bin %s %s\\n" "$name" "$(__donnes_path "$name")"; done`,
+      'printf "@@opencode %s\\n" "$(__donnes_path opencode)"',
       `for name in ${legacyManagers.join(' ')}; do type "$name" >/dev/null 2>&1 && printf "@@legacy %s\\n" "$name"; done`,
       'true',
     ].join('\n');
@@ -166,6 +170,10 @@ export class Health {
       else resolved++;
     }
     if (resolved) this.report('ok', `${resolved} tools resolve through mise`);
+    const opencode = lines.find(([kind]) => kind === '@@opencode')?.slice(1).join(' ');
+    const expected = path.join(this.home, '.opencode/bin/opencode');
+    if (opencode && path.resolve(opencode) === expected) this.report('ok', 'opencode resolves to its v2 install');
+    else this.report('warn', `opencode resolves to ${opencode ? this.files.pretty(path.resolve(opencode)) : 'nothing'} instead of ${this.files.pretty(expected)}`);
     const leftovers = lines.filter(([kind]) => kind === '@@legacy').map(([, name]) => `${name} is still on PATH`);
     for (const [name, directory] of [
       ['nvm', '.nvm'], ['pyenv', '.pyenv'], ['rbenv', '.rbenv'], ['asdf', '.asdf'], ['volta', '.volta'],

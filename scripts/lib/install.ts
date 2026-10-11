@@ -26,6 +26,15 @@ export function detectProfile(): Profile {
 
 const timer = 'hypr-session-autosave.timer';
 
+// opencode v2 is only published through its own installer; mise and the
+// default installer still ship v1. It upgrades itself once installed.
+export const opencodeInstaller = 'https://opencode.ai/v2/install';
+
+export function opencodeVersion(home: string) {
+  const result = spawnSync(path.join(home, '.opencode/bin/opencode'), ['--version'], { encoding: 'utf8' });
+  return result.status === 0 ? result.stdout.match(/\d+\.\d+\.\d+/)?.[0] : undefined;
+}
+
 // Omarchy's installers also set up what a bare package install skips, such as
 // Steam's 32-bit GPU drivers, the Tailscale service and Zed's theme. Some open
 // the app or start a Tailscale login, so each runs only while a package is missing.
@@ -74,12 +83,26 @@ export class Installer {
   }
 
   private packages() {
-    const { dryRun } = this.files;
     if (this.profile === 'omarchy') {
       this.files.log('package', `yay -S --needed - < ${this.files.pretty(this.source('packages/omarchy.txt'))}`);
-      if (!dryRun) run('yay', ['-S', '--needed', '-'], fs.readFileSync(this.source('packages/omarchy.txt'), 'utf8'));
-      return;
-    }
+      if (!this.files.dryRun) run('yay', ['-S', '--needed', '-'], fs.readFileSync(this.source('packages/omarchy.txt'), 'utf8'));
+    } else this.homebrew();
+    this.opencode();
+  }
+
+  // The shell startup files and the GUI PATH already put ~/.opencode/bin first.
+  private opencode() {
+    const version = opencodeVersion(this.files.home);
+    if (version?.startsWith('2.')) { this.files.log('skip', `opencode ${version} already installed`); return; }
+    this.files.log('package', `curl -fsSL ${opencodeInstaller} | bash -s -- --no-modify-path`);
+    if (this.files.dryRun) return;
+    const download = spawnSync('curl', ['-fsSL', opencodeInstaller], { encoding: 'utf8' });
+    if (download.error || download.status !== 0) throw new Error('Cannot download the opencode installer');
+    run('bash', ['-s', '--', '--no-modify-path'], download.stdout);
+  }
+
+  private homebrew() {
+    const { dryRun } = this.files;
     const executable = spawnSync('/bin/sh', ['-c', 'command -v brew'], { encoding: 'utf8' }).stdout?.trim();
     let brew = executable || 'brew';
     if (!executable) {
