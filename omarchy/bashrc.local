@@ -19,6 +19,10 @@ cdc() {
 
 export NODE_OPTIONS=--max-old-space-size=4096
 
+# opencode v2 (opencode2) stays with its own installer; appended so mise's
+# opencode, the v1 line, still wins.
+export PATH="$PATH:$HOME/.opencode/bin"
+
 # Local secrets (untracked)
 [ -f "$HOME/.secrets" ] && source "$HOME/.secrets"
 
