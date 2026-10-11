@@ -316,6 +316,7 @@ class CliInstallTests(unittest.TestCase):
                 self.assertIn(included, codex.read_text())
                 self.assertNotIn(excluded, codex.read_text())
                 self.assertIn('COMPUTERS.md', codex.read_text())
+                self.assertIn(f'managed in `{self.repo}`', codex.read_text())
                 self.assertEqual(default_claude.read_text(), 'default remains local')
                 installed = codex.stat().st_mtime_ns
                 self.run_cli('--only', 'agents')
