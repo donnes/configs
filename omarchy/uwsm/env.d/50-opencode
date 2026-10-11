@@ -1,0 +1,3 @@
+# opencode v2 comes from its own installer, not mise. Put it first for the
+# Hyprland session, so apps such as T3 Code start v2.
+export PATH="$HOME/.opencode/bin:$PATH"
