@@ -50,6 +50,10 @@ I want to share some preferences so we can work well together.
 - Use isolated development state and test data. Track processes you start and stop only those you can identify as belonging to this task.
 - Worktrees, dependencies, build outputs, and simulators eat storage. Reuse suitable environments where practical. Check for unfinished work and untracked files before cleanup; don't delete things just because they look old or large.
 
+## Machine setup
+
+- My machines' packages, mise tools, shell, editor and agent instructions are managed in `~/.donnes/configs`. To change them, edit that repo and apply it with its `./cli`, following its AGENTS.md. Don't install tools or edit those files directly on a machine.
+
 ## Git and GitHub accounts
 
 - My Git and SSH setup routes identities by directory. Respect conditional includes, SSH aliases, identity files, and credential helpers.
