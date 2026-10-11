@@ -69,7 +69,7 @@ and make the command exit with status 1.
 - Nothing is backed up. A link that already resolves to the repo copy (such as `~/.claude/skills/x -> ../../.agents/skills/x`) or a local copy with identical content is relinked. A local file, directory, or skill whose content differs prompts to keep it, replace it with the repo version, update the repo from it, or show the diff; the default is whichever side was modified most recently. Without a terminal, differing copies are kept and reported. Untracked files inside managed directories such as `~/.config/nvim` stay in place.
 - The installer never mirror-deletes and never writes below `/usr/share/omarchy`.
 - Generated instructions offer keep, replace, and diff; edit their source documents instead of updating the generated copy from a local file.
-- Omarchy's bashrc, tmux config, and `hypr/hyprland.lua`, and macOS's `~/.zshenv` and `~/.zprofile`, receive one replaceable marker block each.
+- Omarchy's bashrc, tmux config, and `hypr/hyprland.lua`, and macOS's `~/.zshenv`, `~/.zprofile`, and `~/.gitconfig`, receive one replaceable marker block each. `~/.gitconfig` stays a local file for identity and account routing; its block includes `macos/gitconfig`.
 - `./cli uninstall` removes only managed links and marker blocks. Packages, apps, mise settings, directories, and foreign files remain.
 
 Always inspect `./cli --dry-run` first.

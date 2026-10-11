@@ -2,9 +2,6 @@
 # export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 export PATH="$HOME/.local/bin:$PATH"
 
-# Stable tool installs added by installers (kept early so nothing reorders them)
-export PATH="$HOME/.opencode/bin:$PATH"
-
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
@@ -89,15 +86,9 @@ esac
 # Opt out of anonymous telemetry (px0 and other tools honor this)
 export DO_NOT_TRACK=1
 
-# Vite+ bin (https://viteplus.dev)
-. "/Users/donaldsilveira/.config/vite-plus/env"
-
-# Vite+ bin (https://viteplus.dev)
-. "/Users/donaldsilveira/.vite-plus/env"
-
 # mise manages language runtimes and agent CLIs, switching versions per project.
-# Keep this last: tools prepended after activation, such as Vite+'s node shims,
-# would otherwise shadow mise's versions.
+# Keep this last: tools prepended after activation would otherwise shadow
+# mise's versions.
 eval "$(mise activate zsh)"
 
 # Zoxide comes from mise, so initialize it after activation.

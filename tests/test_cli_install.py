@@ -532,6 +532,20 @@ class CliInstallTests(unittest.TestCase):
             ['systemctl', ['--user', 'enable', '--now', 'mise-prune.timer']],
         ])
 
+    def test_gitconfig_keeps_local_identity_and_includes_shared_settings(self):
+        shared = self.write('macos/gitconfig', '[pull]\n\trebase = true\n')
+        config = self.home / '.gitconfig'
+        config.symlink_to(shared)
+        self.run_cli('--only', 'git')
+        self.assertFalse(config.is_symlink())
+        self.assertEqual(shared.read_text(), '[pull]\n\trebase = true\n')
+        self.assertIn(f'[include]\n\tpath = {shared}', config.read_text())
+        config.write_text('[user]\n\temail = me@example.com\n' + config.read_text())
+        self.run_cli('--only', 'git')
+        self.assertEqual(config.read_text().count('[include]'), 1)
+        self.run_cli('uninstall', '--only', 'git')
+        self.assertEqual(config.read_text().strip(), '[user]\n\temail = me@example.com')
+
     def health(self, expected_code):
         result = subprocess.run(['bash', str(self.repo / 'cli'), 'health'], env=self.env,
                                 capture_output=True, text=True, timeout=120)
