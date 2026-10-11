@@ -22,7 +22,7 @@ class CliInstallTests(unittest.TestCase):
         self.env.pop('XDG_STATE_HOME', None)
         self.env.pop('CODEX_HOME', None)
         self.env.pop('CLAUDE_CONFIG_DIR', None)
-        for name in ['MISE_DATA_DIR', 'XDG_DATA_HOME']:
+        for name in ['MISE_DATA_DIR', 'XDG_DATA_HOME', 'BUN_INSTALL', 'PNPM_HOME']:
             self.env.pop(name, None)
         # Default selections reach launchd and systemd; never touch the real ones.
         fake_bin = self.repo.parent / 'fake-bin'
@@ -592,18 +592,21 @@ class CliInstallTests(unittest.TestCase):
         self.assertIn('2 tools resolve through mise', output)
         self.assertIn('opencode 2.0.26 installed', output)
         self.assertIn('opencode resolves to its v2 install', output)
+        self.assertIn('no global bun or pnpm copies of mise tools', output)
         self.assertNotIn('[fail', output)
 
         (self.home / '.zshenv').write_text('')
         (self.home / '.pyenv').mkdir()
         self.opencode('1.19.0')
+        self.write('.bun/bin/jj', '', home=True)
         startup(f'export PATH="{shadow}:$PATH"\nexport FAKE_MISE_DOCTOR=1\n')
         self.env.update(FAKE_FORMULAE='git', FAKE_LOADED='dev.dstech.guipath',
                         FAKE_MISE_LS=json.dumps({'node': [{'installed': False}], 'jj': [{'installed': True}]}))
         output = self.health(1)
         for expected in ['append: add managed block in ~/.zshenv', 'missing Homebrew formulae: mise',
                          'not installed: node', 'mise doctor found problems', f'jj resolves to {shadow}/jj',
-                         '~/.pyenv is left over from pyenv', 'opencode 1.19.0 is not v2', 'dev.dstech.mise-prune is not loaded']:
+                         '~/.pyenv is left over from pyenv', 'opencode 1.19.0 is not v2',
+                         '~/.bun/bin/jj duplicates the mise tool', 'dev.dstech.mise-prune is not loaded']:
             self.assertIn(expected, output)
 
         self.env.update(DONNES_CONFIGS_PROFILE='omarchy', FAKE_PRESENT='atuin steam', FAKE_LOADED='mise-prune.timer')

@@ -170,6 +170,7 @@ export class Health {
       else resolved++;
     }
     if (resolved) this.report('ok', `${resolved} tools resolve through mise`);
+    this.globals(names);
     const opencode = lines.find(([kind]) => kind === '@@opencode')?.slice(1).join(' ');
     const expected = path.join(this.home, '.opencode/bin/opencode');
     if (opencode && path.resolve(opencode) === expected) this.report('ok', 'opencode resolves to its v2 install');
@@ -184,6 +185,19 @@ export class Health {
     }
     for (const leftover of leftovers) this.report('warn', leftover);
     if (!leftovers.length) this.report('ok', 'no other version managers found');
+  }
+
+  // bun and pnpm install themselves, and their global packages, into these
+  // directories. A copy of a mise tool there is a stale duplicate, even when
+  // mise's comes first on PATH.
+  private globals(names: string[]) {
+    const directories = [
+      path.join(process.env.BUN_INSTALL || path.join(this.home, '.bun'), 'bin'),
+      process.env.PNPM_HOME || path.join(this.home, this.profile === 'macos' ? 'Library/pnpm' : '.local/share/pnpm'),
+    ];
+    const duplicates = directories.flatMap(directory => names.map(name => path.join(directory, name)).filter(file => fs.existsSync(file)));
+    for (const file of duplicates) this.report('warn', `${this.files.pretty(file)} duplicates the mise tool; remove it`);
+    if (!duplicates.length) this.report('ok', 'no global bun or pnpm copies of mise tools');
   }
 
   private services() {
