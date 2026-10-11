@@ -166,7 +166,14 @@ export class Installer {
       // macOS login shells reorder PATH after .zshenv, so mise's shims go in .zprofile.
       await this.block('shell', '.zprofile', `source "${this.source('macos/zprofile')}"`, uninstall);
       await this.tree('shell', 'macos/bin', '.local/bin', uninstall);
-      await this.link('git', 'macos/gitconfig', '.gitconfig', uninstall);
+      // ~/.gitconfig stays local because it holds the identity and account routing;
+      // it includes the shared settings. Older installs linked the file itself, and
+      // a block written through that link would make the repo file include itself.
+      await this.component('git', () => {
+        const config = this.destination('.gitconfig'), source = this.source('macos/gitconfig');
+        this.files.unlink(source, config);
+        if (this.files.target(config) !== source) this.files.block(config, uninstall ? undefined : `[include]\n\tpath = ${source}`);
+      });
       await this.link('tmux', 'macos/tmux.conf', '.tmux.conf', uninstall);
     } else {
       await this.block('shell', '.bashrc', `source "${this.source('omarchy/bashrc.local')}"`, uninstall);
