@@ -69,9 +69,6 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 
-# Eza
-alias ls="eza --color=auto --long --git --no-filesize --icons=always --no-time --no-user --no-permissions"
-
 # Windsurf
 export PATH="$HOME/.codeium/windsurf/bin:$PATH"
 export EDITOR="c --wait"
@@ -97,4 +94,13 @@ eval "$(mise activate zsh)"
 
 # Zoxide comes from mise, so initialize it after activation.
 eval "$(zoxide init zsh)"
-alias cd='z'
+
+# Interactive-only conveniences. Agent shells (Claude Code, Codex, T3) load this
+# file without a TTY; aliasing cd/ls/grep there changes command semantics and
+# output formats their scripts rely on, so only enable them for a real terminal.
+if [[ -t 1 ]]; then
+  alias cd='z'
+  alias ls="eza --color=auto --long --git --no-filesize --icons=always --no-time --no-user --no-permissions"
+else
+  unalias grep 2>/dev/null  # oh-my-zsh adds --exclude-dir flags
+fi

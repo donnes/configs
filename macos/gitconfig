@@ -10,3 +10,15 @@
 	process = git-lfs filter-process
 	required = true
   clean = git-lfs clean -- %f
+
+# Status caching for large repos and many parallel agents. fsmonitor starts a
+# per-repo daemon on first `git status`; `maintenance.auto` keeps the
+# commit-graph and packs fresh. Repos registered for scheduled maintenance
+# (`git maintenance register`) stay in the local ~/.gitconfig.
+[core]
+	fsmonitor = true
+	untrackedCache = true
+[feature]
+	manyFiles = true
+[maintenance]
+	auto = true
