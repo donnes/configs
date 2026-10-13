@@ -9,11 +9,13 @@ I want to share some preferences so we can work well together.
 ## Coding preferences - general
 
 - Keep things simple. Solve the actual problem without adding things we don't need.
+- Don't overengineer. Add an abstraction when it removes real duplication or complexity, not for hypothetical reuse; and don't leave duplication or tangled code where a simple one belongs.
+- Handle the cases that are likely or costly. Don't complicate the code for edge cases that are both unlikely and low-impact.
 - Take advantage of type safety.
 - Don't be scared to propose bold ideas if they can meaningfully improve our work. Explain the tradeoff before expanding the scope.
 - Read the project instructions and existing code before making changes. Preserve unrelated local work.
 - Be careful with destructive actions that I haven't explicitly requested.
-- Tests should cover meaningful behavior and risks. Keep them focused and proportional to the change.
+- Tests should cover meaningful behavior and risks. Keep them focused and proportional to the change. Skip tests for edge cases that are unlikely to happen or wouldn't matter if they did.
 - Comments should clarify how something works or why a decision was made. Don't narrate every line. Keep comments up to date when the code changes.
 - Start with targeted verification. Run broader checks when the change or project requires them. Report what actually passed and what you couldn't verify.
 
