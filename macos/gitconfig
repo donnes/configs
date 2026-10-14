@@ -11,13 +11,16 @@
 	required = true
   clean = git-lfs clean -- %f
 
-# Status caching for large repos and many parallel agents. fsmonitor starts a
-# per-repo daemon on first `git status`; `maintenance.auto` keeps the
-# commit-graph and packs fresh. Repos registered for scheduled maintenance
-# (`git maintenance register`) stay in the local ~/.gitconfig.
+# Status caching for large repos and many parallel agents. `maintenance.auto`
+# keeps the commit-graph and packs fresh. Repos registered for scheduled
+# maintenance (`git maintenance register`) stay in the local ~/.gitconfig.
 [core]
-	fsmonitor = true
 	untrackedCache = true
+# fsmonitor starts a daemon per worktree on first `git status`, so it is limited
+# to project checkouts. Globally, every repo git touches got one, including tool
+# caches like uv's. Linked worktrees match through their gitdir under ~/Git.
+[includeIf "gitdir:~/Git/"]
+	path = gitconfig-fsmonitor
 [feature]
 	manyFiles = true
 [maintenance]

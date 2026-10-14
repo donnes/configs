@@ -144,6 +144,17 @@ class CliInstallTests(unittest.TestCase):
         self.assertEqual((destination / 'lua/plugins/theme.lua').resolve(), theme)
         self.assertEqual(user.read_text(), '-- user')
 
+    def test_gradle_properties_follow_the_profile(self):
+        destination = self.home / '.gradle/gradle.properties'
+        for profile, abi in [('macos', 'arm64-v8a'), ('omarchy', 'x86_64')]:
+            with self.subTest(profile=profile):
+                self.env['DONNES_CONFIGS_PROFILE'] = profile
+                source = self.write(f'{profile}/gradle.properties', f'reactNativeArchitectures={abi}\n')
+                self.run_cli('--only', 'gradle')
+                self.assertEqual(destination.resolve(), source)
+                self.run_cli('uninstall', '--only', 'gradle')
+                self.assertFalse(destination.exists())
+
     def test_marker_blocks_are_idempotent_and_uninstall_preserves_user_content(self):
         self.write('macos/zshrc', '# zsh')
         self.write('macos/zshenv', '# env')

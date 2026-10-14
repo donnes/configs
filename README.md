@@ -37,7 +37,7 @@ Choose what the installer manages with repeatable `--skip` or `--only` options:
 
 `--interactive` opens a Clack multiselect with the default components selected.
 Use Space to toggle components and Enter to continue; Ctrl-C cancels. Available
-components are `packages`, `apps` (Omarchy only), `agents`, `skills`, `mise`, `atuin`, `nvim`, `shell`, `tmux`,
+components are `packages`, `apps` (Omarchy only), `agents`, `skills`, `mise`, `atuin`, `nvim`, `gradle`, `shell`, `tmux`,
 `git` (macOS only), `session` (Omarchy only), and `command-center`. The last
 component is unchecked and excluded from the default install; default uninstall
 includes it. `--skip-packages` remains an
@@ -80,6 +80,7 @@ Always inspect `./cli --dry-run` first.
 - `shared/`: agent, editor, Neovim, Atuin, and tool overlays
 - `omarchy/`: bash/tmux deltas, vendored Omarchy Neovim keepers, `omarchy/bin` scripts linked into `~/.local/bin`, and the Hyprland session files (`hypr/`, `systemd/user/`)
 - `macos/`: full zsh, git, and tmux configuration, plus `macos/bin` scripts linked into `~/.local/bin`
+- `macos/gradle.properties`, `omarchy/gradle.properties`: linked to `~/.gradle/gradle.properties`, so local Android builds target the machine's emulator ABI and share Gradle's build cache
 - `packages/`: platform package lists
 - `shared/mise/`: shared mise tools and settings; `omarchy/mise/`: the prune timer
 - `scripts/`: TypeScript CLI entry point and filesystem, installation, prompt, and skill modules
