@@ -2,6 +2,7 @@ atuin
 bat
 btop
 ca-certificates
+ccache
 curl
 fastlane
 fd

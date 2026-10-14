@@ -6,7 +6,7 @@ import { Skills } from './skills.ts';
 import { Agents } from './agents.ts';
 import { Mise } from './mise.ts';
 
-export const components = ['packages', 'apps', 'agents', 'skills', 'mise', 'atuin', 'nvim', 'shell', 'tmux', 'git', 'session', 'command-center'] as const;
+export const components = ['packages', 'apps', 'agents', 'skills', 'mise', 'atuin', 'nvim', 'gradle', 'shell', 'tmux', 'git', 'session', 'command-center'] as const;
 export type Component = typeof components[number];
 export type Profile = 'macos' | 'omarchy';
 
@@ -179,6 +179,8 @@ export class Installer {
     await this.component('mise', () => new Mise(this.files, this.profile).apply(uninstall));
     await this.tree('atuin', 'shared/atuin', '.config/atuin', uninstall);
     await this.component('nvim', () => this.nvim(uninstall));
+    // Each machine builds Android for its own emulator ABI; Gradle writes nothing else to this file.
+    await this.link('gradle', `${this.profile}/gradle.properties`, '.gradle/gradle.properties', uninstall);
     if (!uninstall) for (const name of ['ghostty', 'yazi', 'ssh']) this.files.log('skip', `shared/${name} is excluded from the default install`);
   }
 
