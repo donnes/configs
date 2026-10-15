@@ -1,6 +1,6 @@
 ---
 name: html-communication
-description: Use when the user asks to communicate through an HTML document, including charts, benchmarks and metric reports, or if they mention "HTML" with no additional context.
+description: Use when the user asks to communicate through an HTML document.
 metadata:
   harness: [claude, codex]
   platform: [darwin, linux]
