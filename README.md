@@ -269,3 +269,33 @@ with mise's shims first. React Native and Expo record an exact Node install in
 those files at the Node shim, which selects each project's version when Xcode
 builds. The daily job runs it over `~/Git` and T3 worktrees before pruning; run
 it by hand after a fresh `pod install` if you want the fix right away.
+
+## REA for Codex and Claude Code
+
+REA is an opt-in integration, pinned to 6.5.0 in the CLI:
+
+```sh
+./cli --dry-run --only rea
+./cli --only rea
+npx --yes rea-agents@6.5.0 doctor --client codex --client claude_code --skill --json
+```
+
+The preview prints the setup command without executing it. To inspect REA's
+exact proposed paths before applying, run that command with `--dry-run`.
+Applying explicitly selects Codex and Claude Code, approves their setup, and
+lets REA preserve unrelated configuration and create its own backups. Restart
+both clients after installation to discover the MCP tools and skills.
+
+REA owns regular skill directories in `~/.agents/skills` and `~/.claude/skills`;
+its updater rejects symlinks, so do not adopt these into `shared/skills`.
+`CODEX_HOME` and `CLAUDE_CONFIG_DIR` select alternate profiles when set.
+No global package or analysis engine is installed. Engines such as Ghidra need
+separate setup for tasks that require them. Use the scoped doctor above for
+REA readiness; the general configs health command does not check this optional
+integration.
+
+Routine installs skip REA. Uninstall leaves it intact because REA's upstream
+uninstall affects all registered clients, not only these two. Review
+`npx --yes rea-agents@6.5.0 uninstall --help` before removing it. To update,
+review the new release's setup dry run, change the pinned version here and in
+`scripts/lib/install.ts`, then apply the REA component again.

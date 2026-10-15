@@ -6,7 +6,7 @@ import { Skills } from './skills.ts';
 import { Agents } from './agents.ts';
 import { Mise } from './mise.ts';
 
-export const components = ['packages', 'apps', 'agents', 'skills', 'mise', 'atuin', 'nvim', 'gradle', 'shell', 'tmux', 'git', 'session', 'command-center'] as const;
+export const components = ['packages', 'apps', 'agents', 'skills', 'mise', 'atuin', 'nvim', 'gradle', 'shell', 'tmux', 'git', 'session', 'command-center', 'rea'] as const;
 export type Component = typeof components[number];
 export type Profile = 'macos' | 'omarchy';
 
@@ -80,6 +80,17 @@ export class Installer {
 
   private async block(component: Component, destination: string, content: string, uninstall: boolean, comment = '#') {
     await this.component(component, () => this.files.block(this.destination(destination), uninstall ? undefined : content, comment));
+  }
+
+  private rea(uninstall: boolean) {
+    // REA's uninstall affects every registered client, not just our two clients.
+    if (uninstall) {
+      this.files.log('note', 'REA left installed; its upstream uninstall affects all clients');
+      return;
+    }
+    const args = ['--yes', 'rea-agents@6.5.0', 'setup', '--client', 'codex', '--client', 'claude_code'];
+    this.files.log('setup', `npx ${[...args, this.files.dryRun ? '--dry-run' : '--yes'].join(' ')}`);
+    if (!this.files.dryRun) run('npx', [...args, '--yes']);
   }
 
   private packages() {
@@ -215,6 +226,7 @@ export class Installer {
   }
 
   async apply(uninstall: boolean) {
+    await this.component('rea', () => this.rea(uninstall));
     if (!uninstall) {
       await this.component('packages', () => this.packages());
       if (this.profile === 'omarchy') await this.component('apps', () => this.apps());

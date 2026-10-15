@@ -70,7 +70,7 @@ export class Health {
   private async configs() {
     this.section('Managed files');
     const recorder = new Recorder(this.repo, this.home, true);
-    const excluded: Component[] = ['packages', 'apps', 'command-center'];
+    const excluded: Component[] = ['packages', 'apps', 'command-center', 'rea'];
     try {
       await new Installer(recorder, this.profile, new Set(components.filter(component => !excluded.includes(component)))).apply(false);
     } catch (error) {

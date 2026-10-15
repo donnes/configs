@@ -85,6 +85,24 @@ class CliInstallTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         return result
 
+    def test_rea_requires_explicit_apply_and_reports_setup_failure(self):
+        runner = self.repo.parent / 'fake-bin/npx'
+        runner.write_text('#!/bin/sh\necho rea-called >> "$COMMAND_LOG"\nexit 7\n')
+        runner.chmod(0o755)
+        for profile in ['macos', 'omarchy']:
+            with self.subTest(profile=profile):
+                self.env['DONNES_CONFIGS_PROFILE'] = profile
+                self.run_cli('--only', 'rea', '--dry-run')
+                self.run_cli('uninstall', '--only', 'rea')
+                self.run_cli('--skip', 'packages,apps,agents,skills,mise,atuin,nvim,gradle,shell,tmux,git,session')
+                self.assertFalse(self.log.exists())
+                result = subprocess.run(['bash', str(self.repo / 'cli'), '--only', 'rea'],
+                                        env=self.env, capture_output=True, text=True)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('npx failed (7)', result.stderr)
+                self.assertEqual(self.log.read_text(), 'rea-called\n')
+                self.log.unlink()
+
     def test_install_and_uninstall_preserve_foreign_files(self):
         source = self.write('shared/agents/global/AGENTS.md', 'instructions')
         custom = self.home / '.codex-purpose'

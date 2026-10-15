@@ -33,6 +33,7 @@ exits 1 when a check fails.
 Components:
   ${components.join(' ')}
   command-center is opt-in when installing; default uninstall includes it.
+  rea is opt-in and leaves integrations intact on uninstall.
 `;
 
 async function main() {
@@ -67,7 +68,7 @@ async function main() {
   if (values.interactive && ['adopt', 'update', 'health'].includes(action)) throw new Error('--interactive applies only to install, uninstall, and remove-skill');
   if (values['dry-run'] && action === 'health') throw new Error('health never changes anything; run it without --dry-run');
   const profile = detectProfile();
-  const defaults = components.filter(component => action === 'uninstall' || component !== 'command-center');
+  const defaults = components.filter(component => component !== 'rea' && (action === 'uninstall' || component !== 'command-center'));
   let enabled = new Set<Component>((only.length ? only : defaults).filter(component => !skip.includes(component)));
   if (values.interactive && ['install', 'uninstall'].includes(action)) {
     if (!canPrompt()) throw new Error('interactive mode requires a terminal');
