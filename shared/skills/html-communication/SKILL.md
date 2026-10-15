@@ -81,19 +81,19 @@ When the user asks for variants:
 
 ## Publish
 
-Donald has given standing permission to upload every artifact created or updated with this skill. Upload is required, including in Auto mode. Do not ask for separate permission or stop at the local file.
+Publishing to Postplan makes the page reachable by URL, so it needs Donald's confirmation every time, including for re-uploads of an already published file and in Auto mode.
 
 ### ✅ DO
 
 1. Write the HTML file locally.
-2. Run `npx postplan upload <file path>`.
-3. Report the local path and returned Postplan URL.
-4. If the harness has a tool that shows HTML inline in the conversation, also show the same file there, following that tool's layout rules. It is the only place the harness theme applies.
+2. If the harness has a tool that shows HTML inline in the conversation, show the file there, following that tool's layout rules. It is the only place the harness theme applies.
+3. Ask whether to publish it to Postplan with the harness's question tool, such as Claude Code's `AskUserQuestion` or Codex's `request_user_input`. Without a question tool, ask in the reply and stop.
+4. Only after Donald confirms, run `npx postplan upload <file path>` and report the returned URL. Otherwise, report the local path.
 
 Re-upload the same absolute path to update the existing URL. Use `npx postplan upload <file path> --new` only when a new draft is wanted.
 
-If validation fails, fix the markup and retry. If a scripted upload needs authentication, ask the user to run `postplan auth login` — then retry without removing the requested interactivity.
+If validation fails, fix the markup and retry. If a scripted upload needs authentication, ask the user to run `postplan auth login`, then retry without removing the requested interactivity.
 
 ### ❌ DON'T
 
-Never open a browser or claim the document is hosted before upload succeeds. Do not verify in a browser unless the user asks. A harness's own HTML preview tool is fine for checking charts, in both light and dark when it offers both.
+Never upload without confirmation, open a browser, or claim the document is hosted before upload succeeds. Do not verify in a browser unless the user asks. A harness's own HTML preview tool is fine for checking charts, in both light and dark when it offers both.
