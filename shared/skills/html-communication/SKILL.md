@@ -26,7 +26,7 @@ Create one self-contained HTML file, capped at 512 KB.
 
 ### ✅ DO
 
-- Write it like a spec, not a landing page: dense, scannable, no hero, decorative chrome, marketing voice, or em dashes. A chart page may lead with one large number when that number is the answer.
+- Write it like a spec, not a landing page: dense, scannable, no hero, decorative chrome, marketing voice, or em dashes. Large numbers are fine on data pages when they carry the answer.
 - Take every color and font from the theme tokens below.
 - Make it mobile-readable with a responsive viewport and no fixed-width layout.
 - Use semantic HTML, inline CSS, inline SVG, and HTTPS or data-URL images.
