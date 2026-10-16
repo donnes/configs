@@ -27,7 +27,7 @@ Create one self-contained HTML file, capped at 512 KB.
 ### ✅ DO
 
 - Write it like a spec, not a landing page: dense, scannable, no hero, decorative chrome, marketing voice, or em dashes. Large numbers are fine on data pages when they carry the answer.
-- Take every color, font and the page padding from the tokens below.
+- Take every color, font and the page padding from the Look tokens below.
 - Make it mobile-readable with a responsive viewport and no fixed-width layout.
 - Use semantic HTML, inline CSS, inline SVG, and HTTPS or data-URL images.
 - Use an inline classic script only when interactivity materially helps. Keep scripted pages useful without JavaScript; the sandbox blocks storage, fetch, workers, frames, forms, and popups.
@@ -39,32 +39,57 @@ Never include external or module scripts, inline event handlers, `javascript:` U
 
 ## Look
 
-Every page uses this fixed palette, black background, and padding, wherever it is shown. Restyle the skill by editing these values here, not per page.
+Every page uses this fixed look wherever it is shown: near-black zinc surfaces, white and zinc text, one green accent, Inter for prose and a monospace for labels. Restyle the skill by editing these values here, not per page.
 
 ```css
 :root {
-  --bg: #000;
-  --fg: #fff;
-  --dim: #8a8a8a;
-  --rule: #2a2a2a;
-  --surface: #111;
-  --c1: #f0712c;
-  --c2: #3b8ee8;
-  --c3: #23a878;
-  --c4: #d4d4d4;
-  --c5: #a78bfa;
-  --c6: #e5c07b;
-  --good: #23a878;
-  --bad: #f0574a;
-  --font: -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
-  --mono: ui-monospace, "SF Mono", Menlo, monospace;
-  --pad: clamp(16px, 4vw, 40px);
+  --bg: #09090b;
+  --surface: #0c0c0e;
+  --surface-2: #121214;
+  --rule: #27272a;
+  --grid: #18181b;
+  --fg: #fafafa;
+  --fg-2: #e4e4e7;
+  --muted: #d4d4d8;
+  --body: #a1a1aa;
+  --dim: #71717a;
+  --faint: #52525b;
+  --accent: #86efac;
+  --bar: #3f3f46;
+  --c1: #86efac;
+  --c2: #7dd3fc;
+  --c3: #fcd34d;
+  --c4: #c4b5fd;
+  --c5: #fda4af;
+  --c6: #a1a1aa;
+  --good: #86efac;
+  --bad: #fca5a5;
+  --font: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --mono: "JetBrains Mono", "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --pad: clamp(20px, 5vw, 96px);
+  --radius: 6px;
 }
 html { background: var(--bg); color: var(--fg); font-family: var(--font); }
 body { margin: 0; padding: var(--pad); }
 ```
 
 Use only these tokens in the rest of the CSS. Don't map them to a harness's theme variables.
+
+### Type
+
+- **Eyebrow:** `--mono`, uppercase, `letter-spacing: .2em`, `--dim`, prefixed with `// `.
+- **Headline:** `--font`, weight 700, `line-height: 1.05`, `letter-spacing: -.035em`, `font-size: clamp(32px, 5.5vw, 80px)`. State the answer in it; color the key figure `--accent`. A second line can drop to `--muted`.
+- **Lede:** `--font`, `clamp(16px, 1.8vw, 28px)`, `--body`. Inline code sits in a `--surface-2` chip with a `--rule` border and `--radius`.
+- **Panel title:** `--mono`, uppercase, `letter-spacing: .15em`, `--fg-2`, in a `--surface-2` header row with its qualifier ("lower is better") right-aligned in `--dim`.
+- **Row label:** `--font` in `--fg-2`, followed by a smaller sublabel in `--dim`.
+- **Values and deltas:** `--mono`; deltas in `--accent` (or `--bad` when worse), neutral notes like "baseline" in `--dim`.
+- **Footnote:** `--mono`, small, `--faint`, prefixed with `// `, with key numbers lifted to `--body`. Put the method and hardware there.
+
+### Surfaces
+
+- Panels are `--surface` with a 1px `--rule` border and `--radius`; their header row is `--surface-2` with a `--rule` bottom border.
+- A thin header can carry the subject on the left (name, a 1px `--rule` divider, a `--mono` uppercase tag) and the exact command or setting in a bordered `--mono` chip on the right.
+- Faint 1px `--grid` vertical guide lines may mark the content edges and center. Nothing else is decorative: no gradients, glows or shadows.
 
 ## Charts and Benchmarks
 

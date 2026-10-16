@@ -13,14 +13,15 @@ Choose the layout, sections and chart types that fit the data and what the user 
 ## Patterns that work
 
 **Horizontal bars, for comparing a few values:**
+- Before/after comparisons: the baseline bar in `--bar`, the subject bar in `--fg`, and an external reference (a stock tool, a competitor) as a 1px dashed `--bar` outline with no fill. Put the delta ("-13%") right after the subject bar in `--mono` `--accent`, and "baseline" or "reference" after the others in `--dim`.
+- Put each row's label and sublabel above its bar. Group one metric per panel, so two metrics sit side by side and stack on phones.
 - A range can be a solid bar for the lower estimate plus a hatched extension up to the upper one.
-- Put the row label and a muted sublabel (a date range or setting) on the left, the bar in the middle, and the value right-aligned in large type.
 - Give the bars fixed heights and build them as HTML (a track with a filled child at `width: N%`). They stay crisp and reflow on phones.
 - Hatch a range with `repeating-linear-gradient(-45deg, var(--c1) 0 3px, transparent 3px 7px)`.
 
 **Stacked columns, for composition:**
 - Put the total above the column, the main segment's value and name inside it in a contrasting color, and the period below.
-- Use `--c4` or `--surface` for "other", so the highlighted segment stands out.
+- Use `--bar` for "other", so the highlighted segment stands out.
 
 **Ranking tables, for benchmarks:**
 - Columns: rank, name with a muted secondary line (harness, version, setting), the settings that differ, the score with an inline bar, then supporting metrics such as error rate, time and tokens.
@@ -38,10 +39,10 @@ Choose the layout, sections and chart types that fit the data and what the user 
 
 ## Type and color
 
-- Headings use `--font` at weight 700 with slightly tight letter spacing. Numbers use the same font at large sizes, with `tabular-nums` wherever they line up in columns.
-- Body text is `--fg`. Labels, sublabels, axis text and captions are `--dim`.
+- Follow the Type rules in `SKILL.md`. Use `tabular-nums` wherever numbers line up in columns.
+- Axis text and captions are `--dim` in `--mono`; gridlines are `--grid`.
 - Assign series colors in order from `--c1` and keep each series' color across every chart on the page.
-- Use one accent for what matters most. Don't add decorative color.
+- `--accent` marks what matters most, usually the improvement. Don't add decorative color.
 - Size the type with `clamp()`, so a 728px reply column and a 360px phone both work. On narrow screens, stack side-by-side charts and let wide tables scroll horizontally inside their own container.
 
 ## Check before publishing
