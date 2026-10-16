@@ -27,7 +27,7 @@ Create one self-contained HTML file, capped at 512 KB.
 ### ✅ DO
 
 - Write it like a spec, not a landing page: dense, scannable, no hero, decorative chrome, marketing voice, or em dashes. Large numbers are fine on data pages when they carry the answer.
-- Take every color and font from the theme tokens below.
+- Take every color, font and the page padding from the tokens below.
 - Make it mobile-readable with a responsive viewport and no fixed-width layout.
 - Use semantic HTML, inline CSS, inline SVG, and HTTPS or data-URL images.
 - Use an inline classic script only when interactivity materially helps. Keep scripted pages useful without JavaScript; the sandbox blocks storage, fetch, workers, frames, forms, and popups.
@@ -37,32 +37,34 @@ Create one self-contained HTML file, capped at 512 KB.
 
 Never include external or module scripts, inline event handlers, `javascript:` URLs, forms, frames, embeds, objects, applets, meta refresh, linked stylesheets, secrets, private URLs, or local filesystem paths.
 
-## Theme
+## Look
 
-Some harnesses show HTML inline and inject their active theme as CSS custom properties on `:root`, such as `--background`, `--foreground` and `--chart-1` to `--chart-6`. The harness's HTML tool description lists them. Map them to your own tokens with a fallback, so the same file matches the harness theme inline, including light mode, and uses the black palette everywhere else, including Postplan:
+Every page uses this fixed palette, black background, and padding, wherever it is shown. Restyle the skill by editing these values here, not per page.
 
 ```css
 :root {
-  --bg: var(--background, #000);
-  --fg: var(--foreground, #fff);
-  --dim: var(--muted-foreground, #8a8a8a);
-  --rule: var(--border, #2a2a2a);
-  --surface: var(--card, #111);
-  --c1: var(--chart-1, #f0712c);
-  --c2: var(--chart-2, #3b8ee8);
-  --c3: var(--chart-3, #23a878);
-  --c4: var(--chart-4, #d4d4d4);
-  --c5: var(--chart-5, #a78bfa);
-  --c6: var(--chart-6, #e5c07b);
-  --good: var(--success, #23a878);
-  --bad: var(--destructive, #f0574a);
-  --font: var(--font-sans, -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif);
-  --mono: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
+  --bg: #000;
+  --fg: #fff;
+  --dim: #8a8a8a;
+  --rule: #2a2a2a;
+  --surface: #111;
+  --c1: #f0712c;
+  --c2: #3b8ee8;
+  --c3: #23a878;
+  --c4: #d4d4d4;
+  --c5: #a78bfa;
+  --c6: #e5c07b;
+  --good: #23a878;
+  --bad: #f0574a;
+  --font: -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --pad: clamp(16px, 4vw, 40px);
 }
 html { background: var(--bg); color: var(--fg); font-family: var(--font); }
+body { margin: 0; padding: var(--pad); }
 ```
 
-Use only these tokens in the rest of the CSS. Never hardcode a color that assumes a dark background, because the harness theme may be light.
+Use only these tokens in the rest of the CSS. Don't map them to a harness's theme variables.
 
 ## Charts and Benchmarks
 
@@ -86,7 +88,7 @@ Publishing to Postplan makes the page reachable by URL, so it needs Donald's con
 ### ✅ DO
 
 1. Write the HTML file locally.
-2. If the harness has a tool that shows HTML inline in the conversation, show the file there, following that tool's layout rules. It is the only place the harness theme applies.
+2. If the harness has a tool that shows HTML inline in the conversation, show the file there with the palette and padding above.
 3. Ask whether to publish it to Postplan with the harness's question tool, such as Claude Code's `AskUserQuestion` or Codex's `request_user_input`. Without a question tool, ask in the reply and stop.
 4. Only after Donald confirms, run `npx postplan upload <file path>` and report the returned URL. Otherwise, report the local path.
 
@@ -96,4 +98,4 @@ If validation fails, fix the markup and retry. If a scripted upload needs authen
 
 ### ❌ DON'T
 
-Never upload without confirmation, open a browser, or claim the document is hosted before upload succeeds. Do not verify in a browser unless the user asks. A harness's own HTML preview tool is fine for checking charts, in both light and dark when it offers both.
+Never upload without confirmation, open a browser, or claim the document is hosted before upload succeeds. Do not verify in a browser unless the user asks. A harness's own HTML preview tool is fine for checking charts.

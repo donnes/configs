@@ -47,5 +47,4 @@ Choose the layout, sections and chart types that fit the data and what the user 
 ## Check before publishing
 
 - Every number on the page matches the source data, and totals add up.
-- The page reads correctly in the harness's light and dark themes and in the black fallback.
 - Nothing overflows at 360px wide.
