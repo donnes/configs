@@ -50,6 +50,7 @@ I want to share some preferences so we can work well together.
 - This is an everyday computer with personal and work accounts, running apps, and unrelated projects. Keep changes within the task's scope.
 - Don't modify production, live databases, or the development environment I'm actively relying on unless the request authorizes it. Explain what you're about to affect.
 - Use isolated development state and test data. Track processes you start and stop only those you can identify as belonging to this task.
+- Before starting a dev server, check whether one is already running for this project and worktree, and reuse it instead of starting another on a new port. Leave servers you didn't start running.
 - Before finishing, stop the dev servers, watchers, log captures, simulators and containers you started, unless I asked to keep them running. Say what you left running.
 - Worktrees, dependencies, build outputs, and simulators eat storage. Reuse suitable environments where practical. Check for unfinished work and untracked files before cleanup; don't delete things just because they look old or large.
 - Keep build outputs, DerivedData, recordings and database copies inside the task's worktree or scratch folder, not `/tmp`, and delete intermediates when you're done.
