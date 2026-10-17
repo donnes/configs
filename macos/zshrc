@@ -104,3 +104,6 @@ if [[ -t 1 ]]; then
 else
   unalias grep 2>/dev/null  # oh-my-zsh adds --exclude-dir flags
 fi
+
+# Vite+ bin (https://viteplus.dev)
+. "/Users/donaldsilveira/.vite-plus/env"
