@@ -11,7 +11,7 @@ export type Component = typeof components[number];
 export type Profile = 'macos' | 'omarchy';
 
 export function available(profile: Profile) {
-  const exclusive: Component[] = profile === 'macos' ? ['apps', 'session'] : ['git'];
+  const exclusive: Component[] = profile === 'macos' ? ['apps', 'session'] : [];
   return components.filter(component => !exclusive.includes(component));
 }
 
@@ -210,6 +210,8 @@ export class Installer {
     await this.component('nvim', () => this.nvim(uninstall));
     // Each machine builds Android for its own emulator ABI; Gradle writes nothing else to this file.
     await this.link('gradle', `${this.profile}/gradle.properties`, '.gradle/gradle.properties', uninstall);
+    // Git reads ~/.config/git/ignore as the global ignore while core.excludesFile is unset.
+    await this.link('git', 'shared/git/ignore', '.config/git/ignore', uninstall);
     if (!uninstall) for (const name of ['ghostty', 'yazi', 'ssh']) this.files.log('skip', `shared/${name} is excluded from the default install`);
   }
 

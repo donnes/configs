@@ -177,6 +177,20 @@ class CliInstallTests(unittest.TestCase):
                 self.run_cli('uninstall', '--only', 'gradle')
                 self.assertFalse(destination.exists())
 
+    def test_global_gitignore_is_linked_on_both_profiles(self):
+        source = self.write('shared/git/ignore', '.scratch/\n')
+        self.write('macos/gitconfig', '[pull]\n\trebase = true\n')
+        destination = self.home / '.config/git/ignore'
+        for profile in ['macos', 'omarchy']:
+            with self.subTest(profile=profile):
+                self.env['DONNES_CONFIGS_PROFILE'] = profile
+                self.run_cli('--only', 'git')
+                self.assertEqual(destination.resolve(), source)
+                self.assertEqual((self.home / '.gitconfig').exists(), profile == 'macos')
+                self.run_cli('uninstall', '--only', 'git')
+                self.assertFalse(destination.exists())
+                (self.home / '.gitconfig').unlink(missing_ok=True)
+
     def test_marker_blocks_are_idempotent_and_uninstall_preserves_user_content(self):
         self.write('macos/zshrc', '# zsh')
         self.write('macos/zshenv', '# env')
