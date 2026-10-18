@@ -21,7 +21,8 @@ details, and `./cli --help` for commands.
 
 - Language runtimes and CLIs: `shared/mise/conf.d/donnes.toml`, used on both
   machines. System packages: `packages/macos.txt`, `packages/macos-casks.txt`
-  and `packages/omarchy.txt`.
+  and `packages/omarchy.txt`. gh extensions: `packages/gh-extensions.txt`, shared
+  by both machines and installed by the `packages` step.
 - Only list tools Donald runs directly. Dependencies other tools need stay with
   whatever needs them.
 - JavaScript globals go through `bun add -g`, not npm or pnpm.

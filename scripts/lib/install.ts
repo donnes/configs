@@ -35,6 +35,14 @@ export function opencodeVersion(home: string) {
   return result.status === 0 ? result.stdout.match(/\d+\.\d+\.\d+/)?.[0] : undefined;
 }
 
+// gh extensions live in the user's gh data directory, so both profiles share one
+// list. Reports owner/repo for each installed extension; none when gh is missing.
+export function ghExtensions() {
+  const result = spawnSync('gh', ['extension', 'list'], { encoding: 'utf8' });
+  if (result.error || result.status !== 0) return new Set<string>();
+  return new Set(result.stdout.split('\n').map(line => line.split('\t')[1]?.trim()).filter(repo => repo !== undefined && repo !== ''));
+}
+
 // Omarchy's installers also set up what a bare package install skips, such as
 // Steam's 32-bit GPU drivers, the Tailscale service and Zed's theme. Some open
 // the app or start a Tailscale login, so each runs only while a package is missing.
@@ -99,6 +107,16 @@ export class Installer {
       if (!this.files.dryRun) run('yay', ['-S', '--needed', '-'], fs.readFileSync(this.source('packages/omarchy.txt'), 'utf8'));
     } else this.homebrew();
     this.opencode();
+    this.ghExtensions();
+  }
+
+  private ghExtensions() {
+    const installed = ghExtensions();
+    for (const repo of fs.readFileSync(this.source('packages/gh-extensions.txt'), 'utf8').split(/\s+/).filter(Boolean)) {
+      if (installed.has(repo)) { this.files.log('skip', `gh extension ${repo} already installed`); continue; }
+      this.files.log('package', `gh extension install ${repo}`);
+      if (!this.files.dryRun) run('gh', ['extension', 'install', repo]);
+    }
   }
 
   // The shell startup files and the GUI PATH already put ~/.opencode/bin first.
