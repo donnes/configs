@@ -28,10 +28,11 @@ class CliInstallTests(unittest.TestCase):
         fake_bin = self.repo.parent / 'fake-bin'
         fake_bin.mkdir()
         self.log = self.repo.parent / 'commands.jsonl'
-        # FAKE_PRESENT lists installed Omarchy packages; FAKE_MISE_SETTING is what
+        # FAKE_PRESENT lists installed Omarchy packages, FAKE_GH_EXTENSIONS installed
+        # gh extensions as owner/repo; FAKE_MISE_SETTING is what
         # `mise settings get` prints. The other FAKE_ variables describe the state
         # that `./cli health` queries.
-        for command in ['brew', 'curl', 'yay', 'pacman', 'systemctl', 'launchctl', 'mise', 'omarchy-pkg-present', 'omarchy-pkg-add',
+        for command in ['brew', 'curl', 'gh', 'yay', 'pacman', 'systemctl', 'launchctl', 'mise', 'omarchy-pkg-present', 'omarchy-pkg-add',
                         'omarchy-pkg-aur-add', 'omarchy-install-gaming-steam', 'omarchy-install-browser']:
             executable = fake_bin / command
             executable.write_text('#!/usr/bin/env python3\nimport json, os, sys\n'
@@ -44,6 +45,9 @@ class CliInstallTests(unittest.TestCase):
                                   '    missing = [arg for arg in args[1:] if arg not in env("FAKE_PRESENT").split()]\n'
                                   '    print("\\n".join(missing))\n'
                                   '    sys.exit(127 if missing else 0)\n'
+                                  'if name == "gh" and args[:2] == ["extension", "list"]:\n'
+                                  '    print("\\n".join(f"gh {repo.split(\'/\')[1]}\\t{repo}\\tv1.0.0" for repo in env("FAKE_GH_EXTENSIONS").split()))\n'
+                                  '    sys.exit()\n'
                                   'if name == "brew" and args[:1] == ["list"]:\n'
                                   '    print("\\n".join(env("FAKE_CASKS" if "--cask" in args else "FAKE_FORMULAE").split()))\n'
                                   '    sys.exit()\n'
@@ -486,17 +490,20 @@ class CliInstallTests(unittest.TestCase):
         log = self.log
         self.write('packages/macos.txt', 'formula-one\nformula-two\n')
         self.write('packages/macos-casks.txt', 'app-one\napp-two\n')
+        self.write('packages/gh-extensions.txt', 'owner/one\nowner/two\n')
+        self.env['FAKE_GH_EXTENSIONS'] = 'owner/two'
         self.run_cli('--only', 'packages')
         self.assertEqual([json.loads(line) for line in log.read_text().splitlines()], [
             ['brew', ['install', 'formula-one', 'formula-two'], ''],
             ['brew', ['trust', '--tap', 'abue-ammar/tinycast'], ''],
             ['brew', ['install', '--cask', 'app-one', 'app-two'], ''],
             ['curl', ['-fsSL', 'https://opencode.ai/v2/install'], ''],
+            ['gh', ['extension', 'install', 'owner/one'], ''],
         ])
         self.assertEqual((self.home / 'opencode-installer-args').read_text().strip(), '--no-modify-path')
         log.write_text('')
         self.opencode('2.0.26')
-        self.env['DONNES_CONFIGS_PROFILE'] = 'omarchy'
+        self.env.update(DONNES_CONFIGS_PROFILE='omarchy', FAKE_GH_EXTENSIONS='owner/one owner/two')
         packages = 'package-one\npackage-two\n'
         self.write('packages/omarchy.txt', packages)
         config = self.write('.config/hypr/hyprland.lua', '-- user config\n', home=True)
@@ -612,14 +619,17 @@ class CliInstallTests(unittest.TestCase):
         self.write('shared/agents/global/AGENTS.md', 'instructions')
         self.write('packages/macos.txt', 'git\nmise\n')
         self.write('packages/macos-casks.txt', 'abue-ammar/tinycast/tinycast\n')
+        self.write('packages/gh-extensions.txt', 'github/gh-stack\n')
         self.run_cli('--skip', 'packages')
-        self.env.update(FAKE_FORMULAE='git mise', FAKE_CASKS='tinycast', FAKE_GUI_PATH=f'{shims}:/usr/bin',
+        self.env.update(FAKE_FORMULAE='git mise', FAKE_CASKS='tinycast', FAKE_GH_EXTENSIONS='github/gh-stack',
+                        FAKE_GUI_PATH=f'{shims}:/usr/bin',
                         FAKE_LOADED='dev.dstech.guipath dev.dstech.mise-prune',
                         FAKE_MISE_LS=json.dumps({'node': [{'installed': True}], 'jj': [{'installed': True}]}))
         output = self.health(0)
         self.assertIn('managed files match the repository', output)
         self.assertIn('2 tools resolve through mise', output)
         self.assertIn('opencode 2.0.26 installed', output)
+        self.assertIn('1 listed gh extensions installed', output)
         self.assertIn('opencode resolves to its v2 install', output)
         self.assertIn('no global bun or pnpm copies of mise tools', output)
         self.assertNotIn('[fail', output)
@@ -629,12 +639,13 @@ class CliInstallTests(unittest.TestCase):
         self.opencode('1.19.0')
         self.write('.bun/bin/jj', '', home=True)
         startup(f'export PATH="{shadow}:$PATH"\nexport FAKE_MISE_DOCTOR=1\n')
-        self.env.update(FAKE_FORMULAE='git', FAKE_LOADED='dev.dstech.guipath',
+        self.env.update(FAKE_FORMULAE='git', FAKE_GH_EXTENSIONS='', FAKE_LOADED='dev.dstech.guipath',
                         FAKE_MISE_LS=json.dumps({'node': [{'installed': False}], 'jj': [{'installed': True}]}))
         output = self.health(1)
         for expected in ['append: add managed block in ~/.zshenv', 'missing Homebrew formulae: mise',
                          'not installed: node', 'mise doctor found problems', f'jj resolves to {shadow}/jj',
                          '~/.pyenv is left over from pyenv', 'opencode 1.19.0 is not v2',
+                         'missing gh extensions: github/gh-stack',
                          '~/.bun/bin/jj duplicates the mise tool', 'dev.dstech.mise-prune is not loaded']:
             self.assertIn(expected, output)
 

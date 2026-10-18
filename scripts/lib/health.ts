@@ -3,7 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { spawnSync, type SpawnSyncOptions } from 'node:child_process';
 import { Files, within } from './files.ts';
-import { apps, components, Installer, opencodeVersion, type Component, type Profile } from './install.ts';
+import { apps, components, ghExtensions, Installer, opencodeVersion, type Component, type Profile } from './install.ts';
 
 type Status = 'ok' | 'warn' | 'fail';
 
@@ -88,6 +88,11 @@ export class Health {
     const opencode = opencodeVersion(this.home);
     if (opencode?.startsWith('2.')) this.report('ok', `opencode ${opencode} installed`);
     else this.report('fail', `${opencode ? `opencode ${opencode} is not v2` : 'opencode v2 is not installed'}; run ./cli --only packages`);
+    const extensions = fs.readFileSync(path.join(this.repo, 'packages/gh-extensions.txt'), 'utf8').split(/\s+/).filter(Boolean);
+    const installed = ghExtensions();
+    const absent = extensions.filter(repo => !installed.has(repo));
+    if (absent.length) this.report('fail', `missing gh extensions: ${absent.join(' ')}; run ./cli --only packages`);
+    else this.report('ok', `${extensions.length} listed gh extensions installed`);
     if (this.profile === 'omarchy') {
       const wanted = fs.readFileSync(path.join(this.repo, 'packages/omarchy.txt'), 'utf8').split(/\s+/).filter(Boolean);
       const missing = capture('pacman', ['-T', ...wanted]).stdout.split('\n').filter(Boolean);

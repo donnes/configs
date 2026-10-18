@@ -53,7 +53,7 @@ changes nothing:
 
 - the configs checkout: uncommitted changes, or commits behind its upstream as of the last fetch;
 - managed files: anything `./cli` would link, relink or rewrite, taken from its own dry run;
-- packages: Homebrew formulae and casks on macOS, pacman packages and Omarchy apps on Omarchy, and opencode v2 on both;
+- packages: Homebrew formulae and casks on macOS, pacman packages and Omarchy apps on Omarchy, and opencode v2 and the listed gh extensions on both;
 - mise: every configured tool installed, and `mise doctor` clean in a new shell;
 - tool resolution: each tool found through mise in a new terminal's shell, started with a clean environment so this process's PATH can't hide problems in startup files. Omarchy's `~/.local/bin` wrappers, which run `mise x`, count as mise;
 - global duplicates: a copy of a mise tool in bun's or pnpm's global bin directory, such as a `bun add -g` install or a standalone bun;
@@ -81,7 +81,7 @@ Always inspect `./cli --dry-run` first.
 - `omarchy/`: bash/tmux deltas, vendored Omarchy Neovim keepers, `omarchy/bin` scripts linked into `~/.local/bin`, and the Hyprland session files (`hypr/`, `systemd/user/`)
 - `macos/`: full zsh, git, and tmux configuration, plus `macos/bin` scripts linked into `~/.local/bin`
 - `macos/gradle.properties`, `omarchy/gradle.properties`: linked to `~/.gradle/gradle.properties`, so local Android builds target the machine's emulator ABI and share Gradle's build cache
-- `packages/`: platform package lists
+- `packages/`: platform package lists, plus `gh-extensions.txt`, the gh extensions both machines install
 - `shared/mise/`: shared mise tools and settings; `omarchy/mise/`: the prune timer
 - `scripts/`: TypeScript CLI entry point and filesystem, installation, prompt, and skill modules
 - `fleet/skills/`: command-center workflows, installed only when selected
