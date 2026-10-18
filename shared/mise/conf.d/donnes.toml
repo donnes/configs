@@ -16,6 +16,9 @@ aws-cli = "latest"
 doppler = "latest"
 vercel = "latest"
 cloudflared = "latest"
+# Cloudflare's `cf` is in beta and mise's "latest" skips prereleases, which
+# resolves to a stale 0.x. Bump the pin until 1.0 ships.
+"npm:cf" = "1.0.0-beta.18"
 eza = "latest"
 fzf = "latest"
 zoxide = "latest"

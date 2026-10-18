@@ -59,6 +59,10 @@ I want to share some preferences so we can work well together.
 
 - My machines' packages, mise tools, shell, editor and agent instructions are managed in `~/.donnes/configs`. To change them, edit that repo and apply it with its `./cli`, following its AGENTS.md. Don't install tools or edit those files directly on a machine.
 
+## Cloudflare
+
+- When interacting with Cloudflare, use the cf CLI unless the project has a Wrangler configuration file.
+
 ## Git and GitHub accounts
 
 - My Git and SSH setup routes identities by directory. Respect conditional includes, SSH aliases, identity files, and credential helpers.
