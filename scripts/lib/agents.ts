@@ -1,10 +1,10 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Files } from './files.ts';
-import type { Profile } from './install.ts';
+import type { Profile, RuntimeHomes } from './install.ts';
 
 export class Agents {
-  constructor(private files: Files, private profile: Profile) {}
+  constructor(private files: Files, private profile: Profile, private homes: RuntimeHomes) {}
 
   private generated(profile: Profile) {
     return path.join(this.files.repo, '.generated/agents', profile, 'AGENTS.md');
@@ -13,8 +13,8 @@ export class Agents {
   async apply(uninstall: boolean) {
     const global = path.join(this.files.repo, 'shared/agents/global/AGENTS.md');
     const destinations = [
-      path.join(process.env.CODEX_HOME || path.join(this.files.home, '.codex'), 'AGENTS.md'),
-      path.join(process.env.CLAUDE_CONFIG_DIR || path.join(this.files.home, '.claude'), 'CLAUDE.md'),
+      path.join(this.homes.codex, 'AGENTS.md'),
+      path.join(this.homes.claude, 'CLAUDE.md'),
     ];
     if (uninstall) {
       for (const destination of destinations) {

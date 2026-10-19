@@ -40,6 +40,9 @@ export class Files {
 
   constructor(readonly repo: string, readonly home: string, readonly dryRun: boolean) {}
 
+  // Differing local copies left in place, which leave an install incomplete.
+  get kept() { return [...this.keptPaths]; }
+
   pretty(file: string) {
     for (const [root, label] of [[this.repo, '<repo>'], [this.home, '~']]) {
       if (root !== undefined && within(file, root)) return label + file.slice(root.length);
@@ -180,31 +183,39 @@ export class Files {
     }
   }
 
+  // Replaces an existing block where it stands, so lines that installers append
+  // after it keep their order; a new block goes at the end.
   block(file: string, content?: string, comment = '#') {
     const start = `${comment} >>> donnes/configs >>>`, end = `${comment} <<< donnes/configs <<<`;
     const original = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
-    if (content === undefined && !original.includes(start)) return;
-    let skipping = false;
-    const lines = original.split('\n').filter(line => {
-      if (line === start) { skipping = true; return false; }
-      if (skipping && line === end) { skipping = false; return false; }
-      return !skipping;
-    });
-    if (content !== undefined) {
-      while (lines.at(-1) === '') lines.pop();
-      if (lines.length) lines.push('');
-      lines.push(start, content, end, '');
+    const lines = original.split('\n');
+    const starts = lines.flatMap((line, index) => line === start ? [index] : []);
+    const ends = lines.flatMap((line, index) => line === end ? [index] : []);
+    const [first] = starts, [last] = ends;
+    if (starts.length > 1 || ends.length > 1 || starts.length !== ends.length || (first !== undefined && last !== undefined && last < first)) {
+      throw new Error(`${this.pretty(file)} has malformed donnes/configs markers (${starts.length} start, ${ends.length} end); fix them by hand`);
     }
-    if (lines.join('\n') === original) {
+    let next: string[];
+    if (first === undefined || last === undefined) {
+      if (content === undefined) return;
+      next = [...lines];
+      while (next.at(-1) === '') next.pop();
+      if (next.length) next.push('');
+      next.push(start, content, end, '');
+    } else if (content === undefined) next = [...lines.slice(0, first), ...lines.slice(last + 1)];
+    else next = [...lines.slice(0, first + 1), content, ...lines.slice(last)];
+    if (next.join('\n') === original) {
       this.log('skip', `managed block in ${this.pretty(file)} is current`);
       return;
     }
-    this.log(content === undefined ? 'remove' : 'append', `${content === undefined ? 'managed block from' : `${original.includes(start) ? 'replace' : 'add'} managed block in`} ${this.pretty(file)}`);
+    if (content === undefined) this.log('remove', `managed block from ${this.pretty(file)}`);
+    else if (first === undefined) this.log('append', `add managed block in ${this.pretty(file)}`);
+    else this.log('replace', `managed block in ${this.pretty(file)}`);
     if (this.dryRun) return;
     fs.mkdirSync(path.dirname(file), { recursive: true });
     const temporary = `${file}.donnes-configs.${process.pid}`;
     const mode = fs.existsSync(file) ? fs.statSync(file).mode & 0o777 : 0o666 & ~process.umask();
-    fs.writeFileSync(temporary, lines.join('\n'), { mode });
+    fs.writeFileSync(temporary, next.join('\n'), { mode });
     fs.renameSync(temporary, file);
   }
 }

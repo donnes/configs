@@ -25,7 +25,11 @@ SSH/Git identities, or switch global accounts to make access work.
 
 Probe the target read-only before applying anything. Confirm its hostname, OS,
 architecture, available disk space, Node/npm, configs revision and dirty state,
-and selected runtime homes. The CLI needs Node >=20.12.0, npm, and either macOS
+and selected runtime homes. Where the target's CLI has them, also read
+`./cli health --json` and its receipt (`~/.local/state/donnes-configs/receipt.json`):
+the last run's outcome and revision, the runtime homes already installed, and
+mise's resolved versions. A box without a receipt was set up before receipts;
+treat its earlier state as unverified, not as complete. The CLI needs Node >=20.12.0, npm, and either macOS
 or an existing Omarchy installation. Do not force the Omarchy profile onto an
 unrelated Linux distribution.
 
@@ -77,7 +81,10 @@ may install checkout-local npm dependencies, as the README describes.
 
 Use `CODEX_HOME` and `CLAUDE_CONFIG_DIR` from the target record for non-default
 runtime homes. Repeat the instruction install for each selected home without
-copying credentials between them. Shared skills go into the target user's
+copying credentials between them. Keep the target's
+`~/.config/donnes-configs/machine.json` in step with its record (role, Codex
+homes, Claude config directories, accepted exceptions with reasons) so its
+health checks them; write it only within an authorized provisioning task. Shared skills go into the target user's
 `.agents/skills`; Claude skills go into the selected Claude config directory.
 
 The unattended CLI preserves differing local copies. Treat `keep`/`differs`
@@ -88,13 +95,22 @@ with its reason recorded.
 
 ## Verify and record the outcome
 
-Check the selected runtime instruction files contain shared guidance and the
-target's matching OS context, and that the selected skill directories resolve
-to the intended checkout. Confirm command-center skills are absent on workers;
+Run `./cli health --json` on the target. Its receipt check must show the run
+completed at the intended revision; `kept-conflicts` or `failed` is unfinished
+work, not a successful refresh. Check the selected runtime instruction files
+contain shared guidance and the target's matching OS context, and that the
+selected skill directories resolve to the intended checkout. Confirm command-center skills are absent on workers;
 remove only their managed links with `./cli uninstall --only command-center`
 when a role change requires it. Keep foreign copies and report them as exceptions.
 
-Record the actual revision and checks in the target's local inventory. New
+Compare the target's `versions` with the command center's when runtime
+consistency matters, and report differences and `override:` warnings as
+observations. Do not upgrade, downgrade or pin a tool to make them agree unless
+the user asks; record an intentional difference as a `machine.json` exception.
+
+Record the actual revision, receipt outcome and checks in the target's local
+inventory, replacing the stale "Last checked" and version fields rather than
+appending contradicting notes. New
 machines keep only their own local record unless they also manage other boxes.
 The command center updates its copy with the observed outcome. Portable purpose
 or baseline changes belong in `COMPUTERS.md`; connection details stay local.
