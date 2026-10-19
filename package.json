@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "check": "tsc --noEmit",
-    "test": "python3 -m unittest discover -s tests -v"
+    "test": "npm run test:e2e --",
+    "test:e2e": "python3 -m unittest discover -s tests/e2e -v"
   },
   "engines": {
     "node": ">=20.12.0"

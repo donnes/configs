@@ -16,7 +16,7 @@ Or bootstrap the canonical checkout:
 curl -fsSL https://raw.githubusercontent.com/donnes/configs/main/cli | bash
 ```
 
-Review the downloaded script before piping it to Bash. An existing `~/.donnes/configs` checkout is never pulled or overwritten automatically. The profile is Omarchy when `/usr/share/omarchy` exists, otherwise macOS on Darwin.
+Review the downloaded script before piping it to Bash. An existing `~/.donnes/configs` checkout is never pulled or overwritten automatically. The profile is Omarchy when `/usr/share/omarchy` exists, otherwise macOS on Darwin. `DONNES_CONFIGS_PROFILE=omarchy` or `macos` overrides the detection; the end-to-end tests use it to run both profiles on one machine.
 
 Node.js >=20.12.0 and npm are required. `cli` is a small Bash launcher; the
 implementation lives in `scripts/` as TypeScript and uses `@clack/prompts` for
@@ -129,7 +129,7 @@ Always inspect `./cli --dry-run` first.
 - `fleet/skills/`: command-center workflows, installed only when selected
 - `COMPUTERS.md`: portable machine roles and desired setup; private connections live in ignored `COMPUTERS.local.md`
 
-Run `npm run check` for TypeScript checking and `npm test` for CLI behavior tests.
+Run `npm run check` for TypeScript checking and `npm test` for the end-to-end tests in `tests/e2e/`, which run `./cli` against a sandbox home; see AGENTS.md.
 
 Ghostty, Yazi, and SSH are tracked but excluded from the default run. Atuin's config is tracked; its history, encryption key, and sessions stay local.
 

@@ -5,6 +5,7 @@
 .idea/
 
 # Temporary
+/.scratch/
 *.tmp
 *.bak
 *.backup
