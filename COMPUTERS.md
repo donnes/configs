@@ -62,6 +62,14 @@ For each record, keep:
 - Capabilities and meaningful exceptions to the baseline.
 - Last verification date, checked revision, checks performed, and pending work.
 
+Each box also keeps two private files of its own that the CLI reads. Its
+`machine.json` mirrors the role, runtime homes and accepted exceptions above, so
+health can check them. Its apply receipt records what `./cli` actually applied:
+revision, components, outcome and resolved tool versions. Take the installed
+revision and versions from the receipt and `./cli health --json` rather than
+copying them forward from an older note; see the README's Receipts and machine
+intent.
+
 Unknown or stale fields stay explicit. Verify identity, OS, connectivity, and
 checkout state again before changing a box. An inventory entry is not proof that
 a host is online or permission to modify it.

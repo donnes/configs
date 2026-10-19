@@ -11,18 +11,21 @@ details, and `./cli --help` for commands.
   managed files on the machine directly; the other machine would never get
   the change.
 - Preview first with `./cli --dry-run --only <components>`, then apply the same
-  selection. Afterwards, run `./cli health`; it should report no failures.
+  selection. Afterwards, run `./cli health`; it should report no failures, and
+  its receipt line should say the run completed.
 - Apply changes on donnes-pc over SSH (`ssh donnes-pc`) from its own checkout,
   `~/.donnes/configs`, after the change is merged and pulled there.
-- `./cli`'s `packages` step runs `brew install`, which also upgrades outdated
-  formulae and casks. Select it only when packages changed.
+- `./cli`'s `packages` and `gh-extensions` steps install only what is missing
+  and don't ask to upgrade installed packages, though a new package can pull
+  newer dependencies. Upgrades are separate, explicit commands (README,
+  Packages and upgrades); don't run them as part of an unrelated change.
 
 ## Where things go
 
 - Language runtimes and CLIs: `shared/mise/conf.d/donnes.toml`, used on both
   machines. System packages: `packages/macos.txt`, `packages/macos-casks.txt`
   and `packages/omarchy.txt`. gh extensions: `packages/gh-extensions.txt`, shared
-  by both machines and installed by the `packages` step.
+  by both machines and installed by the `gh-extensions` component.
 - Only list tools Donald runs directly. Dependencies other tools need stay with
   whatever needs them.
 - JavaScript globals go through `bun add -g`, not npm or pnpm.
@@ -31,7 +34,11 @@ details, and `./cli --help` for commands.
 - Agent instructions: edit `shared/agents/global/AGENTS.md` or the OS
   `CONTEXT.md`, never the generated `.generated/agents/*/AGENTS.md`.
 - Private details (hostnames, SSH aliases, account mappings) belong in the
-  ignored `COMPUTERS.local.md`, never in tracked files.
+  ignored `COMPUTERS.local.md`, never in tracked files. A machine's role,
+  JavaScript runtime owner (`jsRuntimes`), runtime homes and accepted health
+  exceptions go in its own
+  `~/.config/donnes-configs/machine.json`; the CLI writes its apply receipt to
+  `~/.local/state/donnes-configs/receipt.json`. Neither is tracked.
 
 ## Omarchy
 

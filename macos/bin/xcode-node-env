@@ -1,15 +1,84 @@
 #!/bin/sh
 # React Native and Expo record the resolved Node binary in ios/.xcode.env.local
-# on the first `pod install`, naming one exact mise install. That path goes stale
+# on the first `pod install`, naming one exact install. That path goes stale
 # when the project's Node version changes and breaks once mise prunes it. The
-# mise shim instead picks each project's version when Xcode runs it, so point
-# every recorded NODE_BINARY there. Roots default to ~/Git and T3 worktrees.
-line="export NODE_BINARY=\"${MISE_DATA_DIR:-$HOME/.local/share/mise}/shims/node\""
-[ $# -gt 0 ] || set -- "$HOME/Git" "$HOME/.t3/worktrees"
-for root; do [ -d "$root" ] && printf '%s\0' "$root"; done |
-  xargs -0 sh -c 'find "$@" \( -name node_modules -o -name Pods -o -name .git \) -prune -o -name .xcode.env.local -type f -print' sh |
-  while IFS= read -r file; do
-    if grep -q '^export NODE_BINARY=' "$file" && ! grep -qxF "$line" "$file"; then
-      sed -i '' "s|^export NODE_BINARY=.*|$line|" "$file" && echo "updated $file"
-    fi
+# mise shim instead picks each project's version when Xcode runs it.
+#
+# Usage: xcode-node-env [--dry-run] [root...]
+# Roots default to ~/Git and T3 worktrees. Only a NODE_BINARY that names an
+# exact mise or Vite+ Node install is repointed at the shim; any other value is
+# a deliberate choice and stays. Exits non-zero when a root cannot be searched
+# or a file cannot be rewritten, so the daily job skips pruning a version a
+# project may still name.
+set -u
+dry_run=
+if [ "${1-}" = --dry-run ]; then dry_run=1; shift; fi
+data="${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}"
+# awk reads these from its environment, which keeps spaces and backslashes intact.
+XNE_SHIM="$data/shims/node"
+XNE_MISE="$data/installs/node/"
+XNE_VP="${VP_HOME:-$HOME/.vite-plus}/js_runtime/node/"
+export XNE_SHIM XNE_MISE XNE_VP
+status=0
+if [ $# -gt 0 ]; then
+  # A root that was asked for and is missing is an error; a default one is not.
+  for root; do
+    [ -d "$root" ] || { echo "no such directory: $root" >&2; status=1; }
   done
+else
+  set -- "$HOME/Git" "$HOME/.t3/worktrees"
+fi
+for root; do
+  shift
+  [ -d "$root" ] && set -- "$@" "$root"
+done
+[ $# -gt 0 ] || exit "$status"
+
+# Prints the file with stale values replaced to `out`, notes kept values unless
+# `quiet` is set, and exits 10 when it replaced a value.
+program='
+BEGIN { shim = ENVIRON["XNE_SHIM"] }
+/^export NODE_BINARY=/ {
+  value = substr($0, 20)
+  first = substr(value, 1, 1)
+  if (length(value) > 1 && (first == "\"" || first == sprintf("%c", 39)) && substr(value, length(value)) == first)
+    value = substr(value, 2, length(value) - 2)
+  if ((index(value, ENVIRON["XNE_MISE"]) == 1 || index(value, ENVIRON["XNE_VP"]) == 1) && value ~ /\/bin\/node$/) {
+    print "export NODE_BINARY=\"" shim "\"" > out
+    changed = 1
+    next
+  }
+  if (value != shim && !quiet) print "keep " FILENAME ": custom NODE_BINARY=" value
+}
+{ print > out }
+END { exit changed ? 10 : 0 }
+'
+
+files=$(find "$@" \( -name node_modules -o -name Pods -o -name .git \) -prune -o -name .xcode.env.local -type f -print) || status=1
+next=
+trap 'rm -f "$next"' EXIT
+trap 'exit 1' INT TERM
+while IFS= read -r file; do
+  [ -n "$file" ] || continue
+  awk -v out=/dev/null -v quiet= "$program" "$file"
+  case $? in
+    0) continue ;;
+    10) ;;
+    *) echo "cannot read $file" >&2; status=1; continue ;;
+  esac
+  if [ -n "$dry_run" ]; then echo "would update $file"; continue; fi
+  # Write a copy beside the file, keeping its mode, then rename it into place,
+  # so a failed write never leaves the project with a truncated file.
+  if next=$(mktemp "$(dirname "$file")/.xcode.env.local.XXXXXX") && cp -p "$file" "$next" &&
+    { awk -v out="$next" -v quiet=1 "$program" "$file"; [ $? -eq 10 ]; } && mv -f "$next" "$file"; then
+    echo "updated $file"
+  else
+    echo "cannot update $file" >&2
+    status=1
+  fi
+  rm -f "$next"
+  next=
+done <<EOF
+$files
+EOF
+exit "$status"

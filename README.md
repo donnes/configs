@@ -37,10 +37,10 @@ Choose what the installer manages with repeatable `--skip` or `--only` options:
 
 `--interactive` opens a Clack multiselect with the default components selected.
 Use Space to toggle components and Enter to continue; Ctrl-C cancels. Available
-components are `packages`, `apps` (Omarchy only), `agents`, `skills`, `mise`, `atuin`, `nvim`, `gradle`, `shell`, `tmux`,
-`git`, `session` (Omarchy only), and `command-center`. The last
-component is unchecked and excluded from the default install; default uninstall
-includes it. `--skip-packages` remains an
+components are `packages`, `gh-extensions`, `apps` (Omarchy only), `agents`, `skills`, `mise`, `atuin`, `nvim`, `gradle`, `shell`, `tmux`,
+`git`, `session` (Omarchy only), `command-center` and `rea`. `command-center`
+is unchecked and excluded from the default install; default uninstall
+includes it; `rea` is always opt-in. `--skip-packages` remains an
 alias for `--skip packages`. Interactive mode cannot be combined with `--skip`
 or `--only`, and requires a terminal. Unattended agent and SSH sessions use
 explicit commands and flags; differing local copies are preserved when no
@@ -52,16 +52,57 @@ terminal is attached. `./cli install` is equivalent to `./cli`.
 changes nothing:
 
 - the configs checkout: uncommitted changes, or commits behind its upstream as of the last fetch;
-- managed files: anything `./cli` would link, relink or rewrite, taken from its own dry run;
+- the apply receipt: whether the last install finished, kept differing local copies, or failed, and at which revision;
+- managed files: anything `./cli` would link, relink or rewrite, taken from its own dry run, for every known Codex home and Claude config directory, with the `--only` selection that would fix it; and a Codex `AGENTS.override.md` that replaces the installed instructions;
+- the machine's role: command-center skills where the role is `command-center`, and none on a worker;
 - packages: Homebrew formulae and casks on macOS, pacman packages and Omarchy apps on Omarchy, and opencode v2 and the listed gh extensions on both;
-- mise: every configured tool installed, and `mise doctor` clean in a new shell;
-- tool resolution: each tool found through mise in a new terminal's shell, started with a clean environment so this process's PATH can't hide problems in startup files. Omarchy's `~/.local/bin` wrappers, which run `mise x`, count as mise;
+- mise: every tool the shared fragment requests configured and installed, `mise doctor` clean in a new shell, and machine config that requests a different version than the fragment;
+- tool resolution: each tool's executable found through mise in a new terminal's shell, started with a clean environment so this process's PATH can't hide problems in startup files. Omarchy's `~/.local/bin` wrappers, which run `mise x`, and Vite+ shims in system-first mode count as mise; with `jsRuntimes` set to `vite-plus`, node, npm, pnpm, yarn and bun must resolve to Vite+'s own runtimes instead;
 - global duplicates: a copy of a mise tool in bun's or pnpm's global bin directory, such as a `bun add -g` install or a standalone bun;
 - leftover version managers: fnm, nvm, pyenv, rbenv, asdf or volta on PATH or in their usual directories;
-- background jobs: the launchd agents and GUI PATH on macOS, the systemd timers on Omarchy.
+- background jobs: the launchd agents, their last exit code and the GUI PATH on macOS; the systemd timers and their services' last result on Omarchy; and jobs that stopped running.
 
-Drift and leftovers are warnings. Missing packages, tools or jobs are failures,
-and make the command exit with status 1.
+Drift and leftovers are warnings. Missing packages, tools or jobs, failed jobs,
+and probes that cannot answer are failures, and make the command exit with
+status 1. REA is optional and only reported; its scoped doctor is below.
+
+`./cli health --json` prints every check with its status and id, plus the
+checkout and mise's resolved versions, for comparing machines.
+`./cli health --strict` also fails on each warning that is not a recorded
+exception, and prints the id to record.
+
+### Receipts and machine intent
+
+Each install or uninstall that is not a dry run writes a private receipt to
+`${XDG_STATE_HOME:-~/.local/state}/donnes-configs/receipt.json`: the checkout
+revision and whether it had uncommitted changes, the selected components, the
+outcome (`complete`, `kept-conflicts` or `failed`, with the failing component),
+differing local copies that were kept, the runtime homes that agents and skills
+went into, and mise's resolved versions. Each component keeps the record of its
+last finished run, so a failed or partial run never marks it current. A machine
+set up before receipts has none until its next run, and health says so rather
+than assuming the earlier state.
+
+Health also reads an optional, hand-written
+`${XDG_CONFIG_HOME:-~/.config}/donnes-configs/machine.json`:
+
+```json
+{
+  "role": "worker",
+  "jsRuntimes": "mise",
+  "codexHomes": ["~/.codex", "~/.codex-work"],
+  "claudeConfigDirs": ["~/.claude"],
+  "exceptions": { "override:node": "this box keeps Node 26 as its default" }
+}
+```
+
+`role` is `command-center` or `worker`; without it health falls back to whether
+the receipt shows `command-center` installed. `jsRuntimes` is `mise`, the
+default, or `vite-plus`; see Vite+ below. Listed homes are checked even
+before anything was installed into them. Each exception maps a check id from
+`--json` or `--strict` to the reason it is accepted; health reports exceptions
+that no longer match anything. Keep it to this machine's own intent;
+`COMPUTERS.md` and `COMPUTERS.local.md` stay the human inventory.
 
 ## Safety
 
@@ -82,9 +123,9 @@ Always inspect `./cli --dry-run` first.
 - `macos/`: full zsh, git, and tmux configuration, plus `macos/bin` scripts linked into `~/.local/bin`
 - `shared/git/ignore`: the global gitignore on both machines, linked to `~/.config/git/ignore`; only macOS also gets `macos/gitconfig`
 - `macos/gradle.properties`, `omarchy/gradle.properties`: linked to `~/.gradle/gradle.properties`, so local Android builds target the machine's emulator ABI and share Gradle's build cache
-- `packages/`: platform package lists, plus `gh-extensions.txt`, the gh extensions both machines install
+- `packages/`: platform package lists, plus `gh-extensions.txt`, the gh extensions both machines install with the `gh-extensions` component
 - `shared/mise/`: shared mise tools and settings; `omarchy/mise/`: the prune timer
-- `scripts/`: TypeScript CLI entry point and filesystem, installation, prompt, and skill modules
+- `scripts/`: TypeScript CLI entry point and filesystem, installation, health, receipt, prompt, and skill modules
 - `fleet/skills/`: command-center workflows, installed only when selected
 - `COMPUTERS.md`: portable machine roles and desired setup; private connections live in ignored `COMPUTERS.local.md`
 
@@ -127,8 +168,8 @@ Existing default profiles remain untouched when a different home is selected.
 
 Use [provision-box](fleet/skills/provision-box/SKILL.md) when asked to provision
 or refresh a named box. It discovers the target, selects an agreed published
-revision, previews explicit components, applies the requested scope, and records
-verification. This CLI manages a local machine; the skill runs it on a remote
+revision, previews explicit components, applies the requested scope, and verifies
+the result from the target's receipt and `./cli health --json`. This CLI manages a local machine; the skill runs it on a remote
 target through that target's existing SSH configuration. There is no background
 sync service or second installer.
 
@@ -228,6 +269,24 @@ The files under `omarchy/nvim/` were vendored from omarchy-nvim 2026.8.13-1. Rec
 
 The macOS gitconfig is never installed on Omarchy.
 
+## Packages and upgrades
+
+`packages` installs what is missing from the platform lists and opencode v2;
+`gh-extensions` installs what is missing from `packages/gh-extensions.txt`.
+Neither asks to upgrade a listed package that is already installed, so an
+unattended run with everything present changes nothing. Installing a missing
+package can still upgrade what it depends on: Homebrew upgrades outdated
+dependencies of a new formula, and pacman may need newer libraries. On Omarchy, missing packages go through
+`yay`, which prompts, so they need a terminal; the run stops with the missing
+names instead of hanging. Select `gh-extensions` alone to install an extension
+without touching system packages. A missing cask or formula from a third-party
+tap has its tap trusted first.
+
+Upgrades are explicit, one tool at a time, with the tools' own commands:
+`brew upgrade [name]`, `yay -Syu`, `mise up [tool]`, `gh extension upgrade --all`
+and `opencode upgrade`. Review what they will change first (`brew outdated`,
+`mise outdated`); a cask upgrade can quit or reinstall a running app.
+
 ## Omarchy apps
 
 The `apps` component installs Steam, MangoHud, LACT, the Logitech racing wheel
@@ -264,12 +323,60 @@ environment put `~/.opencode/bin` first.
 Omarchy). It deletes versions that no tracked config selects and keeps those a
 running process started from. Upgrades stay manual: `mise up`.
 
+### Versions across machines
+
+The same configs revision does not mean the same runtimes. The shared fragment
+requests `latest` or `lts` for most tools, so each machine resolves whatever was
+current when it last ran `mise install` or `mise up`, and a machine's own
+`config.toml` can request something else. Pins go where agreement matters: in
+the fragment for a tool whose `latest` is wrong (`npm:cf`), and in each
+project's version files for its runtimes. Health warns about a machine config
+that requests a different version than the fragment (`override:<tool>`); record
+an intentional one as an exception in `machine.json`. The receipt keeps the
+versions each run resolved, and `./cli health --json` reports the current ones,
+so the command center can compare machines without changing them.
+
+### Vite+
+
+Vite+ installs its own `vp` into `~/.vite-plus` and puts `~/.vite-plus/bin`
+first on PATH from the startup files, with shims for node, npm, pnpm, yarn and
+bun. In Vite+'s default managed mode those shims run Vite+'s own runtimes, a
+`vp env use` session override outranks project pins, and Node child processes
+get Vite+'s runtime first on PATH, so terminals disagree with mise, agents and
+Xcode. mise owns those runtimes by default: the `mise` component runs
+`vp env off`, Vite+'s system-first mode, whenever a scope is still managed, and
+the shims then hand each command to mise's. `vp` itself stays Vite+'s install;
+the fragment's `github:voidzero-dev/vite-plus` provides it to GUI apps and a new
+machine. Health counts a system-first shim that resolves to mise as mise, and
+warns about a managed one.
+
+A machine that should run Vite+'s runtimes in terminals says so with
+`"jsRuntimes": "vite-plus"` in `machine.json`. The `mise` component then runs
+`vp env on` instead whenever a scope is in system-first mode, its preview and
+health agree, and health accepts node, npm, pnpm, yarn and bun only when they
+resolve to Vite+'s own installs. Running `vp env on` or `off` by hand without
+changing `jsRuntimes` is drift that the next apply reverts. GUI apps and Xcode
+still use mise's shims either way.
+
+### Xcode
+
 On macOS the component also sets the PATH that GUI apps such as Xcode receive,
 with mise's shims first. React Native and Expo record an exact Node install in
-`ios/.xcode.env.local` on the first `pod install`; `xcode-node-env` repoints
-those files at the Node shim, which selects each project's version when Xcode
-builds. The daily job runs it over `~/Git` and T3 worktrees before pruning; run
-it by hand after a fresh `pod install` if you want the fix right away.
+`ios/.xcode.env.local` on the first `pod install`; `xcode-node-env` repoints a
+`NODE_BINARY` that names an exact mise or Vite+ Node install at the Node shim,
+which selects each project's version when Xcode builds. Any other value, such
+as a Homebrew Node or a command substitution, is a deliberate choice and stays.
+
+The daily job sweeps `~/Git` and T3 worktrees right before pruning, because
+pruning is what breaks a recorded path, including in projects nobody touched by
+hand. If the sweep cannot search a directory or rewrite a file, it exits non-zero
+and that day's prune is skipped; health reports the job's failed exit. Preview
+or fix a project directly after a fresh `pod install`:
+
+```sh
+xcode-node-env --dry-run ~/Git/my-app
+xcode-node-env ~/Git/my-app
+```
 
 ## REA for Codex and Claude Code
 
@@ -292,8 +399,8 @@ its updater rejects symlinks, so do not adopt these into `shared/skills`.
 `CODEX_HOME` and `CLAUDE_CONFIG_DIR` select alternate profiles when set.
 No global package or analysis engine is installed. Engines such as Ghidra need
 separate setup for tasks that require them. Use the scoped doctor above for
-REA readiness; the general configs health command does not check this optional
-integration.
+REA readiness; `./cli health` only reports whether the receipt records an REA
+apply, because the doctor downloads and runs REA's installer.
 
 Routine installs skip REA. Uninstall leaves it intact because REA's upstream
 uninstall affects all registered clients, not only these two. Review

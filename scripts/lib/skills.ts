@@ -22,7 +22,7 @@ function writeLock(file: string, data: Lock) {
 }
 
 export class Skills {
-  constructor(private files: Files) {}
+  constructor(private files: Files, private claudeHome: string) {}
 
   private sources() {
     return ['shared/skills', 'fleet/skills'].map(directory => path.join(this.files.repo, directory));
@@ -36,7 +36,7 @@ export class Skills {
 
   private agentRoots() {
     return [path.join(this.files.home, '.agents/skills'),
-      path.join(process.env.CLAUDE_CONFIG_DIR || path.join(this.files.home, '.claude'), 'skills')];
+      path.join(this.claudeHome, 'skills')];
   }
 
   private resolvedLink(file: string, seen = new Set<string>()): string | undefined {
