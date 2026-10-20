@@ -24,8 +24,8 @@ lazygit = "latest"
 jj = "latest"
 # rustup's default profile can be minimal, which has no rustfmt.
 rust = { version = "stable", components = "rustfmt" }
-# Swift and Kotlin linters. ktlint and detekt need a JVM: Zulu 17 on macOS,
-# jdk17-openjdk on Omarchy. SwiftLint's Linux zip has a dynamic `swiftlint`
+# Swift and Kotlin linters. ktlint and detekt need a JVM: Zulu 17 on macOS, the
+# latest jdk-openjdk on Omarchy. SwiftLint's Linux zip has a dynamic `swiftlint`
 # that needs libxml2.so.2, so Linux uses the static one under the same name.
 "github:realm/SwiftLint" = { version = "latest", platforms = { macos-arm64 = { asset_pattern = "portable_swiftlint.zip" }, linux-x64 = { asset_pattern = "swiftlint_linux_amd64.zip", rename_exe = { "swiftlint" = "swiftlint-dynamic", "swiftlint-static" = "swiftlint" }, filter_bins = "swiftlint" } } }
 "aqua:ktlint/ktlint" = "latest"

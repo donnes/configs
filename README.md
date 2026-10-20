@@ -314,7 +314,8 @@ automatically; run `mise install` in the project.
 The fragment's `rust` installs through rustup into `~/.rustup` and `~/.cargo`,
 so its executables resolve from `~/.cargo/bin`. ktlint and detekt need a JVM,
 which stays outside mise so it can't change `JAVA_HOME` for Android builds:
-Zulu 17 on macOS, `jdk17-openjdk` from `packages/omarchy.txt` on Omarchy.
+Zulu 17 on macOS and the latest OpenJDK (`jdk-openjdk` from
+`packages/omarchy.txt`) on Omarchy.
 
 On Omarchy the CLI never edits Omarchy's files. Omarchy's `config.toml` replaces
 the shared list of version files mise reads, so the component appends the
