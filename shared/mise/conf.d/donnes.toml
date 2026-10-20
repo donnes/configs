@@ -22,14 +22,24 @@ fzf = "latest"
 zoxide = "latest"
 lazygit = "latest"
 jj = "latest"
+# rustup's default profile can be minimal, which has no rustfmt.
+rust = { version = "stable", components = "rustfmt" }
+# Swift and Kotlin linters. ktlint and detekt need a JVM: Zulu 17 on macOS,
+# jdk17-openjdk on Omarchy. SwiftLint's Linux zip has a dynamic `swiftlint`
+# that needs libxml2.so.2, so Linux uses the static one under the same name.
+"github:realm/SwiftLint" = { version = "latest", platforms = { macos-arm64 = { asset_pattern = "portable_swiftlint.zip" }, linux-x64 = { asset_pattern = "swiftlint_linux_amd64.zip", rename_exe = { "swiftlint" = "swiftlint-dynamic", "swiftlint-static" = "swiftlint" }, filter_bins = "swiftlint" } } }
+"aqua:ktlint/ktlint" = "latest"
+"github:detekt/detekt" = { version = "latest", asset_pattern = "detekt-cli-*.zip", strip_components = 1, bin_path = "bin", rename_exe = { "detekt-cli" = "detekt" } }
 # Vite+'s standalone `vp`, which hands `vp dev`, `vp test` and `vp run` to the
 # project's own vite-plus. The `vp` registry entry installs the npm package,
 # which runs its bundled Vite and Vitest instead and breaks project plugins.
 "github:voidzero-dev/vite-plus" = "latest"
 
 [settings]
-# Projects pin versions with .nvmrc, .node-version, .ruby-version and .python-version.
-idiomatic_version_file_enable_tools = ["node", "ruby", "python"]
+# Projects pin versions with .nvmrc, .node-version, .ruby-version, .python-version
+# and rust-toolchain.toml. Without rust here, the global stable overrides the
+# project's toolchain file.
+idiomatic_version_file_enable_tools = ["node", "ruby", "python", "rust"]
 # A shim that installs a missing version while mise itself is off PATH, as in
 # Xcode build phases, relinks every shim to itself (mise 2026.10.6). Run
 # `mise install` in the project instead.

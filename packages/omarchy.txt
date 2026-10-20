@@ -1,3 +1,4 @@
 atuin
 bash-preexec
 fastlane
+jdk17-openjdk

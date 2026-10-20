@@ -307,9 +307,14 @@ codex, cursor-agent). Omarchy installs those into its own `config.toml`, and its
 global files. mise loads the fragments
 before `~/.config/mise/config.toml`, which stays machine-owned: `mise use -g`
 and Omarchy write there, and its values win. Projects pin versions with
-`.nvmrc`, `.node-version`, `.ruby-version`, `.python-version`, or `mise.toml`.
-Missing versions are not installed automatically; run `mise install` in the
-project.
+`.nvmrc`, `.node-version`, `.ruby-version`, `.python-version`,
+`rust-toolchain.toml`, or `mise.toml`. Missing versions are not installed
+automatically; run `mise install` in the project.
+
+The fragment's `rust` installs through rustup into `~/.rustup` and `~/.cargo`,
+so its executables resolve from `~/.cargo/bin`. ktlint and detekt need a JVM,
+which stays outside mise so it can't change `JAVA_HOME` for Android builds:
+Zulu 17 on macOS, `jdk17-openjdk` from `packages/omarchy.txt` on Omarchy.
 
 On Omarchy the CLI never edits Omarchy's files. Omarchy's `config.toml` replaces
 the shared list of version files mise reads, so the component appends the

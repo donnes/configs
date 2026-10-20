@@ -26,7 +26,10 @@ const settled = new Set(['skip', 'package', 'load', 'enable']);
 const legacyManagers = ['fnm', 'nvm', 'pyenv', 'rbenv', 'asdf', 'volta'];
 // Tools whose executable differs from their mise name. Backend-qualified tools
 // need an entry here; health reports any that lack one rather than skip them.
-const executables: Record<string, string> = { 'aws-cli': 'aws', 'npm:cf': 'cf', 'github:voidzero-dev/vite-plus': 'vp' };
+const executables: Record<string, string> = {
+  'aws-cli': 'aws', 'npm:cf': 'cf', 'github:voidzero-dev/vite-plus': 'vp', rust: 'rustfmt',
+  'github:realm/SwiftLint': 'swiftlint', 'aqua:ktlint/ktlint': 'ktlint', 'github:detekt/detekt': 'detekt',
+};
 const hour = 3_600_000;
 // Jobs with their expected interval, for spotting ones that stopped running.
 const launchdJobs = [['dev.dstech.guipath', undefined], ['dev.dstech.mise-prune', 50 * hour]] as const;
@@ -338,7 +341,10 @@ export class Health {
     if (doctor === '0') this.report('ok', 'mise doctor found no problems');
     else this.report('fail', 'mise doctor found problems; run mise doctor');
     const data = this.miseData(), vpBin = value('@@vpbin') ?? '';
-    const isMise = (file: string) => within(file, data) || delegatesToMise(file);
+    // mise's rust installs through rustup, whose proxies in ~/.cargo/bin run the
+    // toolchain mise selects with RUSTUP_TOOLCHAIN.
+    const rustup = path.join(this.home, '.cargo/bin');
+    const isMise = (file: string, name?: string) => within(file, data) || delegatesToMise(file) || (name === 'rustfmt' && within(file, rustup));
     // machine.json can give Vite+ these runtimes; then only its own installs count.
     const vitePlusOwns = (name: string) => this.machine?.jsRuntimes === 'vite-plus' && vitePlusScopes.includes(name);
     let resolved = 0, throughVitePlus = 0, managed = 0;
@@ -356,7 +362,7 @@ export class Health {
         } else if (target && isMise(target)) { resolved++; throughVitePlus++; }
         else this.report('warn', `${name} resolves to Vite+'s ${target ? this.files.pretty(target) : 'shim'} instead of mise; run ./cli --only mise to hand Vite+'s shims to mise`, `path:${name}`);
       } else if (vitePlusOwns(name)) this.report('warn', `${name} resolves to ${this.files.pretty(file)} instead of Vite+'s shim that machine.json's jsRuntimes asks for`, `path:${name}`);
-      else if (!isMise(file)) this.report('warn', `${name} resolves to ${this.files.pretty(file)} instead of mise`, `path:${name}`);
+      else if (!isMise(file, name)) this.report('warn', `${name} resolves to ${this.files.pretty(file)} instead of mise`, `path:${name}`);
       else resolved++;
     }
     if (resolved) this.report('ok', `${resolved} tools resolve through mise${throughVitePlus ? ` (${throughVitePlus} via Vite+'s system-first shims)` : ''}`);

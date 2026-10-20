@@ -18,10 +18,12 @@ class HealthTests(CliTestCase):
         # startup file is what puts the doubles and mise's shims on PATH. zsh reads
         # the managed ~/.zshrc link; bash reads an unmanaged ~/.bashrc.
         def startup(extra=''):
-            content = f'export PATH="{self.home}/.opencode/bin:{self.bin}:{shims}:$PATH"\n' + extra
+            content = f'export PATH="{self.home}/.opencode/bin:{self.bin}:{shims}:{self.home}/.cargo/bin:$PATH"\n' + extra
             self.write('macos/zshrc', content)
             self.write('.bashrc', content, home=True)
         startup(startup_extra)
+        # mise's rust puts rustup's proxies in ~/.cargo/bin, not in its shims.
+        self.write('.cargo/bin/rustfmt', '#!/bin/sh\n', home=True).chmod(0o755)
         self.opencode('2.0.26')
         self.write('shared/agents/global/AGENTS.md', 'instructions')
         self.write('packages/macos.txt', 'git\nmise\n')
@@ -29,7 +31,7 @@ class HealthTests(CliTestCase):
         self.write('packages/gh-extensions.txt', 'github/gh-stack\n')
         self.boundary(brew={'formulae': ['git', 'mise'], 'casks': ['tinycast']}, gh={'extensions': ['github/gh-stack']},
                       mise={'ls': {tool: [{'version': '1.0.0', 'installed': True}]
-                                   for tool in ['node', 'jj', 'npm:cf', 'github:voidzero-dev/vite-plus']}})
+                                   for tool in ['node', 'jj', 'npm:cf', 'github:voidzero-dev/vite-plus', 'rust']}})
         self.cli('--skip', 'packages')
         # Logging in runs the GUI PATH agent.
         self.assertEqual(self.launchd_job('dev.dstech.guipath').returncode, 0)
@@ -45,7 +47,7 @@ class HealthTests(CliTestCase):
         # The test repo is not a git checkout; nothing else may warn or fail.
         self.assertEqual(self.warnings(report), ['checkout:git'])
         self.assertEqual(self.failures(report), [])
-        self.check(report, 'ok', 'Shell', '3 tools resolve through mise', "1 via Vite+'s system-first shims")
+        self.check(report, 'ok', 'Shell', '4 tools resolve through mise', "1 via Vite+'s system-first shims")
 
         # A machine can give these runtimes to Vite+; apply and health follow it.
         machine = self.write('.config/donnes-configs/machine.json', json.dumps({'jsRuntimes': 'vite-plus'}), home=True)
