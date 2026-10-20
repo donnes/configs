@@ -23,7 +23,9 @@ details, and `./cli --help` for commands.
 ## Where things go
 
 - Language runtimes and CLIs: `shared/mise/conf.d/donnes.toml`, used on both
-  machines. System packages: `packages/macos.txt`, `packages/macos-casks.txt`
+  machines. Agent CLIs that Omarchy installs itself (claude, codex,
+  cursor-agent) go in `macos/mise/conf.d/donnes-macos.toml` instead; Omarchy's
+  wrappers fail when the shared file declares them too. System packages: `packages/macos.txt`, `packages/macos-casks.txt`
   and `packages/omarchy.txt`. gh extensions: `packages/gh-extensions.txt`, shared
   by both machines and installed by the `gh-extensions` component.
 - Only list tools Donald runs directly. Dependencies other tools need stay with

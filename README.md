@@ -124,7 +124,7 @@ Always inspect `./cli --dry-run` first.
 - `shared/git/ignore`: the global gitignore on both machines, linked to `~/.config/git/ignore`; only macOS also gets `macos/gitconfig`
 - `macos/gradle.properties`, `omarchy/gradle.properties`: linked to `~/.gradle/gradle.properties`, so local Android builds target the machine's emulator ABI and share Gradle's build cache
 - `packages/`: platform package lists, plus `gh-extensions.txt`, the gh extensions both machines install with the `gh-extensions` component
-- `shared/mise/`: shared mise tools and settings; `omarchy/mise/`: the prune timer
+- `shared/mise/`: shared mise tools and settings; `macos/mise/`: macOS-only agent CLIs; `omarchy/mise/`: the prune timer
 - `scripts/`: TypeScript CLI entry point and filesystem, installation, health, receipt, prompt, and skill modules
 - `fleet/skills/`: command-center workflows, installed only when selected
 - `COMPUTERS.md`: portable machine roles and desired setup; private connections live in ignored `COMPUTERS.local.md`
@@ -300,7 +300,11 @@ Tailscale login. Edit the list in `scripts/lib/install.ts`.
 
 mise manages language runtimes and agent CLIs on both profiles; Homebrew and
 pacman keep system packages. The `mise` component links
-`shared/mise/conf.d/donnes.toml` into `~/.config/mise/conf.d/`. mise loads it
+`shared/mise/conf.d/donnes.toml` into `~/.config/mise/conf.d/`, and on macOS
+also `macos/mise/conf.d/donnes-macos.toml`, which holds the agent CLIs (claude,
+codex, cursor-agent). Omarchy installs those into its own `config.toml`, and its
+`~/.local/bin` wrappers run `mise use -g`, which refuses a tool declared in two
+global files. mise loads the fragments
 before `~/.config/mise/config.toml`, which stays machine-owned: `mise use -g`
 and Omarchy write there, and its values win. Projects pin versions with
 `.nvmrc`, `.node-version`, `.ruby-version`, `.python-version`, or `mise.toml`.

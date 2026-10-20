@@ -7,7 +7,7 @@ import {
   apps, components, ghExtensions, Installer, listed, missingHomebrew, missingPacman, opencodeVersion, runtimeHomes,
   type Component, type Profile, type RuntimeHomes,
 } from './install.ts';
-import { miseCurrent, vitePlusHome, vitePlusScopes, type MiseTool } from './mise.ts';
+import { miseCurrent, miseFragments, vitePlusHome, vitePlusScopes, type MiseTool } from './mise.ts';
 import { checkoutState, machinePath, readMachine, readReceipt, receiptPath, type Machine, type Receipt, type Role } from './state.ts';
 
 type Status = 'ok' | 'warn' | 'fail';
@@ -52,7 +52,7 @@ function ago(time: number) {
   return hours < 1 ? `${Math.round(hours * 60)} min ago` : hours < 48 ? `${Math.round(hours)} h ago` : `${Math.round(hours / 24)} days ago`;
 }
 
-// The versions the shared fragment requests, from its [tools] table.
+// The versions a fragment requests, from its [tools] table.
 function requested(fragment: string) {
   if (!fs.existsSync(fragment)) return new Map<string, string>();
   const tools = fs.readFileSync(fragment, 'utf8').split(/^\[(?!tools\])/m)[0]?.split(/^\[tools\]$/m)[1] ?? '';
@@ -274,9 +274,9 @@ export class Health {
       return [];
     }
     const tools = Object.keys(listing);
-    const fragment = path.join(this.repo, 'shared/mise/conf.d/donnes.toml');
-    const shared = requested(fragment);
-    // A tool the fragment requests but mise does not list is not configured at all.
+    const fragments = miseFragments(this.repo, this.profile);
+    const shared = new Map(fragments.flatMap(fragment => [...requested(fragment)]));
+    // A tool a fragment requests but mise does not list is not configured at all.
     const unconfigured = [...shared.keys()].filter(tool => !listing[tool]?.length);
     if (unconfigured.length) this.report('fail', `not configured: ${unconfigured.join(' ')}; is the shared fragment linked? run ./cli --dry-run --only mise`);
     const missing = tools.filter(tool => listing[tool]?.some(version => !version.installed));
@@ -285,8 +285,9 @@ export class Health {
     for (const [tool, [selected]] of Object.entries(listing)) {
       if (selected) this.versions[tool] = selected.version;
       const wanted = shared.get(tool);
-      // A machine's own config wins over the fragment; flag only a different request.
-      if (selected?.source && wanted !== undefined && realPath(selected.source) !== realPath(fragment) && selected.requested !== wanted) {
+      // A machine's own config wins over the fragments; flag only a different request.
+      const source = selected?.source && realPath(selected.source);
+      if (selected?.source && wanted !== undefined && !fragments.some(fragment => realPath(fragment) === source) && selected.requested !== wanted) {
         this.report('warn', `${tool} ${selected.version} from ${this.files.pretty(selected.source)} overrides the shared "${wanted}" (requests "${selected.requested ?? '?'}")`, `override:${tool}`);
       }
     }

@@ -124,8 +124,10 @@ class PlatformTests(CliTestCase):
 
     def test_mise_links_shared_fragment_and_schedules_pruning(self):
         fragment = self.write('shared/mise/conf.d/donnes.toml', '[tools]\n')
+        macos = self.write('macos/mise/conf.d/donnes-macos.toml', '[tools]\n')
         self.cli('--only', 'mise')
         self.assertEqual((self.home / '.config/mise/conf.d/donnes.toml').resolve(), fragment)
+        self.assertEqual((self.home / '.config/mise/conf.d/donnes-macos.toml').resolve(), macos)
         agents = self.home / 'Library/LaunchAgents'
         loaded = self.state['launchd']['loaded']
         self.assertEqual(loaded, {label: str(agents / f'{label}.plist') for label in ['dev.dstech.guipath', 'dev.dstech.mise-prune']})
@@ -153,6 +155,7 @@ class PlatformTests(CliTestCase):
 
         self.cli('uninstall', '--only', 'mise')
         self.assertFalse((self.home / '.config/mise/conf.d/donnes.toml').is_symlink())
+        self.assertFalse((self.home / '.config/mise/conf.d/donnes-macos.toml').is_symlink())
         self.assertEqual(list(agents.iterdir()), [])
         self.assertEqual(self.state['launchd']['loaded'], {})
 
@@ -168,6 +171,11 @@ class PlatformTests(CliTestCase):
             self.assertEqual(self.state['mise']['settings'], {'idiomatic_version_file_enable_tools': ['ruby', 'node']})
         self.assertEqual((self.home / '.config/systemd/user/mise-prune.timer').resolve(), timer)
         self.assertIn('mise-prune.timer', self.state['systemd']['active'])
+        # Omarchy's agent CLI wrappers run `mise use -g`, which refuses a tool that
+        # two global files declare, so the macOS-only agent CLIs stay off Omarchy.
+        self.write('macos/mise/conf.d/donnes-macos.toml', '[tools]\nclaude = "latest"\n')
+        self.cli('--only', 'mise')
+        self.assertEqual(sorted(path.name for path in (self.home / '.config/mise/conf.d').iterdir()), ['donnes.toml'])
 
 
 if __name__ == '__main__':

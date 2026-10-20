@@ -82,6 +82,14 @@ export function miseCurrent(directory: string): Record<string, MiseTool[]> {
   }));
 }
 
+// The fragments linked into ~/.config/mise/conf.d. Omarchy's agent CLI wrappers
+// run `mise use -g`, which refuses a tool two global files declare, so the agent
+// CLIs Omarchy installs itself are only in the macOS fragment.
+export function miseFragments(repo: string, profile: Profile) {
+  return [path.join(repo, 'shared/mise/conf.d/donnes.toml'),
+    ...profile === 'macos' ? [path.join(repo, 'macos/mise/conf.d/donnes-macos.toml')] : []];
+}
+
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
@@ -195,11 +203,12 @@ export class Mise {
   }
 
   async apply(uninstall: boolean) {
-    const fragment = path.join(this.files.repo, 'shared/mise/conf.d/donnes.toml');
-    const destination = path.join(this.files.home, '.config/mise/conf.d/donnes.toml');
-    if (uninstall) this.files.unlink(fragment, destination);
-    else await this.files.link(fragment, destination);
-    if (this.profile === 'omarchy' && !uninstall) this.idiomatic(fragment);
+    for (const fragment of miseFragments(this.files.repo, this.profile)) {
+      const destination = path.join(this.files.home, '.config/mise/conf.d', path.basename(fragment));
+      if (uninstall) this.files.unlink(fragment, destination);
+      else await this.files.link(fragment, destination);
+    }
+    if (this.profile === 'omarchy' && !uninstall) this.idiomatic(path.join(this.files.repo, 'shared/mise/conf.d/donnes.toml'));
     if (!uninstall) this.vitePlus();
     await (this.profile === 'macos' ? this.macos(uninstall) : this.omarchy(uninstall));
   }
