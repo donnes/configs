@@ -1,6 +1,6 @@
 ---
 name: diagnosing-bugs
-description: Diagnosis loop for hard bugs and performance regressions. Use when the user says "diagnose"/"debug this", or reports something broken/throwing/failing/slow.
+description: Diagnosis loop for hard bugs and performance regressions. Use when the user says "diagnose", "debug this" or "investigate and fix", or reports something broken, throwing, failing, slow, or CI that keeps failing. Not for alert triage, read-only questions about a past run, or explaining what happened.
 ---
 
 # Diagnosing Bugs
@@ -65,7 +65,7 @@ Phase 1 is done when the loop is **tight** and **red-capable**: you can name **o
 
 If you catch yourself reading code to build a theory before this command exists, **stop: jumping straight to a hypothesis is the exact failure this skill prevents.** No red-capable command, no Phase 2.
 
-## Phase 2: Reproduce + minimise
+## Phase 2: Reproduce
 
 Run the loop. Watch it go red as the bug appears.
 
@@ -74,16 +74,6 @@ Confirm:
 - [ ] The loop produces the failure mode the **user** described, not a different failure that happens to be nearby. Wrong bug = wrong fix.
 - [ ] The failure is reproducible across multiple runs (or, for non-deterministic bugs, reproducible at a high enough rate to debug against).
 - [ ] You have captured the exact symptom (error message, wrong output, slow timing) so later phases can verify the fix actually addresses it.
-
-### Minimise
-
-Once it's red, shrink the repro to the **smallest scenario that still goes red**. Cut inputs, callers, config, data, and steps **one at a time**, re-running the loop after each cut, and keep only what's load-bearing for the failure.
-
-Why bother: a minimal repro shrinks the hypothesis space in Phase 3 (fewer moving parts left to suspect) and becomes the clean regression test in Phase 5.
-
-Done when **every remaining element is load-bearing**: removing any one of them makes the loop go green.
-
-Do not proceed until you have reproduced **and** minimised.
 
 ## Phase 3: Hypothesise
 
@@ -121,11 +111,11 @@ A correct seam is one where the test exercises the **real bug pattern** as it oc
 
 If a correct seam exists:
 
-1. Turn the minimised repro into a failing test at that seam.
+1. Turn the repro into a failing test at that seam.
 2. Watch it fail.
 3. Apply the fix.
 4. Watch it pass.
-5. Re-run the Phase 1 feedback loop against the original (un-minimised) scenario.
+5. Re-run the Phase 1 feedback loop.
 
 ## Phase 6: Cleanup
 

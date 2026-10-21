@@ -16,6 +16,8 @@ I want to share some preferences so we can work well together.
 - Read the project instructions and existing code before making changes. Preserve unrelated local work.
 - Be careful with destructive actions that I haven't explicitly requested.
 - Tests should cover meaningful behavior and risks. Keep them focused and proportional to the change. Skip tests for edge cases that are unlikely to happen or wouldn't matter if they did.
+- Before adding a test, name the behavior it protects and the regression that would break it, and check that existing coverage doesn't already catch it. Test at the real boundary; don't add exports, flags or hooks that only tests use.
+- A bug's regression test must fail on the pre-fix code for the intended reason before it counts.
 - Comments should clarify how something works or why a decision was made. Don't narrate every line. Keep comments up to date when the code changes.
 - Start with targeted verification. Run broader checks when the change or project requires them. Report what actually passed and what you couldn't verify.
 
@@ -43,6 +45,7 @@ I want to share some preferences so we can work well together.
 - For substantial UI or layout decisions that aren't settled, show concrete alternatives before committing to an implementation. Label them so I can easily pick or combine options.
 - Follow the project's design language and any references I provide.
 - Keep motion purposeful and account for its performance cost, including on mobile.
+- For React Native or Expo motion, gestures, sheets or haptics, load the `animate-expo` skill. For web motion, load `emil-design-eng`.
 - Use screenshots or a short recording when they help me evaluate the result. Keep private project artifacts within the project's approved sharing channels.
 
 ## Blast radius

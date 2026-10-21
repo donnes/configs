@@ -1,6 +1,6 @@
 ---
 name: emil-design-eng
-description: This skill encodes Emil Kowalski's philosophy on UI polish, component design, animation decisions, and the invisible details that make software feel great.
+description: Emil Kowalski's web UI polish and motion rules, with exact easing curves, durations, press and enter scales, and transform origins. Use when building, reviewing, or auditing web animations and transitions, deciding whether something should animate, or polishing how a web component feels. For React Native motion use animate-expo.
 ---
 
 # Design Engineering

@@ -1,6 +1,6 @@
 ---
 name: file-pr
-description: File a concise pull request. Use when the user asks to file, open, or create a PR.
+description: File a concise pull request with explicit repo, base and head, then verify it. Use whenever the user asks to file, open, or create a PR, including "open PR and merge" or a yes to opening one.
 ---
 
 # File PR
@@ -55,7 +55,7 @@ Include what you actually verified and any material remaining risk. Attach scree
 
 ## File and hand off
 
-Use the requested draft status and the repository's review workflow. Do not assume every review bot requires a non-draft PR. Preserve an existing PR's status unless the request authorizes changing it.
+Open the PR ready for review, never as a draft, unless Donald asks for a draft. Tools that create drafts by default, such as `gh stack link` and `gh stack submit`, need `gh pr ready` on every PR they create. Follow the repository's review workflow otherwise.
 
 Use explicit repository, base, and head values when filing so defaults cannot select the wrong target. Pass multiline descriptions through a structured tool argument or a temporary file with `gh --body-file`. Preserve actual newlines and avoid shell interpolation of the description.
 

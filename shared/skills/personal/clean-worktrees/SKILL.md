@@ -1,13 +1,13 @@
 ---
 name: clean-worktrees
-description: Remove merged, clean git worktrees left by agent threads and report what else wastes disk or RAM. Use when the user asks to clean up merged worktrees, or when the weekly scheduled cleanup runs.
+description: Remove merged, clean git worktrees left by agent threads and report what else wastes disk or RAM. Use when the user asks to clean up merged worktrees, or when the daily scheduled cleanup runs.
 ---
 
 # Clean Worktrees
 
 This skill usually runs unattended on a schedule. Never ask questions. When anything is uncertain, keep the worktree and report it. A wrong removal can lose work. A kept worktree only costs disk until Donald looks at the report.
 
-`scripts/clean_worktrees.py` next to this file does the checks and the removal. Don't reimplement its rules by hand, and don't change its thresholds or code during a run. It needs only Python 3.9+ and works on macOS and Linux. Run it from any directory:
+`scripts/clean_worktrees.py` next to this file does the checks and the removal. Its report is the interface: don't read its source, reimplement its rules by hand, or change its thresholds or code during a run. The summary below is enough. It needs only Python 3.9+ and works on macOS and Linux. Run it from any directory:
 
 ```sh
 python3 <this skill's directory>/scripts/clean_worktrees.py            # report only; fetches origin

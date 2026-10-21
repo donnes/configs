@@ -1,54 +1,6 @@
 ---
 name: authentic-product-representation
-description: Product visuals — hero shots, demos, screenshots, landing-page panels — must reproduce the real product, not a stylised poster of it. Design with real content and real data, mirror the actual output the product generates, keep every label and number truthful, and refuse fabricated marketing chrome. Use when building landing pages, hero sections, product screenshots, demo panels, or any visual that stands in for the real thing.
-metadata:
-  priority: 7
-  pathPatterns:
-    - "app/**"
-    - "src/**"
-    - "**/*.tsx"
-    - "**/*.jsx"
-    - "**/*.html"
-    - "**/page.tsx"
-    - "**/hero*"
-    - "marketing/**"
-    - "landing/**"
-  promptSignals:
-    phrases:
-      - "hero section"
-      - "landing page"
-      - "product screenshot"
-      - "screenshot in the hero"
-      - "product shot"
-      - "mockup"
-      - "demo panel"
-      - "fake data"
-      - "placeholder data"
-      - "lorem ipsum"
-      - "marketing visual"
-      - "make it look impressive"
-retrieval:
-  aliases:
-    - authentic product representation
-    - honest product visuals
-    - design with real data
-    - real content not lorem ipsum
-    - credible hero
-    - product screenshot
-    - anti AI-slop
-    - show the real thing
-  intents:
-    - make this hero credible
-    - show the real product output
-    - replace the fake screenshot with something real
-    - use real data in this mockup
-    - this looks AI-generated, make it authentic
-  examples:
-    - this hero looks fake, make it credible
-    - replace the lorem ipsum with real content
-    - the demo panel should show what the product actually outputs
-    - this screenshot is invented, base it on the real thing
-    - the landing visual looks AI-generated
+description: Marketing and promo visuals (landing-page heroes, product screenshots, demo panels, store images, promo videos) must reproduce the real product with real content and truthful labels, not a stylised poster of it. Use when building a visual that stands in for the real product. Not for in-app UI, logos, or colors.
 ---
 
 # Authentic Product Representation
@@ -57,7 +9,7 @@ The fastest way to lose a visitor's trust is a product visual that is obviously 
 
 The principle is simple: **the visual is the product, not a poster of it.** Every shortcut away from that — invented data, decorative chrome, a capability shown that does not exist — is a small withdrawal from the trust account.
 
-This skill governs whether a visual is *credible*; what it has to accomplish in the page's argument comes from the product narrative framework in [[layout-paradigms-and-consistency]]. A fabricated proof point proves nothing.
+This skill governs whether a visual is *credible*. A fabricated proof point proves nothing.
 
 ---
 
@@ -119,14 +71,6 @@ Sometimes a literal screenshot is impossible (pre-launch, sensitive data, a comp
 - Match the product's real states and formatting, including the unglamorous ones.
 - Keep claims conservative — under-promise in the visual, let the product over-deliver.
 - Label clearly illustrative figures as such rather than passing them off as measured.
-
----
-
-## Photos on a Tinted Stage
-
-A product shot on a tinted tile needs a transparent cutout. An opaque shot with a baked-in white background shows as a white box on the tint. Where cutouts do not exist, multiply-blend the photo onto the tile so the white vanishes.
-
-When a design export and its own screenshot disagree, the screenshot wins. The export is the tool's opinion of the file. The rendering is what shipped.
 
 ---
 
