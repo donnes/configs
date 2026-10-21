@@ -290,11 +290,16 @@ and `opencode upgrade`. Review what they will change first (`brew outdated`,
 ## Omarchy apps
 
 The `apps` component installs Steam, MangoHud, LACT, the Logitech racing wheel
-tools, Tailscale, Zed, Zen, and Helium. Each goes through Omarchy's own
+tools, Tailscale, Zed, Zen, Helium, and T3 Code. Each goes through Omarchy's own
 installer where one exists, which also sets up drivers, services, or themes, or
 through Omarchy's package helpers otherwise. An app is installed only while one
 of its packages is missing, because some installers open the app or start a
 Tailscale login. Edit the list in `scripts/lib/install.ts`.
+
+T3 Code is the official nightly AppImage at `~/Applications/T3-Code.AppImage`,
+checked against the checksum in its release manifest. The app updates itself
+from then on. Omarchy's `t3code-bin` and `t3code-nightly-bin` packages would
+run a second copy on the same data, so the step stops while either is installed.
 
 ## mise
 

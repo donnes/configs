@@ -559,7 +559,6 @@ def cache_report(repos):
         ("Xcode DerivedData", [HOME / "Library/Developer/Xcode/DerivedData"]),
         ("CocoaPods cache", [HOME / "Library/Caches/CocoaPods"]),
         ("Scratch folders", SCRATCH_ROOTS),
-        ("T3 build", [HOME / ".t3/build"]),
     ]
     pins = set()
     for repo in repos:

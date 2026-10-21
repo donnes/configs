@@ -40,6 +40,7 @@ EMPTY_STATE = {
     'mise': {'ls': {}, 'doctor': 0, 'settings': {}, 'pruned': 0},
     'npx': {'status': None, 'calls': []},
     'vp': {'mode': 'managed'},
+    't3code': {'tags': [], 'manifests': {}, 'downloads': []},
 }
 
 

@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { exists, Files, realPath, run, walk, within } from './files.ts';
 import { Skills } from './skills.ts';
@@ -91,6 +92,21 @@ export const apps: App[] = [
   { name: 'Zen', packages: ['zen-browser-bin'], installer: ['omarchy-install-browser', 'zen'] },
   { name: 'Helium', packages: ['helium-browser-bin'], aur: true },
 ];
+
+// T3 Code's nightly ships as an AppImage on GitHub and updates itself once
+// installed. Omarchy's t3code packages would be a second copy on the same data.
+export const t3code = {
+  appImage: 'Applications/T3-Code.AppImage',
+  releases: 'https://api.github.com/repos/pingdotgg/t3code/releases?per_page=30',
+  downloads: 'https://github.com/pingdotgg/t3code/releases/download',
+  packages: ['t3code-bin', 't3code-nightly-bin'],
+};
+
+function download(url: string) {
+  const result = spawnSync('curl', ['-fsSL', url], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  if (result.error || result.status !== 0) throw new Error(`Cannot download ${url}`);
+  return result.stdout;
+}
 
 export class Installer {
   readonly skills: Skills;
@@ -221,6 +237,33 @@ export class Installer {
       this.files.log(present ? 'skip' : 'app', present ? `${name}: already installed` : `${name}: ${[command, ...args].join(' ')}`);
       if (!present && !this.files.dryRun) run(command, args);
     }
+    this.t3code();
+  }
+
+  private t3code() {
+    const appImage = this.destination(t3code.appImage);
+    if (fs.existsSync(appImage)) { this.files.log('skip', 'T3 Code: already installed'); return; }
+    const missing = missingPacman(t3code.packages);
+    const packaged = t3code.packages.filter(name => !missing.includes(name));
+    if (packaged.length) throw new Error(`T3 Code: remove ${packaged.join(' ')} first (sudo pacman -R ${packaged.join(' ')}); the AppImage replaces it`);
+    this.files.log('app', `T3 Code: latest nightly AppImage -> ${this.files.pretty(appImage)}`);
+    if (this.files.dryRun) return;
+    const releases: { tag_name: string }[] = JSON.parse(download(t3code.releases));
+    const tag = releases.find(release => release.tag_name.includes('-nightly.'))?.tag_name;
+    if (!tag) throw new Error('T3 Code: no nightly release found');
+    // electron-updater's manifest names the x86_64 AppImage and its checksum.
+    const manifest = download(`${t3code.downloads}/${tag}/nightly-linux.yml`);
+    const file = manifest.match(/^path: (\S+)$/m)?.[1], sha512 = manifest.match(/^sha512: (\S+)$/m)?.[1];
+    if (!file || !sha512) throw new Error(`T3 Code: cannot read the ${tag} manifest`);
+    const partial = `${appImage}.part`;
+    fs.mkdirSync(path.dirname(appImage), { recursive: true });
+    run('curl', ['-fsSL', '-o', partial, `${t3code.downloads}/${tag}/${file}`]);
+    if (createHash('sha512').update(fs.readFileSync(partial)).digest('base64') !== sha512) {
+      fs.rmSync(partial);
+      throw new Error(`T3 Code: ${file} does not match its published checksum`);
+    }
+    fs.chmodSync(partial, 0o755);
+    fs.renameSync(partial, appImage);
   }
 
   private async nvim(uninstall: boolean) {
