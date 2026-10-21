@@ -64,6 +64,7 @@ class PlatformTests(CliTestCase):
         # pacman cannot install AUR packages, and Omarchy's installers reopen apps that are present.
         self.boundary(pacman={'installed': 'steam mangohud lact tailscale zed omazed helium-browser-bin oversteer usb_modeswitch'.split(),
                               'aur': ['oversteer', 'new-lg4ff-dkms-git', 'usb_modeswitch', 'helium-browser-bin']})
+        self.write('Applications/T3-Code.AppImage', 'installed', home=True)
         before = self.state
         self.cli('--only', 'apps', '--dry-run')
         self.assertEqual(self.state, before)
@@ -71,6 +72,28 @@ class PlatformTests(CliTestCase):
         self.assertLessEqual({'lib32-mangohud', 'new-lg4ff-dkms-git', 'zen-browser-bin'}, set(self.state['pacman']['installed']))
         self.env['DONNES_CONFIGS_PROFILE'] = 'macos'
         self.assertNotIn('apps', self.interactive(['--interactive'], [('Select components', '\x03')], code=130))
+
+    def test_omarchy_installs_the_verified_t3code_nightly_appimage_once(self):
+        self.env['DONNES_CONFIGS_PROFILE'] = 'omarchy'
+        installed = 'steam mangohud lib32-mangohud lact tailscale zed omazed zen-browser-bin helium-browser-bin oversteer new-lg4ff-dkms-git usb_modeswitch'.split()
+        nightly = 'v0.1.2-nightly.20261021.3473'
+        # Newest first: a maintainer preview, the nightly, then the stable release.
+        self.boundary(pacman={'installed': installed + ['t3code-nightly-bin']},
+                      t3code={'tags': ['v0.1.1-preview.20261021.3449', nightly, 'v0.1.1'],
+                              'manifests': {nightly: f'path: T3-Code-{nightly[1:]}-x86_64.AppImage\nsha512: tampered\n'}})
+        app = self.home / 'Applications/T3-Code.AppImage'
+        # Omarchy's package would run a second T3 Code on the same data.
+        self.assertIn('remove t3code-nightly-bin first', self.fails('--only', 'apps').stderr)
+        self.boundary(pacman={'installed': installed})
+        self.assertIn('does not match its published checksum', self.fails('--only', 'apps').stderr)
+        self.assertEqual(list(app.parent.iterdir()), [])
+        self.boundary(t3code={'manifests': {}})
+        self.cli('--only', 'apps')
+        self.assertEqual(app.read_text(), nightly)
+        self.assertTrue(app.stat().st_mode & 0o111)
+        # The app updates itself; a later run must not download over it.
+        self.cli('--only', 'apps')
+        self.assertEqual(self.state['t3code']['downloads'], [f'T3-Code-{nightly[1:]}-x86_64.AppImage'] * 2)
 
     def test_session_enables_its_timer_and_uninstall_unloads_it(self):
         self.env['DONNES_CONFIGS_PROFILE'] = 'omarchy'

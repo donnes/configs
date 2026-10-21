@@ -9,6 +9,8 @@ reinstalling an installed package, which upgrades it. Any invocation it does not
 model fails with status 97 and is recorded under "unexpected", which the
 harness reports, so a new command can never pass silently.
 """
+import base64
+import hashlib
 import json
 import os
 import plistlib
@@ -78,9 +80,33 @@ def brew():
     unexpected()
 
 
+T3_RELEASES = 'https://api.github.com/repos/pingdotgg/t3code/releases?per_page=30'
+T3_DOWNLOADS = 'https://github.com/pingdotgg/t3code/releases/download/'
+
+
+def t3_appimage(tag):
+    return f'T3-Code-{tag[1:]}-x86_64.AppImage'
+
+
 def curl():
     if args == ['-fsSL', 'https://opencode.ai/v2/install']:
         done(out=OPENCODE_INSTALLER)
+    # GitHub's releases API (newest first) and each tag's assets, which hold
+    # the tag's own AppImage bytes; "manifests" overrides a published manifest.
+    store = state['t3code']
+    if args == ['-fsSL', T3_RELEASES]:
+        done(out=json.dumps([{'tag_name': tag} for tag in store['tags']]))
+    if args[:1] == ['-fsSL'] and args[-1].startswith(T3_DOWNLOADS):
+        tag, file = args[-1][len(T3_DOWNLOADS):].split('/')
+        if tag not in store['tags']:
+            done(22, err='curl: (22) The requested URL returned error: 404')
+        if args[1:] == [args[-1]] and file == 'nightly-linux.yml':
+            digest = base64.b64encode(hashlib.sha512(tag.encode()).digest()).decode()
+            done(out=store['manifests'].get(tag, f'path: {t3_appimage(tag)}\nsha512: {digest}\n'))
+        if len(args) == 4 and args[1] == '-o' and file == t3_appimage(tag):
+            store['downloads'].append(file)
+            Path(args[2]).write_text(tag)
+            done()
     unexpected()
 
 
