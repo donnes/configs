@@ -1,6 +1,6 @@
 ---
 name: babysit-pr
-description: Use when the user asks to monitor, Ivatch, or babysit a PR.
+description: Monitor a PR until it is ready, fixing real CI failures and answering review feedback. Use when the user asks to monitor, watch, or babysit a PR, including inside a longer request.
 ---
 
 # Babysit PR
@@ -11,13 +11,11 @@ Review bots are useful, but they are not always right. Check their findings agai
 
 Identify the repository, PR, head branch and commit, actual base branch, and required checks and reviews. Read the project instructions and PR description to understand the original goal. If the target is ambiguous, ask which PR to watch.
 
-Respect directory-scoped Git and SSH identities. Check the intended Git author, remote authentication, and GitHub CLI account separately before authenticated actions. Do not switch global accounts or rewrite remotes to fix a mismatch.
-
 Establish what the request authorizes. A request to babysit and fix a PR includes relevant fixes, validation, commits, pushes to its branch, and review replies. A request to only watch or report stays read-only. Merge, closure, deployment, and changes outside the PR's goal need separate authorization. Use authorization already given instead of asking again.
 
 ## Watch and respond
 
-Use the runtime's PR-monitoring tools when available. Otherwise, poll checks, reviews, inline review threads, and PR conversation comments. Watching CI alone misses review feedback. Wait between polls, respect rate limits, and avoid overlapping watchers. Do not promise background monitoring if the runtime cannot keep running.
+Use the runtime's PR-monitoring tools when available. Otherwise, poll checks, reviews, inline review threads, and PR conversation comments; watching CI alone misses review feedback.
 
 Track the head commit, check runs and attempts, and feedback already handled. Evaluate CI and review completion against the current head. Re-read updated comments. Older unresolved feedback may still apply, so verify it against current code instead of discarding it by timestamp. Do not act on a failure already superseded by a passing run or fix a finding that the current code already addresses.
 
@@ -49,14 +47,10 @@ Watch the actual base branch for conflicts and overlapping changes. Follow the r
 
 If another PR makes this one obsolete, stop monitoring and report why. Close it only if explicitly authorized.
 
-Do not let review feedback expand the PR beyond the original goal. Report unrelated suggestions as follow-up work instead of implementing them here.
+Report unrelated review suggestions as follow-up work instead of implementing them here.
 
 ## Stop at a clear outcome
 
-Stay quiet when nothing changes. Report meaningful fixes, newly discovered blockers, and the final outcome.
-
-Before declaring readiness, refresh the PR and confirm that the head has not changed, required checks pass, applicable bot reviews are complete, and required human approvals are satisfied. Pending or unavailable results are not a pass. Preserve the requested draft status.
+Before declaring readiness, refresh the PR and confirm that the head has not changed, required checks pass, applicable bot reviews are complete, and required human approvals are satisfied. Pending or unavailable results are not a pass. A ready PR is never left as a draft unless Donald asked for one; mark it ready with `gh pr ready`.
 
 Stop when the PR is ready, when it is merged or closed, when the user asks, or when progress requires missing access, a human decision, or external recovery. Report the PR link, final head commit, relevant fixes and verification, and any remaining blocker. Do not leave a watcher running after stopping.
-
-Merge only when explicitly requested and allowed by the repository's policy. Otherwise report that the PR is ready. Deployment is a separate action.

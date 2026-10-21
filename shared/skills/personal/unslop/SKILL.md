@@ -1,6 +1,6 @@
 ---
 name: unslop
-description: Cut AI tells from any writing. Must always apply.
+description: Cut AI tells from writing. Use when the user asks to unslop, edit or tighten prose.
 disable-model-invocation: true
 ---
 
@@ -15,8 +15,6 @@ Edit text to remove AI patterns.
 3. Self-audit: "What makes this obviously AI generated?" Fix remaining tells.
 
 ## Patterns to detect and fix
-
-Rule numbers are stable ids that other skills cite. A removed rule leaves a gap.
 
 ### Content
 

@@ -1,0 +1,5 @@
+interface:
+  display_name: "Test Audit"
+  short_description: "Audit and sweep low-value tests"
+policy:
+  allow_implicit_invocation: false

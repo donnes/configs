@@ -59,6 +59,24 @@ class SkillCollectionTests(CliTestCase):
         self.assertFalse(agent.is_symlink())
         self.assertFalse(claude.is_symlink())
 
+    def test_personal_skills_install_alongside_shared_ones(self):
+        personal = self.write('shared/skills/personal/mine/SKILL.md', 'mine').parent
+        self.write('shared/skills/example/SKILL.md', 'shared')
+        self.write('shared/skills.lock.json', '{"version":3,"skills":{}}')
+        self.cli('--only', 'skills')
+        for root in ['.agents/skills', '.claude/skills']:
+            with self.subTest(root=root):
+                self.assertEqual((self.home / root / 'mine').resolve(), personal)
+                self.assertEqual((self.home / root / 'example/SKILL.md').read_text(), 'shared')
+                self.assertFalse((self.home / root / 'personal').exists())
+        self.write('shared/skills/mine/SKILL.md', 'duplicate')
+        self.assertIn('ambiguous tracked skill: mine', self.fails('--only', 'skills').stderr)
+        shutil.rmtree(self.repo / 'shared/skills/mine')
+        self.cli('remove-skill', 'mine')
+        self.assertFalse(personal.exists())
+        self.assertFalse((self.home / '.agents/skills/mine').is_symlink())
+        self.assertFalse((self.home / '.claude/skills/mine').is_symlink())
+
     def test_skill_collection_install_rejects_duplicate_names_before_linking(self):
         self.write('shared/skills/example/SKILL.md', 'shared')
         self.write('fleet/skills/example/SKILL.md', 'manager')

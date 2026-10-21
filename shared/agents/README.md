@@ -6,8 +6,9 @@ the host's OS context.
 
 ## Existing foundation
 
-The configs installer already links each `shared/skills/<name>` directory into
-`~/.agents/skills` and `~/.claude/skills`. Keep shared skills there. Avoid creating
+The configs installer already links each `shared/skills/<name>` and
+`shared/skills/personal/<name>` directory into `~/.agents/skills` and
+`~/.claude/skills`. Keep shared skills there. Avoid creating
 a second skill collection here or moving existing skills merely to reorganize them.
 
 Runtime credentials, sessions, history, caches, and machine-local settings remain

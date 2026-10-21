@@ -27,6 +27,7 @@ Create one self-contained HTML file, capped at 512 KB.
 ### ✅ DO
 
 - Write it like a spec, not a landing page: dense, scannable, no hero, decorative chrome, marketing voice, or em dashes. Large numbers are fine on data pages when they carry the answer.
+- Prefer charts, tables and short labelled rows over paragraphs. Keep each block of prose to a few sentences; a wall of text defeats the point of a visual page.
 - Take every color, font and the page padding from the Look tokens below.
 - Make it mobile-readable with a responsive viewport and no fixed-width layout.
 - Use semantic HTML, inline CSS, inline SVG, and HTTPS or data-URL images.

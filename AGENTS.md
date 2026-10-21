@@ -33,6 +33,11 @@ details, and `./cli --help` for commands.
 - JavaScript globals go through `bun add -g`, not npm or pnpm.
 - opencode v2 comes from its own installer, not mise. fastlane and atuin stay
   system packages.
+- Skills: Donald's own skills go in `shared/skills/personal/<name>`; skills
+  installed from other repos with `npx skills` stay in `shared/skills/<name>`
+  and in `shared/skills.lock.json`. A third-party skill edited here leaves the
+  lockfile, so an update can't overwrite the edit. Command-center-only skills
+  go in `fleet/skills`.
 - Agent instructions: edit `shared/agents/global/AGENTS.md` or the OS
   `CONTEXT.md`, never the generated `.generated/agents/*/AGENTS.md`.
 - Private details (hostnames, SSH aliases, account mappings) belong in the
