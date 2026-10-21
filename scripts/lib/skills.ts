@@ -6,6 +6,9 @@ import { answer, canPrompt } from './prompts.ts';
 
 type Lock = Record<string, unknown> & { skills: Record<string, unknown> };
 
+// Donald's own skills live apart from installed third-party ones but install alongside them.
+const PERSONAL = 'shared/skills/personal';
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
@@ -25,7 +28,7 @@ export class Skills {
   constructor(private files: Files, private claudeHome: string) {}
 
   private sources() {
-    return ['shared/skills', 'fleet/skills'].map(directory => path.join(this.files.repo, directory));
+    return ['shared/skills', PERSONAL, 'fleet/skills'].map(directory => path.join(this.files.repo, directory));
   }
 
   source(name: string) {
@@ -77,7 +80,8 @@ export class Skills {
   }
 
   private async collection(source: string, uninstall: boolean) {
-    const entries = children(source).filter(entry => !path.basename(entry).startsWith('.'));
+    const personal = path.join(this.files.repo, PERSONAL);
+    const entries = children(source).filter(entry => !path.basename(entry).startsWith('.') && entry !== personal);
     if (!uninstall) for (const entry of entries) this.source(path.basename(entry));
     // Claude links may go through ~/.agents/skills, so process Codex first.
     for (const destination of this.agentRoots()) {
@@ -94,11 +98,13 @@ export class Skills {
 
   async install() {
     await this.collection(path.join(this.files.repo, 'shared/skills'), false);
+    await this.collection(path.join(this.files.repo, PERSONAL), false);
     await this.syncLock();
   }
 
   async uninstall() {
     await this.collection(path.join(this.files.repo, 'shared/skills'), true);
+    await this.collection(path.join(this.files.repo, PERSONAL), true);
     this.files.unlink(path.join(this.files.repo, 'shared/skills.lock.json'), this.lockPath());
   }
 
