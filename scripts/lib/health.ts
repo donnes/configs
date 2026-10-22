@@ -29,6 +29,8 @@ const legacyManagers = ['fnm', 'nvm', 'pyenv', 'rbenv', 'asdf', 'volta'];
 const executables: Record<string, string> = {
   'aws-cli': 'aws', 'npm:cf': 'cf', 'github:voidzero-dev/vite-plus': 'vp', rust: 'rustfmt',
   'github:realm/SwiftLint': 'swiftlint', 'aqua:ktlint/ktlint': 'ktlint', 'github:detekt/detekt': 'detekt',
+  // Omarchy installs Grok's CLI into its own mise config.
+  'npm:@xai-official/grok': 'grok',
 };
 const hour = 3_600_000;
 // Jobs with their expected interval, for spotting ones that stopped running.
