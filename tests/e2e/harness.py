@@ -88,6 +88,7 @@ class CliTestCase(unittest.TestCase):
         (self.repo / 'node_modules').symlink_to(ROOT / 'node_modules', target_is_directory=True)
         self.write('macos/agents/CONTEXT.md', 'MAC_CONTEXT')
         self.write('linux/agents/CONTEXT.md', 'LINUX_CONTEXT')
+        self.write('shared/skills/personal/unslop/SKILL.md', '---\nname: unslop\n---\n\n# Unslop\n\nUNSLOP_RULES\n')
         self.state_file = self.sandbox / 'boundary.json'
         self.state_file.write_text(json.dumps(EMPTY_STATE))
         for command in COMMANDS:

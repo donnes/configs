@@ -227,6 +227,7 @@ class FilesTests(CliTestCase):
                 self.assertIn('SHARED_CONTEXT', codex.read_text())
                 self.assertIn(included, codex.read_text())
                 self.assertNotIn(excluded, codex.read_text())
+                self.assertIn('UNSLOP_RULES', codex.read_text())
                 self.assertIn('COMPUTERS.md', codex.read_text())
                 self.assertEqual(default_claude.read_text(), 'default remains local')
                 installed = codex.stat().st_mtime_ns

@@ -39,7 +39,9 @@ details, and `./cli --help` for commands.
   lockfile, so an update can't overwrite the edit. Command-center-only skills
   go in `fleet/skills`.
 - Agent instructions: edit `shared/agents/global/AGENTS.md` or the OS
-  `CONTEXT.md`, never the generated `.generated/agents/*/AGENTS.md`.
+  `CONTEXT.md`, never the generated `.generated/agents/*/AGENTS.md`. The
+  generated file also carries the unslop skill's rules, so editing
+  `shared/skills/personal/unslop/SKILL.md` changes every session's instructions.
 - Private details (hostnames, SSH aliases, account mappings) belong in the
   ignored `COMPUTERS.local.md`, never in tracked files. A machine's role,
   JavaScript runtime owner (`jsRuntimes`), runtime homes and accepted health

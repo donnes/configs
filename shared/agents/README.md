@@ -41,7 +41,10 @@ such as platform or scope does not enforce distribution by itself.
 ```
 
 The installer generates `.generated/agents/<profile>/AGENTS.md` from the shared
-preferences, matching OS context, and references to the machine inventories.
+preferences, matching OS context, the rules in
+`shared/skills/personal/unslop/SKILL.md`, and references to the machine
+inventories. Agents don't reliably load a skill on their own, so the unslop
+rules ship in every session's instructions.
 It links that composed file to:
 
 - `${CODEX_HOME:-~/.codex}/AGENTS.md` for Codex.

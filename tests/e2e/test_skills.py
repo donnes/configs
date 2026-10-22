@@ -12,7 +12,7 @@ class SkillCollectionTests(CliTestCase):
         alias.symlink_to(self.home)
         self.env['HOME'] = str(alias)
         self.write('shared/skills.lock.json', '{"version":3,"skills":{}}')
-        (self.repo / 'shared/skills').mkdir()
+        (self.repo / 'shared/skills').mkdir(exist_ok=True)
         agent = self.home / '.agents/skills/gone'
         agent.parent.mkdir(parents=True)
         agent.symlink_to(self.repo / 'shared/skills/gone')
