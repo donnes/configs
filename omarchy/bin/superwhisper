@@ -1,0 +1,4 @@
+#!/bin/sh
+# Superwhisper's bar panel runs ~/.local/bin/superwhisper, where its own installer
+# puts the CLI, but the Omarchy package (superwhisper-bin) installs it in /usr/bin.
+exec /usr/bin/superwhisper "$@"
