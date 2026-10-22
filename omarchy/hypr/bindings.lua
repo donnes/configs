@@ -47,3 +47,9 @@ o.bind("SUPER + SHIFT + T", "Extract text (OCR) from screenshot", "omarchy-captu
 hl.unbind("SUPER + SHIFT + C")
 hl.unbind("SUPER + SHIFT + E")
 hl.unbind("SUPER + SHIFT + ALT + E")
+
+-- Superwhisper's own shortcuts (F10 toggle, set in its Settings). It writes them to
+-- shortcuts.lua but can't add this block itself because this file is a symlink.
+-- Superwhisper managed shortcuts BEGIN
+dofile("/home/donnes/.config/superwhisper/shortcuts.lua")
+-- Superwhisper managed shortcuts END
