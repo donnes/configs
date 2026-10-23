@@ -44,6 +44,7 @@ I want to share some preferences so we can work well together.
 
 - For substantial UI or layout decisions that aren't settled, show concrete alternatives before committing to an implementation. Label them so I can easily pick or combine options.
 - Follow the project's design language and any references I provide.
+- Don't put counters in front of headings, titles or eyebrow labels, such as "01 / O ponto de partida" or "02 • Nosso manifesto". Write the heading alone. Number items only when the order carries meaning, like the steps of a process.
 - Keep motion purposeful and account for its performance cost, including on mobile.
 - For React Native or Expo motion, gestures, sheets or haptics, load the `animate-expo` skill. For web motion, load `emil-design-eng`.
 - Use screenshots or a short recording when they help me evaluate the result. Keep private project artifacts within the project's approved sharing channels.
