@@ -119,7 +119,7 @@ Always inspect `./cli --dry-run` first.
 ## Layout
 
 - `shared/`: agent, editor, Neovim, Atuin, and tool overlays
-- `omarchy/`: bash/tmux deltas, vendored Omarchy Neovim keepers, `omarchy/bin` scripts linked into `~/.local/bin`, and the Hyprland session files (`hypr/`, `systemd/user/`)
+- `omarchy/`: bash/tmux deltas, vendored Omarchy Neovim keepers, `omarchy/bin` scripts linked into `~/.local/bin`, Helium's WebGPU flags (`helium-browser-flags.conf`), and the Hyprland session files (`hypr/`, `systemd/user/`)
 - `macos/`: full zsh, git, and tmux configuration, plus `macos/bin` scripts linked into `~/.local/bin`
 - `shared/git/ignore`: the global gitignore on both machines, linked to `~/.config/git/ignore`; only macOS also gets `macos/gitconfig`
 - `macos/gradle.properties`, `omarchy/gradle.properties`: linked to `~/.gradle/gradle.properties`, so local Android builds target the machine's emulator ABI and share Gradle's build cache

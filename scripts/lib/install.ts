@@ -327,6 +327,7 @@ export class Installer {
       } else {
         this.block('.bashrc', `source "${this.source('omarchy/bashrc.local')}"`, uninstall);
         await this.tree('omarchy/uwsm', '.config/uwsm', uninstall);
+        await this.link('omarchy/helium-browser-flags.conf', '.config/helium-browser-flags.conf', uninstall);
         await this.tree('omarchy/bin', '.local/bin', uninstall);
       }
     });
