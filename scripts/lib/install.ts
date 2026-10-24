@@ -102,6 +102,13 @@ export const t3code = {
   packages: ['t3code-bin', 't3code-nightly-bin'],
 };
 
+// HyperFrames' desktop app links only its latest AppImage, without a checksum,
+// and records where it lives in ~/.config/HyperFrames/launcher.json when it runs.
+export const hyperframes = {
+  appImage: 'Applications/HyperFrames.AppImage',
+  download: 'https://hyperframes.dev/studio/download?os=linux',
+};
+
 function download(url: string) {
   const result = spawnSync('curl', ['-fsSL', url], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
   if (result.error || result.status !== 0) throw new Error(`Cannot download ${url}`);
@@ -238,6 +245,7 @@ export class Installer {
       if (!present && !this.files.dryRun) run(command, args);
     }
     this.t3code();
+    this.hyperframes();
   }
 
   private t3code() {
@@ -255,12 +263,25 @@ export class Installer {
     const manifest = download(`${t3code.downloads}/${tag}/nightly-linux.yml`);
     const file = manifest.match(/^path: (\S+)$/m)?.[1], sha512 = manifest.match(/^sha512: (\S+)$/m)?.[1];
     if (!file || !sha512) throw new Error(`T3 Code: cannot read the ${tag} manifest`);
+    this.appImage(appImage, `${t3code.downloads}/${tag}/${file}`, sha512);
+  }
+
+  private hyperframes() {
+    const appImage = this.destination(hyperframes.appImage);
+    if (fs.existsSync(appImage)) { this.files.log('skip', 'HyperFrames: already installed'); return; }
+    this.files.log('app', `HyperFrames: latest AppImage -> ${this.files.pretty(appImage)}`);
+    if (!this.files.dryRun) this.appImage(appImage, hyperframes.download);
+  }
+
+  // Downloads next to the destination, so a failed or tampered download never
+  // leaves an AppImage that later runs would take as installed.
+  private appImage(appImage: string, url: string, sha512?: string) {
     const partial = `${appImage}.part`;
     fs.mkdirSync(path.dirname(appImage), { recursive: true });
-    run('curl', ['-fsSL', '-o', partial, `${t3code.downloads}/${tag}/${file}`]);
-    if (createHash('sha512').update(fs.readFileSync(partial)).digest('base64') !== sha512) {
+    run('curl', ['-fsSL', '-o', partial, url]);
+    if (sha512 && createHash('sha512').update(fs.readFileSync(partial)).digest('base64') !== sha512) {
       fs.rmSync(partial);
-      throw new Error(`T3 Code: ${file} does not match its published checksum`);
+      throw new Error(`${path.basename(url)} does not match its published checksum`);
     }
     fs.chmodSync(partial, 0o755);
     fs.renameSync(partial, appImage);

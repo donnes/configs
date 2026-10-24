@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import { spawnSync, type SpawnSyncOptions } from 'node:child_process';
 import { children, Files, realPath, within } from './files.ts';
 import {
-  apps, components, ghExtensions, Installer, listed, missingHomebrew, missingPacman, opencodeVersion, runtimeHomes, t3code,
+  apps, components, ghExtensions, Installer, listed, missingHomebrew, missingPacman, opencodeVersion, runtimeHomes, t3code, hyperframes,
   type Component, type Profile, type RuntimeHomes,
 } from './install.ts';
 import { miseCurrent, miseFragments, vitePlusHome, vitePlusScopes, type MiseTool } from './mise.ts';
@@ -245,9 +245,10 @@ export class Health {
           const absent = missingPacman(packages);
           return absent.length ? [`${name} (${absent.join(' ')})`] : [];
         });
-        if (!fs.existsSync(path.join(this.home, t3code.appImage))) incomplete.push(`T3 Code (~/${t3code.appImage})`);
+        const appImages = [['T3 Code', t3code.appImage], ['HyperFrames', hyperframes.appImage]] as const;
+        for (const [name, appImage] of appImages) if (!fs.existsSync(path.join(this.home, appImage))) incomplete.push(`${name} (~/${appImage})`);
         if (incomplete.length) this.report('fail', `missing apps: ${incomplete.join(', ')}; run ./cli --only apps`);
-        else this.report('ok', `${apps.length + 1} Omarchy apps installed`);
+        else this.report('ok', `${apps.length + appImages.length} Omarchy apps installed`);
       } catch (error) {
         this.report('fail', message(error));
       }

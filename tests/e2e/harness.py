@@ -41,6 +41,7 @@ EMPTY_STATE = {
     'npx': {'status': None, 'calls': []},
     'vp': {'mode': 'managed'},
     't3code': {'tags': [], 'manifests': {}, 'downloads': []},
+    'hyperframes': {'downloads': 0},
 }
 
 

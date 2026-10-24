@@ -290,7 +290,7 @@ and `opencode upgrade`. Review what they will change first (`brew outdated`,
 ## Omarchy apps
 
 The `apps` component installs Steam, MangoHud, LACT, the Logitech racing wheel
-tools, Tailscale, Zed, Zen, Helium, and T3 Code. Each goes through Omarchy's own
+tools, Tailscale, Zed, Zen, Helium, T3 Code, and HyperFrames. Each goes through Omarchy's own
 installer where one exists, which also sets up drivers, services, or themes, or
 through Omarchy's package helpers otherwise. An app is installed only while one
 of its packages is missing, because some installers open the app or start a
@@ -300,6 +300,11 @@ T3 Code is the official nightly AppImage at `~/Applications/T3-Code.AppImage`,
 checked against the checksum in its release manifest. The app updates itself
 from then on. Omarchy's `t3code-bin` and `t3code-nightly-bin` packages would
 run a second copy on the same data, so the step stops while either is installed.
+
+HyperFrames is the desktop app's latest AppImage at
+`~/Applications/HyperFrames.AppImage`, from
+`https://hyperframes.dev/studio/download?os=linux`. HyperFrames publishes no
+checksum for it. The step downloads it only while the file is missing.
 
 ## mise
 

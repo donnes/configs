@@ -64,7 +64,8 @@ class PlatformTests(CliTestCase):
         # pacman cannot install AUR packages, and Omarchy's installers reopen apps that are present.
         self.boundary(pacman={'installed': 'steam mangohud lact tailscale zed omazed helium-browser-bin oversteer usb_modeswitch'.split(),
                               'aur': ['oversteer', 'new-lg4ff-dkms-git', 'usb_modeswitch', 'helium-browser-bin']})
-        self.write('Applications/T3-Code.AppImage', 'installed', home=True)
+        for app in ['T3-Code', 'HyperFrames']:
+            self.write(f'Applications/{app}.AppImage', 'installed', home=True)
         before = self.state
         self.cli('--only', 'apps', '--dry-run')
         self.assertEqual(self.state, before)
@@ -73,7 +74,7 @@ class PlatformTests(CliTestCase):
         self.env['DONNES_CONFIGS_PROFILE'] = 'macos'
         self.assertNotIn('apps', self.interactive(['--interactive'], [('Select components', '\x03')], code=130))
 
-    def test_omarchy_installs_the_verified_t3code_nightly_appimage_once(self):
+    def test_omarchy_installs_the_appimages_once(self):
         self.env['DONNES_CONFIGS_PROFILE'] = 'omarchy'
         installed = 'steam mangohud lib32-mangohud lact tailscale zed omazed zen-browser-bin helium-browser-bin oversteer new-lg4ff-dkms-git usb_modeswitch'.split()
         nightly = 'v0.1.2-nightly.20261021.3473'
@@ -90,10 +91,13 @@ class PlatformTests(CliTestCase):
         self.boundary(t3code={'manifests': {}})
         self.cli('--only', 'apps')
         self.assertEqual(app.read_text(), nightly)
-        self.assertTrue(app.stat().st_mode & 0o111)
-        # The app updates itself; a later run must not download over it.
+        hyperframes = self.home / 'Applications/HyperFrames.AppImage'
+        for file in [app, hyperframes]:
+            self.assertTrue(file.stat().st_mode & 0o111)
+        # A later run must not download over an installed app.
         self.cli('--only', 'apps')
         self.assertEqual(self.state['t3code']['downloads'], [f'T3-Code-{nightly[1:]}-x86_64.AppImage'] * 2)
+        self.assertEqual(self.state['hyperframes']['downloads'], 1)
 
     def test_session_enables_its_timer_and_uninstall_unloads_it(self):
         self.env['DONNES_CONFIGS_PROFILE'] = 'omarchy'

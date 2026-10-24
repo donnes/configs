@@ -82,6 +82,7 @@ def brew():
 
 T3_RELEASES = 'https://api.github.com/repos/pingdotgg/t3code/releases?per_page=30'
 T3_DOWNLOADS = 'https://github.com/pingdotgg/t3code/releases/download/'
+HYPERFRAMES_DOWNLOAD = 'https://hyperframes.dev/studio/download?os=linux'
 
 
 def t3_appimage(tag):
@@ -91,6 +92,11 @@ def t3_appimage(tag):
 def curl():
     if args == ['-fsSL', 'https://opencode.ai/v2/install']:
         done(out=OPENCODE_INSTALLER)
+    # HyperFrames redirects to its latest AppImage; -L follows the redirect.
+    if len(args) == 4 and args[:2] == ['-fsSL', '-o'] and args[3] == HYPERFRAMES_DOWNLOAD:
+        state['hyperframes']['downloads'] += 1
+        Path(args[2]).write_text('hyperframes')
+        done()
     # GitHub's releases API (newest first) and each tag's assets, which hold
     # the tag's own AppImage bytes; "manifests" overrides a published manifest.
     store = state['t3code']
