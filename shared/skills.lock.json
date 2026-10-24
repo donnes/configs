@@ -27,6 +27,15 @@
       "skillFolderHash": "678c375b883794bf4292715a43acbba5c84681aa",
       "installedAt": "2026-09-18T14:13:28.152Z",
       "updatedAt": "2026-09-18T14:13:28.152Z"
+    },
+    "cinematic-shot": {
+      "source": "1weiho/cinematic-shot",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/1weiho/cinematic-shot.git",
+      "skillPath": "skills/cinematic-shot/SKILL.md",
+      "skillFolderHash": "a0ae2d2e7a32f047ad75c891fed61a075beb6c43",
+      "installedAt": "2026-10-24T13:38:49.537Z",
+      "updatedAt": "2026-10-24T13:38:49.537Z"
     }
   },
   "dismissed": {
