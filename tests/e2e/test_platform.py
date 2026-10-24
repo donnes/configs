@@ -64,8 +64,8 @@ class PlatformTests(CliTestCase):
         # pacman cannot install AUR packages, and Omarchy's installers reopen apps that are present.
         self.boundary(pacman={'installed': 'steam mangohud lact tailscale zed omazed helium-browser-bin oversteer usb_modeswitch'.split(),
                               'aur': ['oversteer', 'new-lg4ff-dkms-git', 'usb_modeswitch', 'helium-browser-bin']})
-        for app in ['T3-Code', 'HyperFrames']:
-            self.write(f'Applications/{app}.AppImage', 'installed', home=True)
+        for app in ['Applications/T3-Code.AppImage', 'Applications/HyperFrames.AppImage', '.local/share/applications/hyperframes.desktop']:
+            self.write(app, 'installed', home=True)
         before = self.state
         self.cli('--only', 'apps', '--dry-run')
         self.assertEqual(self.state, before)
@@ -94,10 +94,19 @@ class PlatformTests(CliTestCase):
         hyperframes = self.home / 'Applications/HyperFrames.AppImage'
         for file in [app, hyperframes]:
             self.assertTrue(file.stat().st_mode & 0o111)
-        # A later run must not download over an installed app.
+        # HyperFrames' own entry stays out of the launcher, so the step adds one with the AppImage's icon.
+        entry = self.home / '.local/share/applications/hyperframes.desktop'
+        icon = self.home / '.local/share/icons/dev.hyperframes.desktop.png'
+        self.assertIn(f'Exec="{hyperframes}" %U\n', entry.read_text())
+        self.assertIn(f'Icon={icon}\n', entry.read_text())
+        self.assertEqual(icon.read_text(), 'icon')
+        # A later run must not download over an installed app, and restores only a missing entry.
+        entry.unlink()
         self.cli('--only', 'apps')
+        self.assertTrue(entry.exists())
         self.assertEqual(self.state['t3code']['downloads'], [f'T3-Code-{nightly[1:]}-x86_64.AppImage'] * 2)
         self.assertEqual(self.state['hyperframes']['downloads'], 1)
+        self.assertEqual(sorted(path.name for path in self.home.iterdir() if path.name.startswith('.hyperframes')), [])
 
     def test_session_enables_its_timer_and_uninstall_unloads_it(self):
         self.env['DONNES_CONFIGS_PROFILE'] = 'omarchy'

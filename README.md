@@ -304,7 +304,10 @@ run a second copy on the same data, so the step stops while either is installed.
 HyperFrames is the desktop app's latest AppImage at
 `~/Applications/HyperFrames.AppImage`, from
 `https://hyperframes.dev/studio/download?os=linux`. HyperFrames publishes no
-checksum for it. The step downloads it only while the file is missing.
+checksum for it. The step downloads it only while the file is missing. The
+app's own desktop entry only handles its URL schemes and is hidden from the
+launcher, so the step also writes `~/.local/share/applications/hyperframes.desktop`
+with the icon from the AppImage, while that entry is missing.
 
 ## mise
 

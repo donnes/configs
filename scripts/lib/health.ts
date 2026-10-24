@@ -245,8 +245,11 @@ export class Health {
           const absent = missingPacman(packages);
           return absent.length ? [`${name} (${absent.join(' ')})`] : [];
         });
-        const appImages = [['T3 Code', t3code.appImage], ['HyperFrames', hyperframes.appImage]] as const;
-        for (const [name, appImage] of appImages) if (!fs.existsSync(path.join(this.home, appImage))) incomplete.push(`${name} (~/${appImage})`);
+        const appImages = [['T3 Code', [t3code.appImage]], ['HyperFrames', [hyperframes.appImage, hyperframes.entry]]] as const;
+        for (const [name, files] of appImages) {
+          const absent = files.filter(file => !fs.existsSync(path.join(this.home, file)));
+          if (absent.length) incomplete.push(`${name} (${absent.map(file => `~/${file}`).join(' ')})`);
+        }
         if (incomplete.length) this.report('fail', `missing apps: ${incomplete.join(', ')}; run ./cli --only apps`);
         else this.report('ok', `${apps.length + appImages.length} Omarchy apps installed`);
       } catch (error) {

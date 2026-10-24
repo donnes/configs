@@ -104,9 +104,13 @@ export const t3code = {
 
 // HyperFrames' desktop app links only its latest AppImage, without a checksum,
 // and records where it lives in ~/.config/HyperFrames/launcher.json when it runs.
+// Its own desktop entry only handles its URL schemes and stays out of the app
+// launcher, so the step adds a visible one with the icon from the AppImage.
 export const hyperframes = {
   appImage: 'Applications/HyperFrames.AppImage',
   download: 'https://hyperframes.dev/studio/download?os=linux',
+  entry: '.local/share/applications/hyperframes.desktop',
+  icon: '.local/share/icons/dev.hyperframes.desktop.png',
 };
 
 function download(url: string) {
@@ -268,9 +272,30 @@ export class Installer {
 
   private hyperframes() {
     const appImage = this.destination(hyperframes.appImage);
-    if (fs.existsSync(appImage)) { this.files.log('skip', 'HyperFrames: already installed'); return; }
-    this.files.log('app', `HyperFrames: latest AppImage -> ${this.files.pretty(appImage)}`);
-    if (!this.files.dryRun) this.appImage(appImage, hyperframes.download);
+    if (fs.existsSync(appImage)) this.files.log('skip', 'HyperFrames: already installed');
+    else {
+      this.files.log('app', `HyperFrames: latest AppImage -> ${this.files.pretty(appImage)}`);
+      if (!this.files.dryRun) this.appImage(appImage, hyperframes.download);
+    }
+    const entry = this.destination(hyperframes.entry), icon = this.destination(hyperframes.icon);
+    if (fs.existsSync(entry)) { this.files.log('skip', `HyperFrames: ${this.files.pretty(entry)} exists`); return; }
+    this.files.log('app', `HyperFrames: launcher entry -> ${this.files.pretty(entry)}`);
+    if (this.files.dryRun) return;
+    const extracted = fs.mkdtempSync(path.join(this.files.home, '.hyperframes-icon-'));
+    try {
+      spawnSync(appImage, ['--appimage-extract', path.basename(icon)], { cwd: extracted, stdio: 'ignore' });
+      const file = path.join(extracted, 'squashfs-root', path.basename(icon));
+      if (!fs.existsSync(file)) throw new Error(`HyperFrames: ${path.basename(icon)} is missing from the AppImage`);
+      fs.mkdirSync(path.dirname(icon), { recursive: true });
+      fs.copyFileSync(file, icon);
+    } finally {
+      fs.rmSync(extracted, { recursive: true, force: true });
+    }
+    fs.mkdirSync(path.dirname(entry), { recursive: true });
+    fs.writeFileSync(entry, [
+      '[Desktop Entry]', 'Type=Application', 'Name=HyperFrames', 'Comment=Write HTML, render video',
+      `Exec="${appImage}" %U`, `Icon=${icon}`, 'Terminal=false', 'Categories=AudioVideo;Video;', 'StartupWMClass=hyperframes', '',
+    ].join('\n'));
   }
 
   // Downloads next to the destination, so a failed or tampered download never
