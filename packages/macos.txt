@@ -9,6 +9,7 @@ fd
 gh
 git
 mise
+mobai-app/tap/simslim
 neovim
 ripgrep
 starship
