@@ -91,24 +91,6 @@
       "installedAt": "2026-10-25T00:47:32.614Z",
       "updatedAt": "2026-10-25T00:47:32.614Z"
     },
-    "modernize": {
-      "source": "t3dotgg/tstack",
-      "sourceType": "github",
-      "sourceUrl": "https://github.com/t3dotgg/tstack.git",
-      "skillPath": "skills/modernize/SKILL.md",
-      "skillFolderHash": "149f54a0835d2da770b564eb8624f1e3618a33a7",
-      "installedAt": "2026-10-25T00:47:32.614Z",
-      "updatedAt": "2026-10-25T00:47:32.614Z"
-    },
-    "sol-loop": {
-      "source": "t3dotgg/tstack",
-      "sourceType": "github",
-      "sourceUrl": "https://github.com/t3dotgg/tstack.git",
-      "skillPath": "skills/sol-loop/SKILL.md",
-      "skillFolderHash": "9d2b1c1b00bf54e1b4e6e6243aec6d39037ce624",
-      "installedAt": "2026-10-25T00:47:32.614Z",
-      "updatedAt": "2026-10-25T00:47:32.614Z"
-    },
     "takeover": {
       "source": "t3dotgg/tstack",
       "sourceType": "github",

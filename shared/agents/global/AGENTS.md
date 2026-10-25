@@ -87,3 +87,4 @@ I want to share some preferences so we can work well together.
 - Resolve bot threads you fixed or dismissed with evidence. Never dismiss a human review or resolve a human reviewer's thread on their behalf.
 - Don't let review feedback expand the PR beyond the original goal. Stay quiet when nothing has changed. Stop when the required checks and reviews pass on the latest commit, or report a blocker.
 - Merge only when requested. Otherwise, report that the PR is ready. Treat deploying as a separate action.
+- Our tstack skills `modernize` and `sol-loop` are installed as `modernize-pr` and `sol-review-loop`. When another skill, such as `full-send` or `takeover`, names the old skill, use the renamed one.

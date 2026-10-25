@@ -1,9 +1,9 @@
 ---
-name: sol-loop
-description: Use when the user says "sol loop".
+name: sol-review-loop
+description: Use when the user says "sol loop" or "sol review loop".
 ---
 
-# sol-loop
+# sol-review-loop
 
 This is a workflow for making your code changes more correct before (or
 sometimes after) filing a pull request. tl;dr - use OpenAI's GPT Sol to review
@@ -111,7 +111,7 @@ Do not push during the loop. Push after agreement only if the user asked
 to push, ship, or update the PR. If you push to a PR, add above the model
 blurb:
 
-`Reviewed with sol-loop: <N> rounds with <model>. Sol verdict: approved`.
+`Reviewed with sol-review-loop: <N> rounds with <model>. Sol verdict: approved`.
 
 Add `on <effort>` only if verified.
 

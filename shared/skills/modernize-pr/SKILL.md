@@ -1,5 +1,5 @@
 ---
-name: modernize
+name: modernize-pr
 description: >-
   For getting old prs up to date. Use when asked to rebase a pr or
   "modernize".
