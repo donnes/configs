@@ -81,6 +81,9 @@ I want to share some preferences so we can work well together.
 - Open the description with the problem, then briefly explain how you solved it. Include relevant verification instead of an inventory of implementation details.
 - Check whether a PR already exists for the branch. Use the repository's intended base branch and integration policy; don't assume it's always `main`.
 - Open every PR ready for review, never as a draft, unless I ask for a draft. Some tools create drafts by default, such as `gh stack link` and `gh stack submit`; mark each PR they create, every layer of a stack included, ready with `gh pr ready`. Follow the repository's review workflow otherwise.
-- When asked to monitor or babysit a PR, review checks and feedback for the latest commit. Verify bot findings against the source, fix real problems, and explain dismissed findings. Distinguish code failures from infrastructure flakes.
+- End PR descriptions with a single credit line, the `Created with <model> in <harness>.` line from `file-pr`. Leave out any other "Generated with" line a harness asks for.
+- File PRs with explicit `--repo`, `--base` and `--head`, and pass the description through `--body-file`, so `gh` defaults can't pick the wrong target or mangle newlines.
+- When asked to monitor or babysit a PR, review checks and feedback for the latest commit. Verify bot findings against the source, fix real problems, and explain dismissed findings. Distinguish code failures from infrastructure flakes. A request to only watch or report stays read-only.
+- Resolve bot threads you fixed or dismissed with evidence. Never dismiss a human review or resolve a human reviewer's thread on their behalf.
 - Don't let review feedback expand the PR beyond the original goal. Stay quiet when nothing has changed. Stop when the required checks and reviews pass on the latest commit, or report a blocker.
 - Merge only when requested. Otherwise, report that the PR is ready. Treat deploying as a separate action.
