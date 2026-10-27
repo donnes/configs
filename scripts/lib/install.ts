@@ -8,7 +8,7 @@ import { Agents } from './agents.ts';
 import { Mise } from './mise.ts';
 import { canPrompt } from './prompts.ts';
 
-export const components = ['packages', 'gh-extensions', 'apps', 'agents', 'skills', 'mise', 'atuin', 'nvim', 'gradle', 'shell', 'tmux', 'git', 'session', 'command-center', 'rea'] as const;
+export const components = ['packages', 'gh-extensions', 'apps', 'agents', 'skills', 'mise', 'atuin', 'nvim', 'gradle', 'shell', 'tmux', 'git', 'tinycast', 'session', 'command-center', 'rea'] as const;
 export type Component = typeof components[number];
 export type Profile = 'macos' | 'omarchy';
 
@@ -45,7 +45,7 @@ export function missingHomebrew(brew: string, kind: '--formula' | '--cask', want
 }
 
 export function available(profile: Profile) {
-  const exclusive: Component[] = profile === 'macos' ? ['apps', 'session'] : [];
+  const exclusive: Component[] = profile === 'macos' ? ['apps', 'session'] : ['tinycast'];
   return components.filter(component => !exclusive.includes(component));
 }
 
@@ -367,6 +367,8 @@ export class Installer {
       this.files.unlink(source, config);
       if (this.files.target(config) !== source) this.files.block(config, uninstall ? undefined : `[include]\n\tpath = ${source}`);
     });
+    // Tinycast's imported script commands run these files from ~/Scripts/Tinycast.
+    if (macos) await this.component('tinycast', () => this.tree('macos/tinycast', 'Scripts/Tinycast', uninstall));
     if (!macos) await this.component('session', () => this.session(uninstall));
     await this.component('tmux', async () => {
       if (macos) { await this.link('macos/tmux.conf', '.tmux.conf', uninstall); return; }

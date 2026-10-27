@@ -17,7 +17,7 @@ class PlatformTests(CliTestCase):
                 self.env['DONNES_CONFIGS_PROFILE'] = profile
                 self.cli('--only', 'rea', '--dry-run')
                 self.cli('uninstall', '--only', 'rea')
-                self.cli('--skip', 'packages,gh-extensions,apps,agents,skills,mise,atuin,nvim,gradle,shell,tmux,git,session')
+                self.cli('--skip', 'packages,gh-extensions,apps,agents,skills,mise,atuin,nvim,gradle,shell,tmux,git,tinycast,session')
                 self.assertEqual(self.state['npx']['calls'], [])
                 result = self.fails('--only', 'rea')
                 self.assertIn('npx failed (7)', result.stderr)

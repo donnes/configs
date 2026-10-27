@@ -38,7 +38,7 @@ Choose what the installer manages with repeatable `--skip` or `--only` options:
 `--interactive` opens a Clack multiselect with the default components selected.
 Use Space to toggle components and Enter to continue; Ctrl-C cancels. Available
 components are `packages`, `gh-extensions`, `apps` (Omarchy only), `agents`, `skills`, `mise`, `atuin`, `nvim`, `gradle`, `shell`, `tmux`,
-`git`, `session` (Omarchy only), `command-center` and `rea`. `command-center`
+`git`, `tinycast` (macOS only), `session` (Omarchy only), `command-center` and `rea`. `command-center`
 is unchecked and excluded from the default install; default uninstall
 includes it; `rea` is always opt-in. `--skip-packages` remains an
 alias for `--skip packages`. Interactive mode cannot be combined with `--skip`
@@ -121,6 +121,7 @@ Always inspect `./cli --dry-run` first.
 - `shared/`: agent, editor, Neovim, Atuin, and tool overlays
 - `omarchy/`: bash/tmux deltas, vendored Omarchy Neovim keepers, `omarchy/bin` scripts linked into `~/.local/bin`, Helium's WebGPU flags (`helium-browser-flags.conf`), and the Hyprland session files (`hypr/`, `systemd/user/`)
 - `macos/`: full zsh, git, and tmux configuration, plus `macos/bin` scripts linked into `~/.local/bin`
+- `macos/tinycast/`: Raycast-style script commands linked into `~/Scripts/Tinycast`; import that folder once from Tinycast's custom commands settings
 - `shared/git/ignore`: the global gitignore on both machines, linked to `~/.config/git/ignore`; only macOS also gets `macos/gitconfig`
 - `macos/gradle.properties`, `omarchy/gradle.properties`: linked to `~/.gradle/gradle.properties`, so local Android builds target the machine's emulator ABI and share Gradle's build cache
 - `packages/`: platform package lists, plus `gh-extensions.txt`, the gh extensions both machines install with the `gh-extensions` component

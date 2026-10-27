@@ -84,6 +84,13 @@ class FilesTests(CliTestCase):
                 self.assertFalse(gradle.exists())
                 self.assertFalse(git.exists())
                 (self.home / '.gitconfig').unlink(missing_ok=True)
+        # Tinycast's imported script commands run the files from ~/Scripts/Tinycast.
+        script, command = self.write('macos/tinycast/capture.sh', '#!/bin/bash\n'), self.home / 'Scripts/Tinycast/capture.sh'
+        self.env['DONNES_CONFIGS_PROFILE'] = 'macos'
+        self.cli('--only', 'tinycast')
+        self.assertEqual(command.resolve(), script)
+        self.cli('uninstall', '--only', 'tinycast')
+        self.assertFalse(command.exists())
 
     def test_marker_blocks_are_idempotent_and_uninstall_preserves_user_content(self):
         self.write('macos/zshrc', '# zsh')
