@@ -46,15 +46,6 @@
       "installedAt": "2026-10-25T00:47:32.614Z",
       "updatedAt": "2026-10-25T00:47:32.614Z"
     },
-    "council": {
-      "source": "t3dotgg/tstack",
-      "sourceType": "github",
-      "sourceUrl": "https://github.com/t3dotgg/tstack.git",
-      "skillPath": "skills/council/SKILL.md",
-      "skillFolderHash": "b4e9b66bb03bb90aeae0b8c988915e5d3ba5c347",
-      "installedAt": "2026-10-25T00:47:32.614Z",
-      "updatedAt": "2026-10-25T00:47:32.614Z"
-    },
     "file-pr": {
       "source": "t3dotgg/tstack",
       "sourceType": "github",

@@ -8,11 +8,13 @@ description: Trigger this if the user says 'council'.
 Bring in three delegates to help with the user's request, usually for review
 or feedback. Use one strong model from each of three different providers, at
 high reasoning effort. If the user's instructions name council members, use
-those. Otherwise pick the latest flagship model from each provider, for
-example Claude Opus, GPT Sol, and Gemini Pro.
+those. Otherwise use the latest Claude Opus, the latest GPT Sol, and Kimi K3.1
+Pro from OpenCode Go.
 
 In T3 Code, use `orchestrator_capabilities` to resolve the models, then
-`delegate_task` to start one delegate per model in parallel. Elsewhere, use
+`delegate_task` to start one delegate per model in parallel. Kimi runs on the
+`opencode` provider as `opencode-go/kimi-k3.1-pro`. It has no default
+variant, so pass `variant: high`. Elsewhere, use
 the harness's subagent tools. If you cannot reach three providers, or a named
 member is unavailable, report it instead of substituting.
 
