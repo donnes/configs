@@ -22,6 +22,8 @@ fzf = "latest"
 zoxide = "latest"
 lazygit = "latest"
 jj = "latest"
+# Reruns a command when files change, such as a project's rebuild-and-relaunch.
+watchexec = "latest"
 # rustup's default profile can be minimal, which has no rustfmt.
 rust = { version = "stable", components = "rustfmt" }
 # Swift and Kotlin linters. ktlint and detekt need a JVM: Zulu 17 on macOS, the
