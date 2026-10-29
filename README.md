@@ -55,7 +55,7 @@ changes nothing:
 - the apply receipt: whether the last install finished, kept differing local copies, or failed, and at which revision;
 - managed files: anything `./cli` would link, relink or rewrite, taken from its own dry run, for every known Codex home and Claude config directory, with the `--only` selection that would fix it; and a Codex `AGENTS.override.md` that replaces the installed instructions;
 - the machine's role: command-center skills where the role is `command-center`, and none on a worker;
-- packages: Homebrew formulae and casks on macOS, pacman packages and Omarchy apps on Omarchy, and opencode v2 and the listed gh extensions on both;
+- packages: Homebrew formulae and casks on macOS, pacman packages and Omarchy apps on Omarchy, and the listed gh extensions on both;
 - mise: every tool the shared fragment requests configured and installed, `mise doctor` clean in a new shell, and machine config that requests a different version than the fragment;
 - tool resolution: each tool's executable found through mise in a new terminal's shell, started with a clean environment so this process's PATH can't hide problems in startup files. Omarchy's `~/.local/bin` wrappers, which run `mise x`, and Vite+ shims in system-first mode count as mise; with `jsRuntimes` set to `vite-plus`, node, npm, pnpm, yarn and bun must resolve to Vite+'s own runtimes instead;
 - global duplicates: a copy of a mise tool in bun's or pnpm's global bin directory, such as a `bun add -g` install or a standalone bun;
@@ -271,7 +271,7 @@ The macOS gitconfig is never installed on Omarchy.
 
 ## Packages and upgrades
 
-`packages` installs what is missing from the platform lists and opencode v2;
+`packages` installs what is missing from the platform lists;
 `gh-extensions` installs what is missing from `packages/gh-extensions.txt`.
 Neither asks to upgrade a listed package that is already installed, so an
 unattended run with everything present changes nothing. Installing a missing
@@ -283,8 +283,8 @@ without touching system packages. A missing cask or formula from a third-party
 tap has its tap trusted first.
 
 Upgrades are explicit, one tool at a time, with the tools' own commands:
-`brew upgrade [name]`, `yay -Syu`, `mise up [tool]`, `gh extension upgrade --all`
-and `opencode upgrade`. Review what they will change first (`brew outdated`,
+`brew upgrade [name]`, `yay -Syu`, `mise up [tool]` and `gh extension upgrade --all`.
+Review what they will change first (`brew outdated`,
 `mise outdated`); a cask upgrade can quit or reinstall a running app.
 
 ## Omarchy apps
@@ -315,7 +315,7 @@ mise manages language runtimes and agent CLIs on both profiles; Homebrew and
 pacman keep system packages. The `mise` component links
 `shared/mise/conf.d/donnes.toml` into `~/.config/mise/conf.d/`, and on macOS
 also `macos/mise/conf.d/donnes-macos.toml`, which holds the agent CLIs (claude,
-codex, cursor-agent). Omarchy installs those into its own `config.toml`, and its
+codex, cursor-agent, opencode). Omarchy installs those into its own `config.toml`, and its
 `~/.local/bin` wrappers run `mise use -g`, which refuses a tool declared in two
 global files. mise loads the fragments
 before `~/.config/mise/config.toml`, which stays machine-owned: `mise use -g`
@@ -336,11 +336,9 @@ missing tools with `mise settings add`. Omarchy's other settings stay, including
 `upgrade.auto_prune = false`, which keeps `mise up` from deleting a version a
 running session uses; the daily prune does the cleanup instead.
 
-opencode stays outside mise, which only publishes the v1 line. The `packages`
-component runs opencode's v2 installer (`https://opencode.ai/v2/install`) while
-`~/.opencode/bin/opencode` is missing or older than v2; opencode upgrades itself
-from there. The shell startup files, the macOS GUI PATH and Omarchy's uwsm
-environment put `~/.opencode/bin` first.
+The macOS fragment pins opencode to `aqua:anomalyco/opencode` at `2`, because
+that backend's `latest` still resolves to the 1.x line. Omarchy's own opencode
+wrapper uses the registry's npm backend, whose `latest` is already 2.x.
 
 `mise prune` runs daily (a launchd agent on macOS, `mise-prune.timer` on
 Omarchy). It deletes versions that no tracked config selects and keeps those a

@@ -18,13 +18,12 @@ class HealthTests(CliTestCase):
         # startup file is what puts the doubles and mise's shims on PATH. zsh reads
         # the managed ~/.zshrc link; bash reads an unmanaged ~/.bashrc.
         def startup(extra=''):
-            content = f'export PATH="{self.home}/.opencode/bin:{self.bin}:{shims}:{self.home}/.cargo/bin:$PATH"\n' + extra
+            content = f'export PATH="{self.bin}:{shims}:{self.home}/.cargo/bin:$PATH"\n' + extra
             self.write('macos/zshrc', content)
             self.write('.bashrc', content, home=True)
         startup(startup_extra)
         # mise's rust puts rustup's proxies in ~/.cargo/bin, not in its shims.
         self.write('.cargo/bin/rustfmt', '#!/bin/sh\n', home=True).chmod(0o755)
-        self.opencode('2.0.26')
         self.write('shared/agents/global/AGENTS.md', 'instructions')
         self.write('packages/macos.txt', 'git\nmise\n')
         self.write('packages/macos-casks.txt', 'abue-ammar/tinycast/tinycast\n')
@@ -66,7 +65,6 @@ class HealthTests(CliTestCase):
         (shadow / 'jj').chmod(0o755)
         (self.home / '.zshenv').write_text('')
         (self.home / '.pyenv').mkdir()
-        self.opencode('1.19.0')
         self.write('.bun/bin/jj', '', home=True)
         startup(f'export PATH="{vite}:{shadow}:$PATH"\n')
         state = self.state
@@ -83,7 +81,7 @@ class HealthTests(CliTestCase):
                    'legacy:pyenv', 'duplicate:~/.bun/bin/jj']:
             self.assertIn(id, warnings)
         self.assertTrue([id for id in warnings if id.startswith('files:vp env off')], warnings)
-        for section, words in [('Packages', ['formulae', 'mise']), ('Packages', ['opencode 1.19.0']),
+        for section, words in [('Packages', ['formulae', 'mise']),
                                ('Packages', ['github/gh-stack']), ('mise', ['not configured', 'bat']),
                                ('mise', ['not installed', 'node']), ('Shell', ['mise doctor']),
                                ('Background', ['dev.dstech.mise-prune'])]:

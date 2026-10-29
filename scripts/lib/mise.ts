@@ -102,10 +102,9 @@ export class Mise {
     const log = path.join(this.files.home, 'Library/Logs/dev.dstech.mise-prune.log');
     return [
       // GUI apps such as Xcode and Android Studio start with launchd's PATH, not
-      // the shell's. The shims select each project's tool versions from its cwd;
-      // opencode v2 comes from its own installer.
+      // the shell's. The shims select each project's tool versions from its cwd.
       ['dev.dstech.guipath', plist('dev.dstech.guipath',
-        `/bin/launchctl setenv PATH "$HOME/.opencode/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"`,
+        `/bin/launchctl setenv PATH "$HOME/.local/share/mise/shims:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"`,
         '  <key>RunAtLoad</key>\n  <true/>')],
       // Repoint Xcode at the Node shim before pruning removes recorded install
       // paths. A sweep that fails skips the prune, which can wait a day.

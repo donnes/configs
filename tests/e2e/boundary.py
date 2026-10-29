@@ -48,16 +48,6 @@ INSTALLERS = {
     'omarchy-install-browser zen': ['zen-browser-bin'],
 }
 
-OPENCODE_INSTALLER = '''
-case " $* " in *" --no-modify-path "*) ;; *)
-  for rc in "$HOME/.zshrc" "$HOME/.bashrc"; do printf '\\nexport PATH="$HOME/.opencode/bin:$PATH"\\n' >> "$rc"; done ;;
-esac
-mkdir -p "$HOME/.opencode/bin"
-printf '#!/bin/sh\\necho opencode v2.0.26\\n' > "$HOME/.opencode/bin/opencode"
-chmod 755 "$HOME/.opencode/bin/opencode"
-'''
-
-
 def brew():
     store = state['brew']
     if args == ['--prefix']:
@@ -94,8 +84,6 @@ def t3_appimage(tag):
 
 
 def curl():
-    if args == ['-fsSL', 'https://opencode.ai/v2/install']:
-        done(out=OPENCODE_INSTALLER)
     # HyperFrames redirects to its latest AppImage; -L follows the redirect.
     # The AppImage double only extracts a file into ./squashfs-root, as the runtime does.
     if len(args) == 4 and args[:2] == ['-fsSL', '-o'] and args[3] == HYPERFRAMES_DOWNLOAD:
