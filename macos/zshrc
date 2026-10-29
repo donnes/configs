@@ -2,10 +2,6 @@
 # export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 export PATH="$HOME/.local/bin:$PATH"
 
-# opencode v2 comes from its own installer and updates with `opencode upgrade`;
-# mise only publishes the v1 line.
-export PATH="$HOME/.opencode/bin:$PATH"
-
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 

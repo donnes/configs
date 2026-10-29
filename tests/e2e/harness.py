@@ -147,11 +147,6 @@ class CliTestCase(unittest.TestCase):
         self.git('commit', '-qm', message, '--allow-empty')
         return self.git('rev-parse', 'HEAD')
 
-    def opencode(self, version):
-        binary = self.write('.opencode/bin/opencode', f'#!/bin/sh\necho opencode v{version}\n', home=True)
-        binary.chmod(0o755)
-        return binary
-
     def launchd_job(self, label):
         """Runs a loaded launchd agent's program as launchd would, recording its exit code.
         Only the absolute boundary executables in it are swapped for doubles."""

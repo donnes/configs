@@ -24,15 +24,14 @@ details, and `./cli --help` for commands.
 
 - Language runtimes and CLIs: `shared/mise/conf.d/donnes.toml`, used on both
   machines. Agent CLIs that Omarchy installs itself (claude, codex,
-  cursor-agent) go in `macos/mise/conf.d/donnes-macos.toml` instead; Omarchy's
+  cursor-agent, opencode) go in `macos/mise/conf.d/donnes-macos.toml` instead; Omarchy's
   wrappers fail when the shared file declares them too. System packages: `packages/macos.txt`, `packages/macos-casks.txt`
   and `packages/omarchy.txt`. gh extensions: `packages/gh-extensions.txt`, shared
   by both machines and installed by the `gh-extensions` component.
 - Only list tools Donald runs directly. Dependencies other tools need stay with
   whatever needs them.
 - JavaScript globals go through `bun add -g`, not npm or pnpm.
-- opencode v2 comes from its own installer, not mise. fastlane and atuin stay
-  system packages.
+- fastlane and atuin stay system packages.
 - Skills: Donald's own skills go in `shared/skills/personal/<name>`; skills
   installed from other repos with `npx skills` stay in `shared/skills/<name>`
   and in `shared/skills.lock.json`. A third-party skill edited here leaves the

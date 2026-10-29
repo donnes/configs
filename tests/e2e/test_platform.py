@@ -30,21 +30,15 @@ class PlatformTests(CliTestCase):
         self.write('packages/macos.txt', 'formula-one\nformula-two\n')
         self.write('packages/macos-casks.txt', 'app-one\nowner/tap/app-two\n')
         self.write('packages/gh-extensions.txt', 'owner/one\nowner/two\n')
-        startup = [self.write(name, '# user\n', home=True) for name in ['.zshrc', '.bashrc']]
         self.boundary(brew={'formulae': ['formula-two'], 'casks': ['app-one']}, gh={'extensions': ['owner/two']})
         before = self.state
         self.cli('--only', 'packages,gh-extensions', '--dry-run')
         self.assertEqual(self.state, before)
-        self.assertFalse((self.home / '.opencode').exists())
         self.cli('--only', 'packages,gh-extensions')
         installed = self.state
         self.assertEqual(sorted(installed['brew']['formulae']), ['formula-one', 'formula-two'])
         self.assertEqual(sorted(installed['brew']['casks']), ['app-one', 'app-two'])
         self.assertEqual(sorted(installed['gh']['extensions']), ['owner/one', 'owner/two'])
-        opencode = subprocess.run([self.home / '.opencode/bin/opencode', '--version'], capture_output=True, text=True)
-        self.assertEqual(opencode.stdout.strip(), 'opencode v2.0.26')
-        # The startup files already put ~/.opencode/bin first; the installer must not edit them.
-        self.assertEqual([file.read_text() for file in startup], ['# user\n', '# user\n'])
         # The doubles reject reinstalling, which would upgrade an installed package.
         self.cli('--only', 'packages,gh-extensions')
         self.assertEqual(self.state, installed)

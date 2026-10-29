@@ -60,15 +60,6 @@ export function detectProfile(): Profile {
 
 const timer = 'hypr-session-autosave.timer';
 
-// opencode v2 is only published through its own installer; mise and the
-// default installer still ship v1. It upgrades itself once installed.
-export const opencodeInstaller = 'https://opencode.ai/v2/install';
-
-export function opencodeVersion(home: string) {
-  const result = spawnSync(path.join(home, '.opencode/bin/opencode'), ['--version'], { encoding: 'utf8' });
-  return result.status === 0 ? result.stdout.match(/\d+\.\d+\.\d+/)?.[0] : undefined;
-}
-
 // gh extensions live in the user's gh data directory, so both profiles share one
 // list. Reports owner/repo for each installed extension.
 export function ghExtensions() {
@@ -188,7 +179,6 @@ export class Installer {
         if (!this.files.dryRun) run('yay', ['-S', '--needed', ...missing]);
       }
     } else this.homebrew();
-    this.opencode();
   }
 
   private ghExtensions() {
@@ -198,17 +188,6 @@ export class Installer {
       this.files.log('package', `gh extension install ${repo}`);
       if (!this.files.dryRun) run('gh', ['extension', 'install', repo]);
     }
-  }
-
-  // The shell startup files and the GUI PATH already put ~/.opencode/bin first.
-  private opencode() {
-    const version = opencodeVersion(this.files.home);
-    if (version?.startsWith('2.')) { this.files.log('skip', `opencode ${version} already installed`); return; }
-    this.files.log('package', `curl -fsSL ${opencodeInstaller} | bash -s -- --no-modify-path`);
-    if (this.files.dryRun) return;
-    const download = spawnSync('curl', ['-fsSL', opencodeInstaller], { encoding: 'utf8' });
-    if (download.error || download.status !== 0) throw new Error('Cannot download the opencode installer');
-    run('bash', ['-s', '--', '--no-modify-path'], download.stdout);
   }
 
   private homebrew() {

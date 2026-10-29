@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import { spawnSync, type SpawnSyncOptions } from 'node:child_process';
 import { children, Files, realPath, within } from './files.ts';
 import {
-  apps, components, ghExtensions, Installer, listed, missingHomebrew, missingPacman, opencodeVersion, runtimeHomes, t3code, hyperframes,
+  apps, components, ghExtensions, Installer, listed, missingHomebrew, missingPacman, runtimeHomes, t3code, hyperframes,
   type Component, type Profile, type RuntimeHomes,
 } from './install.ts';
 import { miseCurrent, miseFragments, vitePlusHome, vitePlusScopes, type MiseTool } from './mise.ts';
@@ -29,6 +29,7 @@ const legacyManagers = ['fnm', 'nvm', 'pyenv', 'rbenv', 'asdf', 'volta'];
 const executables: Record<string, string> = {
   'aws-cli': 'aws', 'npm:cf': 'cf', 'github:voidzero-dev/vite-plus': 'vp', rust: 'rustfmt',
   'github:realm/SwiftLint': 'swiftlint', 'aqua:ktlint/ktlint': 'ktlint', 'github:detekt/detekt': 'detekt',
+  'aqua:anomalyco/opencode': 'opencode',
 };
 const hour = 3_600_000;
 // Jobs with their expected interval, for spotting ones that stopped running.
@@ -223,9 +224,6 @@ export class Health {
 
   private packages() {
     this.section('Packages');
-    const opencode = opencodeVersion(this.home);
-    if (opencode?.startsWith('2.')) this.report('ok', `opencode ${opencode} installed`);
-    else this.report('fail', `${opencode ? `opencode ${opencode} is not v2` : 'opencode v2 is not installed'}; run ./cli --only packages`);
     const extensions = listed(path.join(this.repo, 'packages/gh-extensions.txt'));
     try {
       const installed = ghExtensions();
@@ -328,7 +326,6 @@ export class Health {
       '  __donnes_bin="$(__donnes_path "$name")"; printf "@@bin %s %s\\n" "$name" "$__donnes_bin"',
       '  case "$__donnes_bin" in "$__donnes_vp"/*) printf "@@vp %s %s\\n" "$name" "$("$__donnes_vp/vp" env which "$name" 2>/dev/null | head -n 1)" ;; esac',
       'done',
-      'printf "@@opencode %s\\n" "$(__donnes_path opencode)"',
       `for name in ${legacyManagers.join(' ')}; do type "$name" >/dev/null 2>&1 && printf "@@legacy %s\\n" "$name"; done`,
       'true',
     ].join('\n');
@@ -373,10 +370,6 @@ export class Health {
     if (resolved) this.report('ok', `${resolved} tools resolve through mise${throughVitePlus ? ` (${throughVitePlus} via Vite+'s system-first shims)` : ''}`);
     if (managed) this.report('ok', `${managed} tools resolve to Vite+'s managed runtimes, as machine.json's jsRuntimes asks`);
     this.globals(names);
-    const opencode = value('@@opencode');
-    const expected = path.join(this.home, '.opencode/bin/opencode');
-    if (opencode && path.resolve(opencode) === expected) this.report('ok', 'opencode resolves to its v2 install');
-    else this.report('warn', `opencode resolves to ${opencode ? this.files.pretty(path.resolve(opencode)) : 'nothing'} instead of ${this.files.pretty(expected)}`, 'opencode:path');
     const leftovers = lines.filter(([kind]) => kind === '@@legacy').map(([, name]) => [`${name} is still on PATH`, `legacy:${name}`]);
     for (const [name, directory] of [
       ['nvm', '.nvm'], ['pyenv', '.pyenv'], ['rbenv', '.rbenv'], ['asdf', '.asdf'], ['volta', '.volta'],
