@@ -1,0 +1,4 @@
+interface:
+  display_name: "Full Push"
+  short_description: "Prove, review, push to main, and verify it landed"
+  default_prompt: "Use $full-push to land this on main without a PR. I am not watching this thread."
