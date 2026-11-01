@@ -13,7 +13,6 @@ class FilesTests(CliTestCase):
         custom = self.home / '.codex-purpose'
         self.env['CODEX_HOME'] = str(custom)
         skill = self.write('shared/skills/example/SKILL.md', 'example').parent
-        self.write('shared/skills.lock.json', '{"version":3,"skills":{}}')
         foreign = self.write('.agents/skills/foreign/SKILL.md', 'foreign', home=True)
         self.cli('--only', 'agents,skills', '--dry-run')
         self.assertFalse((custom / 'AGENTS.md').exists())
@@ -31,7 +30,6 @@ class FilesTests(CliTestCase):
 
     def test_unattended_install_keeps_conflicts_through_linked_skills(self):
         source = self.write('shared/skills/example/SKILL.md', 'repository')
-        self.write('shared/skills.lock.json', '{"version":3,"skills":{}}')
         local = self.write('.agents/skills/example/SKILL.md', 'local', home=True)
         link = self.home / '.claude/skills/example'
         link.parent.mkdir(parents=True)
@@ -174,7 +172,6 @@ class FilesTests(CliTestCase):
         self.assertEqual(source.read_text(), 'repository config')
         self.assertEqual(os.readlink(alias), 'config.toml')
         skill = self.write('shared/skills/example/SKILL.md', 'repository skill')
-        self.write('shared/skills.lock.json', '{"version":3,"skills":{}}')
         (self.home / '.agents').mkdir()
         (self.home / '.agents/skills').symlink_to(skill.parent.parent)
         self.cli('--only', 'skills')
@@ -295,7 +292,6 @@ class FilesTests(CliTestCase):
 
     def test_conflict_choices_and_same_second_default(self):
         source = self.write('shared/skills/example/SKILL.md', 'repository')
-        self.write('shared/skills.lock.json', '{"version":3,"skills":{}}')
         local = self.write('.agents/skills/example/SKILL.md', 'local', home=True)
         for choice, reply in [('keep', '\r'), ('replace', '\x1b[B\r'), ('update', '\x1b[B\x1b[B\r')]:
             with self.subTest(choice=choice):

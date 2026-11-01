@@ -4,25 +4,8 @@ import * as p from '@clack/prompts';
 import { children, exists, Files, realPath } from './files.ts';
 import { answer, canPrompt } from './prompts.ts';
 
-type Lock = Record<string, unknown> & { skills: Record<string, unknown> };
-
 // Donald's own skills live apart from installed third-party ones but install alongside them.
 const PERSONAL = 'shared/skills/personal';
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function readLock(file: string): Lock {
-  const value: unknown = JSON.parse(fs.readFileSync(file, 'utf8'));
-  if (!isObject(value) || !isObject(value.skills)) throw new Error(`${file}: expected a lockfile with a skills object`);
-  return { ...value, skills: value.skills };
-}
-
-function writeLock(file: string, data: Lock) {
-  // Write through the existing path, preserving links from other agents.
-  fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
-}
 
 export class Skills {
   constructor(private files: Files, private claudeHome: string) {}
@@ -52,33 +35,6 @@ export class Skills {
     return target ? this.resolvedLink(path.resolve(path.dirname(canonical), target), seen) : canonical;
   }
 
-  lockPath() {
-    return process.env.XDG_STATE_HOME
-      ? path.join(process.env.XDG_STATE_HOME, 'skills/.skill-lock.json')
-      : path.join(this.files.home, '.agents/.skill-lock.json');
-  }
-
-  async syncLock() {
-    const { repo, dryRun } = this.files;
-    const tracked = path.join(repo, 'shared/skills.lock.json'), local = this.lockPath();
-    if (this.files.target(local) === tracked) {
-      this.files.log('skip', `${this.files.pretty(local)} already links to ${this.files.pretty(tracked)}`);
-      return;
-    }
-    if (!exists(local)) { await this.files.link(tracked, local); return; }
-    const repoLock = readLock(tracked), localLock = readLock(local);
-    if (repoLock.version !== localLock.version) throw new Error('lockfile versions differ; migrate them before syncing');
-    const merged = { ...repoLock };
-    for (const [key, value] of Object.entries(localLock)) {
-      const previous = repoLock[key];
-      merged[key] = isObject(value) && isObject(previous) ? { ...previous, ...value } : value;
-    }
-    this.files.log('sync', `merge ${this.files.pretty(local)} into ${this.files.pretty(tracked)} (local values win)`);
-    if (!dryRun && JSON.stringify(merged) !== JSON.stringify(repoLock)) writeLock(tracked, merged);
-    this.files.log('relink', `${this.files.pretty(local)} -> ${this.files.pretty(tracked)}`);
-    if (!dryRun) this.files.replaceWithLink(tracked, local);
-  }
-
   private async collection(source: string, uninstall: boolean) {
     const personal = path.join(this.files.repo, PERSONAL);
     const entries = children(source).filter(entry => !path.basename(entry).startsWith('.') && entry !== personal);
@@ -96,16 +52,23 @@ export class Skills {
     }
   }
 
+  // Machines set up while the repo tracked a skills lockfile still link to it.
+  private unlinkOldLock() {
+    const tracked = path.join(this.files.repo, 'shared/skills.lock.json');
+    this.files.unlink(tracked, path.join(this.files.home, '.agents/.skill-lock.json'));
+    if (process.env.XDG_STATE_HOME) this.files.unlink(tracked, path.join(process.env.XDG_STATE_HOME, 'skills/.skill-lock.json'));
+  }
+
   async install() {
     await this.collection(path.join(this.files.repo, 'shared/skills'), false);
     await this.collection(path.join(this.files.repo, PERSONAL), false);
-    await this.syncLock();
+    this.unlinkOldLock();
   }
 
   async uninstall() {
     await this.collection(path.join(this.files.repo, 'shared/skills'), true);
     await this.collection(path.join(this.files.repo, PERSONAL), true);
-    this.files.unlink(path.join(this.files.repo, 'shared/skills.lock.json'), this.lockPath());
+    this.unlinkOldLock();
   }
 
   async commandCenter(uninstall: boolean) {
@@ -113,20 +76,13 @@ export class Skills {
   }
 
   async remove(requested: string[]) {
-    const { repo, home, dryRun } = this.files;
-    const locks = new Map<string, Lock>();
-    const candidates = [path.join(repo, 'shared/skills.lock.json'), path.join(home, '.agents/.skill-lock.json'), this.lockPath()];
-    for (const file of candidates) {
-      const target = realPath(file);
-      if (target && !locks.has(target)) locks.set(target, readLock(target));
-    }
+    const { home, dryRun } = this.files;
     let names = [...new Set(requested)];
     const interactive = names.length === 0;
     if (interactive) {
       if (!canPrompt()) throw new Error('interactive removal requires a terminal; pass skill names instead');
       const available = new Set(this.sources().flatMap(children)
         .filter(file => !this.files.target(file) && fs.existsSync(path.join(file, 'SKILL.md'))).map(file => path.basename(file)));
-      for (const lock of locks.values()) for (const name of Object.keys(lock.skills)) available.add(name);
       if (!available.size) { console.log('No tracked skills to remove.'); return; }
       names = answer(await p.multiselect({
         message: 'Select tracked skills to remove',
@@ -148,8 +104,8 @@ export class Skills {
       if (exists(skill) && (!fs.statSync(skill).isDirectory() || !fs.statSync(path.join(skill, 'SKILL.md'), { throwIfNoEntry: false })?.isFile())) {
         throw new Error(`${skill}: not a skill directory`);
       }
-      if (!exists(skill) && ![...locks.values()].some(lock => Object.hasOwn(lock.skills, name))) throw new Error(`unknown tracked skill: ${name}`);
-      if (exists(skill)) directories.push(skill);
+      if (!exists(skill)) throw new Error(`unknown tracked skill: ${name}`);
+      directories.push(skill);
       for (const root of roots) {
         const file = path.join(root, name);
         const target = this.files.target(file);
@@ -158,18 +114,9 @@ export class Skills {
         else if (fs.existsSync(file) && agentRoots.includes(root)) throw new Error(`${file}: unmanaged copy or link; sync it before removal`);
       }
     }
-    // Preflight all names and lockfiles before any deletion.
+    // Preflight all names before any deletion.
     for (const file of [...links].sort()) this.files.log('unlink', this.files.pretty(file));
     for (const directory of directories) this.files.log('delete', this.files.pretty(directory));
-    const changed = new Map<string, Lock>();
-    for (const [file, lock] of locks) {
-      const removed = names.filter(name => Object.hasOwn(lock.skills, name));
-      if (!removed.length) continue;
-      this.files.log('lock', `${this.files.pretty(file)}: remove ${removed.join(', ')}`);
-      const skills = { ...lock.skills };
-      for (const name of removed) delete skills[name];
-      changed.set(file, { ...lock, skills });
-    }
     if (dryRun) return;
     if (interactive && !answer(await p.confirm({ message: `Delete ${names.join(', ')} from the repository and agents?`, initialValue: false }))) {
       p.cancel('Removal cancelled.');
@@ -177,6 +124,5 @@ export class Skills {
     }
     for (const file of links) fs.unlinkSync(file);
     for (const directory of directories) fs.rmSync(directory, { recursive: true });
-    for (const [file, lock] of changed) writeLock(file, lock);
   }
 }

@@ -115,7 +115,6 @@ class HealthTests(CliTestCase):
 
     def test_health_checks_recorded_homes_role_and_strict_exceptions(self):
         self.write('fleet/skills/provision-box/SKILL.md', 'provision')
-        self.write('shared/skills.lock.json', '{"version":3,"skills":{}}')
         self.healthy_macos()
         report = self.health(0)
         self.check(report, 'ok', 'Apply receipt', 'completed')

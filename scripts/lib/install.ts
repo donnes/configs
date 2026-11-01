@@ -398,7 +398,6 @@ export class Installer {
     const expanded = input.startsWith('~/') ? this.destination(input.slice(2)) : path.resolve(input);
     const source = path.join(fs.realpathSync(path.dirname(expanded)), path.basename(expanded));
     if (!exists(source)) throw new Error(`${source} does not exist`);
-    if (update && source === this.skills.lockPath()) { await this.skills.syncLock(); return; }
     if (this.files.target(source)) throw new Error(`${source} is already a symlink${update ? '; edits already write through to its target' : ''}`);
     const mapping = [
       ['.agents/skills', 'shared/skills'], ['.config/nvim', 'shared/nvim'], ['.config/atuin', 'shared/atuin'],

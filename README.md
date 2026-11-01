@@ -214,7 +214,6 @@ On Omarchy, `~/.local/bin`, `~/.config/hypr`, and `~/.config/systemd/user` also 
 
 ```sh
 ./cli update ~/.agents/skills/my-skill
-./cli update ~/.agents/.skill-lock.json
 ```
 
 `update` is the explicit local-wins operation for tracked files that are not linked
@@ -222,24 +221,11 @@ yet. It copies local files into their mapped repo location without deleting anyt
 then replaces them with symlinks. Prefer updating one skill or file at a time; managed
 roots such as `~/.agents/skills` are rejected so foreign content is not imported.
 
-The installer symlinks the local skills lockfile to `shared/skills.lock.json`,
-just as it symlinks skill directories. Edits through that link reach the repo.
-A CLI that saves by replacing the file can replace the symlink with a regular file.
-
-Skills lockfiles use a merge instead. `./cli update ~/.agents/.skill-lock.json` retains entries
-from both `shared/skills.lock.json` and the local lockfile, uses local values for
-conflicting entries and restores its symlink.
-Skills installation also runs this sync. An
-existing managed symlink needs no changes. Run the command after a skills CLI
-update if its file replacement detached the symlink, then review and commit the
-repo diff. Entries absent from the local file remain in the repo; remove unwanted
-entries explicitly from the linked lockfile.
-
-The local path is `~/.agents/.skill-lock.json`, or
-`$XDG_STATE_HOME/skills/.skill-lock.json` when `XDG_STATE_HOME` is set. Merging a
-detached lockfile runs in the CLI. Invalid JSON and mismatched lockfile versions
-stop the sync before either file changes. Use `--dry-run` to validate and preview
-the merge and link operations.
+The repo doesn't track a skills lockfile. Third-party skills are plain copies, so
+`npx skills update` can't see them. To update one, install it with `npx skills add`
+somewhere temporary and copy the result over the tracked directory. `npx skills` may
+still write its own `~/.agents/.skill-lock.json`; the CLI leaves a regular file there
+alone and only removes the old symlink to the repo's lockfile.
 
 ## Remove tracked skills
 
@@ -253,11 +239,10 @@ Without names, the command opens a Clack multiselect of tracked skills
 and asks for confirmation before deletion. Selecting nothing or pressing Ctrl-C cancels. With
 `--dry-run`, it previews the selected removals without deleting anything.
 
-`remove-skill` handles `shared/skills`, `shared/skills/personal` and `fleet/skills`. It deletes the tracked skill directories, removes agent symlinks that
-point to them, and removes their entries from the repo and local skills lockfiles.
-It also accepts stale lockfile entries whose directories are already gone.
+`remove-skill` handles `shared/skills`, `shared/skills/personal` and `fleet/skills`. It deletes the tracked skill directories and removes agent symlinks that
+point to them.
 Unmanaged copies in `~/.agents/skills` or `~/.claude/skills` must be synced first.
-Names and lockfiles are checked before deletion begins.
+Names are checked before deletion begins.
 Backups remain untouched. Unlike `npx skills remove`, this command handles our
 symlinked skill directories and removes the repo copy so reinstalling cannot
 restore a deleted skill.
