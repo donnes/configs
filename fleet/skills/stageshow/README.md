@@ -35,7 +35,7 @@ changes the scene. They do not automate real application controls.
 
 The kit supports React 18 and later. It needs no third-party animation runtime. The
 playground uses Vite through Vite+; filming uses `playwright-core` and locally installed
-Chrome (or `CHROME_PATH`). Those tools are not runtime dependencies of a demo.
+Chrome, then Helium (or `CHROME_PATH`). Those tools are not runtime dependencies of a demo.
 
 ## Verify
 
