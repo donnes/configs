@@ -52,8 +52,21 @@ only if exposed. Use `delegate_task` every round (`role: "review"`,
 `childThreadId` is storage, not the next target. Do not use
 `t3_thread_send`, `create_threads`, or `t3_thread_launch` for review.
 
-If T3 tools are not listed, try one direct capability call. Outside T3, use
-a native Sol subagent and keep its ID. In Claude Code, use a custom subagent
+In Monocode, use the `app` CLI whose path is in your context. It appears in a
+Mono and in a thread whose message started with `/operator`. Without it, and
+with no native route to Sol, tell the user to resend the request starting with
+`/operator`, and stop. Resolve the latest Sol with `models.list`, then
+`sessions.start` one session with its `harness` and `model` and
+`"runtimeMode": "read-only"`. Keep the session ID. Add to the brief: "Reply in
+one final message under 6,000 characters." `sessions.read` returns only the
+last message and caps it there. In a Mono, set `"notifyOnComplete": true` and
+end your turn. Elsewhere, run `../council/scripts/monocode-wait <cli> <id>` from
+this skill's directory as a foreground command, and run it again if it exits 3.
+That script is the one exception to "do not poll" below. Read the reply with
+`sessions.read` and `"maxChars": 6000`.
+
+If T3 tools are not listed, try one direct capability call. Outside T3 and
+Monocode, use a native Sol subagent and keep its ID. In Claude Code, use a custom subagent
 only if it is set up to run Sol. If no route runs Sol, report the blocker. Do
 not substitute a model.
 
@@ -61,7 +74,7 @@ Do not edit scoped files while review runs. Wait for the notice. Do not
 poll or start a second reviewer. Timeout, error, or no reply is not
 approval. On failure, cancel, verify stop, restart with the ledger.
 
-Round 1 brief (T3 children get no history):
+Round 1 brief (T3 and Monocode children get no history):
 
 ```
 Review only. Do not edit, commit, push, comment on PRs, or start subagents.
@@ -95,7 +108,8 @@ review grew the diff, cut first. Do not agree just to end the loop.
 
 Start one only if budget remains and a blocker or should is open, behavior code
 changed, or approval does not cover the current behavior diff. Use a fresh
-`delegate_task` in T3, or follow up the saved native ID. Send the round 1 brief,
+`delegate_task` in T3, `sessions.send` to the saved session in Monocode, or
+follow up the saved native ID. Send the round 1 brief,
 the ledger (`fixed:` / `disagree:` / `declined:` + evidence), the same base
 diff, and the change since last round. Tell Sol: open ids and changed code only.
 Mark each old id `resolved` or `still open: <reason>`.
