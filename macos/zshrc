@@ -65,9 +65,7 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 
-# Windsurf
-export PATH="$HOME/.codeium/windsurf/bin:$PATH"
-export EDITOR="c --wait"
+export EDITOR="nvim"
 
 # bob
 export PATH="/Users/$USER/.local/share/bob/nvim-bin/:$PATH"

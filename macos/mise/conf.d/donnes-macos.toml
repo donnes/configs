@@ -4,6 +4,8 @@
 # global config files declare. So they can't be in the shared fragment.
 
 [tools]
+# Replace the standalone and Python-installed copies on this Mac.
+uv = "latest"
 claude = "latest"
 codex = "latest"
 # The aqua backend installs the release binary, without Node. Its "latest"
