@@ -38,6 +38,23 @@ Create one self-contained HTML file, capped at 512 KB.
 
 Never include external or module scripts, inline event handlers, `javascript:` URLs, forms, frames, embeds, objects, applets, meta refresh, linked stylesheets, secrets, private URLs, or local filesystem paths.
 
+## Words
+
+Every line of text states a fact from the work. Cut any text that brands the page, labels it or introduces it.
+
+### ✅ DO
+
+- Open the page with the headline. It states the main result in plain words with its number, such as "Cold start is 2x faster."
+- Name each section by what it contains, in two to four plain words: "Results", "How it works", "Not changed".
+- Keep code identifiers in their real case, such as `useMemo` and `u64`, even inside uppercase labels.
+
+### ❌ DON'T
+
+- Don't put an eyebrow, kicker, product name, tagline or category tag above or beside the headline. "Acme | THE ALL-IN-ONE WORKSPACE", "Acme | PERFORMANCE" and "// What changed and why it matters" are all banned.
+- Don't mention the PR, its number, title, branch or commit unless Donald asks.
+- Don't write jokes, slogans, punchlines, teasers or clever section headings, such as "Fast was never fast enough." or "What we left on the table".
+- Don't prefix headings or labels with `//`, `#`, numbers or other decoration.
+
 ## Look
 
 Every page uses this fixed look wherever it is shown: near-black zinc surfaces, white and zinc text, one green accent, Inter for prose and a monospace for labels. Restyle the skill by editing these values here, not per page.
@@ -78,18 +95,17 @@ Use only these tokens in the rest of the CSS. Don't map them to a harness's them
 
 ### Type
 
-- **Eyebrow:** `--mono`, uppercase, `letter-spacing: .2em`, `--dim`, prefixed with `// `.
-- **Headline:** `--font`, weight 700, `line-height: 1.05`, `letter-spacing: -.035em`, `font-size: clamp(32px, 5.5vw, 80px)`. State the answer in it; color the key figure `--accent`. A second line can drop to `--muted`.
+- **Headline:** `--font`, weight 700, `line-height: 1.05`, `letter-spacing: -.035em`, `font-size: clamp(32px, 5.5vw, 80px)`. Color the key figure `--accent`. A second line can drop to `--muted`.
+- **Section heading:** `--font`, weight 600, `--fg-2`, sentence case.
 - **Lede:** `--font`, `clamp(16px, 1.8vw, 28px)`, `--body`. Inline code sits in a `--surface-2` chip with a `--rule` border and `--radius`.
 - **Panel title:** `--mono`, uppercase, `letter-spacing: .15em`, `--fg-2`, in a `--surface-2` header row with its qualifier ("lower is better") right-aligned in `--dim`.
 - **Row label:** `--font` in `--fg-2`, followed by a smaller sublabel in `--dim`.
 - **Values and deltas:** `--mono`; deltas in `--accent` (or `--bad` when worse), neutral notes like "baseline" in `--dim`.
-- **Footnote:** `--mono`, small, `--faint`, prefixed with `// `, with key numbers lifted to `--body`. Put the method and hardware there.
+- **Footnote:** `--mono`, small, `--faint`, with key numbers lifted to `--body`. Put the method and hardware there.
 
 ### Surfaces
 
 - Panels are `--surface` with a 1px `--rule` border and `--radius`; their header row is `--surface-2` with a `--rule` bottom border.
-- A thin header can carry the subject on the left (name, a 1px `--rule` divider, a `--mono` uppercase tag) and the exact command or setting in a bordered `--mono` chip on the right.
 - Faint 1px `--grid` vertical guide lines may mark the content edges and center. Nothing else is decorative: no gradients, glows or shadows.
 
 ## Charts and Benchmarks
@@ -134,7 +150,8 @@ The X version is a separate 1600×900 image that tells the page's main point on 
 ### ✅ DO
 
 - Write it as a second file next to the page, named `<page>-x.html`, with a fixed `1600px` × `900px` body, `overflow: hidden` and the Look tokens. The fixed size replaces the mobile-readable rule for this file only.
-- Keep the answer and cut the rest: the eyebrow, the headline with its key figure, then the one chart, table or three to five rows that prove it, and a footnote with the source or method. Leave out sections, prose and secondary charts.
+- Use the page's headline word for word. Don't write a new one for the image, and don't swap in a PR title or a post caption.
+- Under the headline, keep only the one chart, table or three to five rows that prove it, and a footnote with the source or method. Leave out sections, prose and secondary charts. The Words rules apply here too.
 - Size for a phone timeline, where X shows the image at about a quarter of its width: headline at least 72px, every other text at least 28px, padding at least 64px. If the content doesn't fit at those sizes, cut more instead of shrinking it.
 - Render it with headless Helium (Chromium), using a profile in the scratch folder so it doesn't touch the running browser:
 
