@@ -5,7 +5,7 @@ metadata:
   harness: [claude, codex]
   platform: [darwin, linux]
   scope: fleet
-  requires: "npx (postplan is run via npx)"
+  requires: "npx (postplan is run via npx), Helium (renders the X image)"
 ---
 
 # HTML Communication
@@ -115,8 +115,9 @@ Publishing to Postplan makes the page reachable by URL, so it needs Donald's con
 
 1. Write the HTML file locally.
 2. If the harness has a tool that shows HTML inline in the conversation, show the file there with the palette and padding above.
-3. Ask whether to publish it to Postplan with the harness's question tool, such as Claude Code's `AskUserQuestion` or Codex's `request_user_input`. Without a question tool, ask in the reply and stop.
+3. Ask two questions in one call to the harness's question tool, such as Claude Code's `AskUserQuestion` or Codex's `request_user_input`: whether to publish it to Postplan, and whether to make a version to post on X (see Post on X). Ask the second one every time; the full page is usually too long for one image. Without a question tool, ask both in the reply and stop.
 4. Only after Donald confirms, run `npx postplan upload <file path>` and report the returned URL. Otherwise, report the local path.
+5. If he wants the X version, build and render it as described below.
 
 Re-upload the same absolute path to update the existing URL. Use `npx postplan upload <file path> --new` only when a new draft is wanted.
 
@@ -125,3 +126,27 @@ If validation fails, fix the markup and retry. If a scripted upload needs authen
 ### ❌ DON'T
 
 Never upload without confirmation, open a browser, or claim the document is hosted before upload succeeds. Do not verify in a browser unless the user asks. A harness's own HTML preview tool is fine for checking charts.
+
+## Post on X
+
+The X version is a separate 1600×900 image that tells the page's main point on its own. Don't screenshot the full page or shrink it to fit.
+
+### ✅ DO
+
+- Write it as a second file next to the page, named `<page>-x.html`, with a fixed `1600px` × `900px` body, `overflow: hidden` and the Look tokens. The fixed size replaces the mobile-readable rule for this file only.
+- Keep the answer and cut the rest: the eyebrow, the headline with its key figure, then the one chart, table or three to five rows that prove it, and a footnote with the source or method. Leave out sections, prose and secondary charts.
+- Size for a phone timeline, where X shows the image at about a quarter of its width: headline at least 72px, every other text at least 28px, padding at least 64px. If the content doesn't fit at those sizes, cut more instead of shrinking it.
+- Render it with headless Helium (Chromium), using a profile in the scratch folder so it doesn't touch the running browser:
+
+  ```sh
+  helium=/Applications/Helium.app/Contents/MacOS/Helium  # Linux: /usr/bin/helium-browser
+  "$helium" --headless --disable-gpu --hide-scrollbars --force-device-scale-factor=1 \
+    --user-data-dir="<scratch dir>/helium-x" --window-size=1600,900 \
+    --screenshot="<page>-x.png" "file://<absolute path>/<page>-x.html"
+  ```
+
+- Look at the PNG before reporting it. Fix clipped text, overflow and empty areas, then render again. Report the PNG's absolute path.
+
+### ❌ DON'T
+
+Don't upload the X version to Postplan unless Donald asks; the PNG is what he posts. Don't post to X yourself.
