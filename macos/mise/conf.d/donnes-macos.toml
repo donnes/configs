@@ -8,6 +8,10 @@
 uv = "latest"
 claude = "latest"
 codex = "latest"
+# Grok Build. The registry entry downloads the same native binary as
+# x.ai/cli/install.sh, without that script's shell-profile and PATH edits.
+# Omarchy installs it as npm:@xai-official/grok.
+grok = "latest"
 # The aqua backend installs the release binary, without Node. Its "latest"
 # still resolves to the 1.x line, so pin v2.
 "aqua:anomalyco/opencode" = "2"
