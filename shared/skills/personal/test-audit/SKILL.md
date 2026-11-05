@@ -1,176 +1,94 @@
 ---
 name: test-audit
-description: "Audit or sweep existing tests for low-value, implementation-coupled, or duplicative tests and the test-only production seams they demand, and gate the tests a change adds. Use when the user asks to audit tests."
-disable-model-invocation: true
+description: Trigger this if the user says 'test audit'.
 ---
 
-# Test Audit
+# Test audit
 
-Three modes, one value bar. Authoring mode gates every new or changed test at
-write time. Audit mode runs focused sweeps of tests that re-assert source,
-duplicate stronger proof, couple behavior to implementation, or keep test-only
-production seams alive. Continue broad audits as separate coherent follow-up
-PRs; optimize for confidence, not deletion count. Campaign mode prunes one
-whole subsystem's test surface (every test file a package, module, or service
-owns); before starting one, read [CAMPAIGN.md](CAMPAIGN.md).
+Find and delete low-signal tests. These tests check what the types already
+guarantee, re-assert what their own mocks were told to return, only check that
+something mounts, or repeat a stronger test of the same contract. They cost CI
+time and review attention and catch nothing.
 
-## Authoring gate
+The goal is the same confidence for less CI time and code, not a deletion
+count. Every deletion names its reason. Every contract worth keeping still has
+a test that can fail. When unsure, keep.
 
-Before adding any test, answer four questions; a missing answer means do not
-add it yet:
+## Scope
 
-1. What observable behavior, invariant, or independent contract does it protect?
-2. What credible regression makes it fail?
-3. Why does existing coverage not already catch that failure? Each contract has
-   one primary test owner at the strongest boundary; another layer needs its
-   own distinct risk, such as a transport or lifecycle failure the owner cannot
-   reach. Prefer extending a table-driven case or shared fixture over a
-   near-duplicate test; consolidate duplicated setup in the same change.
-4. Does it need a production seam (export, flag, wrapper, injection hook) that no
-   production caller needs? If yes, move the test to the real boundary instead.
+Use the scope the user names: a file, a package, or the whole repo. With no
+scope, audit the whole repo. Read the repo's agent and contributor guidance
+and its CI config first. Their testing rules override this skill.
 
-Then check the test against every [junk pattern](#junk-patterns); a match fails
-the gate unless the [retention bar](#retention-bar) names the contract it
-independently guards. A test that would break under behavior-preserving
-refactoring is asserting implementation, not behavior; rewrite it at the
-owning boundary before landing it.
+## Delete
 
-Bug regression tests must fail on the pre-fix code for the intended reason and
-pass after the owner-boundary repair. A regression test that never demonstrably
-failed proves the mock, not the fix. One regression at the owner boundary
-covers the bug; do not replay the same scenario at every layer it crosses.
+A test is low-signal when it:
 
-## Junk patterns
+- checks what the type checker already enforces, such as a field's presence,
+  an object's shape, or a function's declared return type;
+- asserts that a mock returned what the test told it to return, or was called
+  with the arguments the test just passed in;
+- only checks that a component renders, mounts, or has basic DOM, such as a
+  button existing or a click handler firing;
+- covers trivial logic: getters, constants, pass-through wrappers, re-exports;
+- smoke-tests a path that a stronger test already covers;
+- repeats another row of the same table, or another test of the same contract
+  at a weaker boundary;
+- waits on real timers or asserts wall-clock speed;
+- compares against a copy of the source: copied fixtures, export lists,
+  source greps;
+- computes its expected value with the code under test;
+- cannot fail: no assertion, a negative check that passes for an unrelated
+  reason, or a name that promises more than the body checks.
 
-The shared checklist for both modes: the authoring gate rejects a new test that
-matches one, and audits hunt for existing tests that do.
+## Keep
 
-- assertion-free coverage probes;
-- self-comparisons and identity copiers;
-- copied fixtures, inventories, manifests, or export lists;
-- exact source, import, or string greps;
-- private predicate or call-shape tests duplicated at real boundaries;
-- duplicate invocations of the same contract;
-- per-implementation replays of shared helpers;
-- tests whose only purpose is preserving test-only exports, globals, or wrappers;
-- dead production code whose only callers are tests;
-- expected values produced by the helper or renderer under test;
-- mocks that implement the asserted behavior, or one identical mock standing in
-  for different APIs;
-- fixtures that supply the result, state, or callback ordering the owner
-  should produce, or persistence asserted against a store the path never writes;
-- capability tests that restate declared flags instead of exercising the
-  behavior the flag promises;
-- negative controls that pass for an unrelated reason, such as a denial from a
-  different guard or a rejection the production path never reaches;
-- names or fixtures that promise more than the input exercises, such as a
-  "clears the cache" test asserting the cache was not cleared.
+Keep a test when it is the only proof of:
 
-## Value bar
+- state, orchestration, or event-sourcing correctness;
+- protocol translation, wire formats, and parsing of external formats;
+- auth, permission, and scope guards, including expiry and rotation tested on
+  a deterministic clock;
+- persistence, migrations, and storage formats;
+- public API, config, and default values;
+- a fixed bug or race that could plausibly come back;
+- call order, when the order is observable behavior.
 
-Tests justify their maintenance cost by protecting behavior, a credible
-regression, or an independently meaningful contract. In an audit, an existing
-test that must change for behavior-preserving source reorganization is suspect,
-not automatically deletable; the authoring gate still rejects new ones.
+A test that matches a delete pattern but is the only proof of a keep contract
+stays. If its assertion is weak, fix it or move it to the real boundary. A test
+that already fails on the default branch may be a product bug. Report it
+instead of deleting it to get green.
 
-Before judging a candidate, read the complete test and production owner, its
-entry point, callers, callees, sibling implementations, overlapping tests, CI
-routing, and relevant history. Read the repository's agent and contributor
-guidance first (root and scoped `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, or
-equivalents). When the test claims dependency-backed behavior, inspect the
-dependency source or types directly.
+## Steps
 
-## Discovery
-
-Keep discovery read-only and report evidence before editing. For broad scope,
-run parallel discovery lanes when available, split along the repository's own
-top-level boundaries, for example:
-
-- core source and shared packages or libraries;
-- plugins, extensions, integrations, or services;
-- UI, apps, scripts, and tooling;
-- a cross-cutting pattern sweep.
-
-Outside campaign mode, prefer a few high-confidence candidates over a large
-speculative inventory. Hunt for the [junk patterns](#junk-patterns).
-
-## Retention bar
-
-Keep a test when it independently enforces a public API, SDK, protocol, config,
-migration, storage, security, platform, default, wire-format or byte-exact
-output, generated cross-language, package, release, or architecture contract.
-Also keep:
-
-- call ordering when order is observable behavior;
-- regressions with a credible failure mode;
-- source inspection when it is the cheapest independent guard: it fails when
-  the contract changes (the user-facing key, byte, or path) and survives an
-  identifier-only refactor;
-- a retained test that fails on the baseline: treat it as a possible product
-  bug, reproduce it, and repair the owner rather than deleting it.
-
-Static or slow is not a deletion reason. A test that resembles implementation
-may still be the independent contract; prove otherwise before removing it.
-
-## Candidate evidence
-
-Record every field below before editing. A missing field means the candidate is
-not ready for deletion:
-
-- exact test name and location;
-- what failure it can actually detect;
-- non-test callers of the covered production or support seam;
-- stronger remaining owner-boundary proof, or why no proof is needed;
-- relevant history and the reason the test or seam exists;
-- production or test-support deletion unlocked;
-- risk and the focused validation command.
-
-## Edit shape
-
-Choose one coherent owner-boundary batch. Delete obsolete test-only exports,
-globals, wrappers, and dead production paths instead of preserving aliases.
-Move retained regressions to their canonical owners. Consolidate repeated
-package or dependency assertions into one generic contract.
-
-Prefer net-negative production LOC. Do not add replacement tests that restate
-the same implementation, and do not convert uncertain candidates into cleanup
-to increase deletion counts.
-
-## Validation
-
-Never edit source or tests while a test runner or watcher is running in the
-checkout. Discover the project's commands from its guidance files, package
-manifest, task runner, and CI config; follow any repository testing rules, and
-use the project's established route for heavy or remote proof.
-
-1. Run the smallest owner and sibling tests with the project's test runner,
-   filtered to the changed paths or test names.
-2. For removed source greps or plan assertions, run the executable script or
-   dry-run that owns the real contract.
-3. Run targeted formatting and linting, then `git diff --check`.
-4. Run the changed-files or affected-targets gate the repository requires
-   (the same checks CI runs for these paths); fall back to the full suite for
-   the affected packages when no such gate exists.
-5. Inspect `git diff --numstat`; report production/tooling separately from
-   tests and test support.
-6. After final audit edits, run a code review pass on the diff (a review skill
-   or reviewer agent when available) and resolve its findings.
-
-## Landing and continuation
-
-Commit, push, open a PR, or land only when authorized. Follow the repository's
-own PR and merge conventions. Land one coherent PR at a time; after landing,
-refresh from the current default branch and rerun read-only discovery for the
-next high-confidence batch.
-
-## Handoff
-
-Report:
-
-- root cause and removed low-value categories;
-- production owner simplifications;
-- retained false positives and why they remain valuable;
-- focused and full proof actually run;
-- production versus test LOC;
-- PR and merge state;
-- named follow-ups.
+1. **Baseline.** On the default branch, run the test suites in scope with the
+   project's runner. Record test count and wall time per package, using a JSON
+   reporter when the runner has one, and list the tests that already fail.
+2. **Sweep.** Read each test file in full, with the production code it covers.
+   Judge a test by its assertions, not its name. Mark each test `keep`,
+   `delete`, `merge` into a named stronger test or table, or `fix` when the
+   contract matters but the assertion cannot fail. Each `delete` names its
+   pattern and the test that still covers the contract, or says no contract
+   exists. For a large scope, split the work by package or production area and
+   give each part to a read-only subagent with the Delete and Keep lists. When a
+   file's calls are uncertain, run a second independent pass on it and delete
+   only what both passes mark.
+3. **Cut.** Delete tests by title. For a large cut, script the edit on the
+   syntax tree (the TypeScript compiler API for TypeScript) instead of editing
+   by hand. Remove imports, helpers, fixtures, and test scripts left unused.
+   Un-export or delete production code that only the deleted tests used; the
+   project's unused-export check (knip or equivalent) finds it. That cleanup
+   must not change production behavior. Update CI test lists, shard weights,
+   and docs that name deleted files.
+4. **Verify.** Run typecheck, lint, format, the unused-export check, and the
+   affected tests. Rerun the baseline commands and compare counts and wall
+   time. A failure that also happens on the baseline is not from the cut; say
+   so in the report.
+5. **Review.** Run `sol-review-loop` on the diff. Tell Sol the intent is
+   deleting low-signal tests, and ask it to flag keep contracts that lost
+   their only test. Restore those tests.
+6. **Report.** Give the before and after table of tests and wall time per
+   package, what each delete pattern removed, the tests you kept on purpose
+   and why, production code removed, baseline failures, and what review
+   restored. Commit and file a PR with `file-pr` only when the user asked, and
+   put the same table in the description.

@@ -1,5 +1,4 @@
 interface:
   display_name: "Test Audit"
-  short_description: "Audit and sweep low-value tests"
-policy:
-  allow_implicit_invocation: false
+  short_description: "Find and delete low-signal tests"
+  default_prompt: "Use $test-audit to find and delete low-signal tests in this repo."
