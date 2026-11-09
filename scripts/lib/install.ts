@@ -8,7 +8,7 @@ import { Agents } from './agents.ts';
 import { Mise } from './mise.ts';
 import { canPrompt } from './prompts.ts';
 
-export const components = ['packages', 'gh-extensions', 'apps', 'agents', 'skills', 'mise', 'atuin', 'nvim', 'gradle', 'shell', 'tmux', 'git', 'tinycast', 'session', 'command-center', 'rea'] as const;
+export const components = ['packages', 'gh-extensions', 'apps', 'agents', 'skills', 'mise', 'atuin', 'nvim', 'gradle', 'shell', 'tmux', 'git', 'tinycast', 'command-center', 'rea'] as const;
 export type Component = typeof components[number];
 export type Profile = 'macos' | 'omarchy';
 
@@ -45,7 +45,7 @@ export function missingHomebrew(brew: string, kind: '--formula' | '--cask', want
 }
 
 export function available(profile: Profile) {
-  const exclusive: Component[] = profile === 'macos' ? ['apps', 'session'] : ['tinycast'];
+  const exclusive: Component[] = profile === 'macos' ? ['apps'] : ['tinycast'];
   return components.filter(component => !exclusive.includes(component));
 }
 
@@ -57,8 +57,6 @@ export function detectProfile(): Profile {
   if (process.platform === 'darwin') return 'macos';
   throw new Error('unsupported system: expected Omarchy or macOS');
 }
-
-const timer = 'hypr-session-autosave.timer';
 
 // gh extensions live in the user's gh data directory, so both profiles share one
 // list. Reports owner/repo for each installed extension.
@@ -311,23 +309,6 @@ export class Installer {
     }
   }
 
-  private async session(uninstall: boolean) {
-    const config = this.destination('.config/hypr/hyprland.lua');
-    if (!uninstall && !this.files.dryRun && !fs.existsSync(config)) throw new Error(`${config} is missing; restore Omarchy's Hyprland config first`);
-    if (uninstall) {
-      this.files.log('disable', `systemd user timer ${timer}`);
-      if (!this.files.dryRun) spawnSync('systemctl', ['--user', 'disable', '--now', timer], { stdio: ['inherit', 'inherit', 'ignore'] });
-    }
-    await this.tree('omarchy/hypr', '.config/hypr', uninstall);
-    await this.tree('omarchy/systemd/user', '.config/systemd/user', uninstall);
-    this.files.block(config, uninstall ? undefined : 'require("hypr.session")', '--');
-    if (!uninstall) this.files.log('enable', `systemd user timer ${timer}`);
-    if (!this.files.dryRun) {
-      run('systemctl', ['--user', 'daemon-reload']);
-      if (!uninstall) run('systemctl', ['--user', 'enable', '--now', timer]);
-    }
-  }
-
   private async shared(uninstall: boolean) {
     await this.component('agents', () => new Agents(this.files, this.profile, this.homes).apply(uninstall));
     await this.component('skills', () => uninstall ? this.skills.uninstall() : this.skills.install());
@@ -354,6 +335,7 @@ export class Installer {
         await this.tree('omarchy/uwsm', '.config/uwsm', uninstall);
         await this.link('omarchy/helium-browser-flags.conf', '.config/helium-browser-flags.conf', uninstall);
         await this.tree('omarchy/bin', '.local/bin', uninstall);
+        await this.tree('omarchy/hypr', '.config/hypr', uninstall);
       }
     });
     await this.component('git', async () => {
@@ -369,7 +351,6 @@ export class Installer {
     });
     // Tinycast's imported script commands run these files from ~/Scripts/Tinycast.
     if (macos) await this.component('tinycast', () => this.tree('macos/tinycast', 'Scripts/Tinycast', uninstall));
-    if (!macos) await this.component('session', () => this.session(uninstall));
     await this.component('tmux', async () => {
       if (macos) { await this.link('macos/tmux.conf', '.tmux.conf', uninstall); return; }
       const config = this.destination('.config/tmux/tmux.conf');
@@ -403,7 +384,7 @@ export class Installer {
       ['.agents/skills', 'shared/skills'], ['.config/nvim', 'shared/nvim'], ['.config/atuin', 'shared/atuin'],
       [this.profile === 'macos' ? 'Library/Application Support/com.mitchellh.ghostty' : '.config/ghostty', 'shared/ghostty'],
       ['.config/yazi', 'shared/yazi'], ['.ssh', 'shared/ssh'], ['.local/bin', `${this.profile}/bin`],
-      ...(this.profile === 'omarchy' ? [['.config/hypr', 'omarchy/hypr'], ['.config/systemd/user', 'omarchy/systemd/user']] : []),
+      ...(this.profile === 'omarchy' ? [['.config/hypr', 'omarchy/hypr']] : []),
     ].find(([destination]) => destination !== undefined && within(source, this.destination(destination)));
     const [localRoot, repoRoot] = mapping ?? [];
     if (!localRoot || !repoRoot) throw new Error(`${source} is outside the managed path map`);

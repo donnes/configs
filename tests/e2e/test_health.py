@@ -105,7 +105,6 @@ class HealthTests(CliTestCase):
         self.check(report, 'ok', 'Packages', '1 listed packages installed')
         self.check(report, 'fail', 'Packages', 'MangoHud')
         self.check(report, 'fail', 'Background', 'mise-prune.service', 'exit-code', 'status 1')
-        self.check(report, 'fail', 'Background', 'hypr-session-autosave.timer')
         # A package query that fails is a failure, never an empty "nothing missing".
         self.boundary(pacman={'broken': True})
         report = self.health(1)

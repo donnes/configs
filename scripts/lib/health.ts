@@ -34,7 +34,7 @@ const executables: Record<string, string> = {
 const hour = 3_600_000;
 // Jobs with their expected interval, for spotting ones that stopped running.
 const launchdJobs = [['dev.dstech.guipath', undefined], ['dev.dstech.mise-prune', 50 * hour]] as const;
-const systemdJobs = [['mise-prune', 'mise', 50 * hour], ['hypr-session-autosave', 'session', 15 * 60_000]] as const;
+const systemdJobs = [['mise-prune', 'mise', 50 * hour]] as const;
 
 function capture(command: string, args: string[], options: SpawnSyncOptions = {}) {
   const result = spawnSync(command, args, { ...options, encoding: 'utf8' });

@@ -17,7 +17,7 @@ class PlatformTests(CliTestCase):
                 self.env['DONNES_CONFIGS_PROFILE'] = profile
                 self.cli('--only', 'rea', '--dry-run')
                 self.cli('uninstall', '--only', 'rea')
-                self.cli('--skip', 'packages,gh-extensions,apps,agents,skills,mise,atuin,nvim,gradle,shell,tmux,git,tinycast,session')
+                self.cli('--skip', 'packages,gh-extensions,apps,agents,skills,mise,atuin,nvim,gradle,shell,tmux,git,tinycast')
                 self.assertEqual(self.state['npx']['calls'], [])
                 result = self.fails('--only', 'rea')
                 self.assertIn('npx failed (7)', result.stderr)
@@ -101,26 +101,6 @@ class PlatformTests(CliTestCase):
         self.assertEqual(self.state['t3code']['downloads'], [f'T3-Code-{nightly[1:]}-x86_64.AppImage'] * 2)
         self.assertEqual(self.state['hyperframes']['downloads'], 1)
         self.assertEqual(sorted(path.name for path in self.home.iterdir() if path.name.startswith('.hyperframes')), [])
-
-    def test_session_enables_its_timer_and_uninstall_unloads_it(self):
-        self.env['DONNES_CONFIGS_PROFILE'] = 'omarchy'
-        config = self.write('.config/hypr/hyprland.lua', '-- user config\n', home=True)
-        module = self.write('omarchy/hypr/session.lua', '-- session')
-        timer = self.write('omarchy/systemd/user/hypr-session-autosave.timer', '[Timer]')
-        self.cli('--only', 'session')
-        self.assertEqual((self.home / '.config/hypr/session.lua').resolve(), module)
-        self.assertEqual((self.home / '.config/systemd/user/hypr-session-autosave.timer').resolve(), timer)
-        self.assertIn('require("hypr.session")', config.read_text())
-        systemd = self.state['systemd']
-        self.assertIn('hypr-session-autosave.timer', systemd['active'])
-        self.cli('uninstall', '--only', 'session')
-        systemd = self.state['systemd']
-        self.assertNotIn('hypr-session-autosave.timer', systemd['active'])
-        # The unit files are gone, and systemd was told so.
-        self.assertNotIn('hypr-session-autosave.timer', systemd['loaded'])
-        self.assertEqual(config.read_text().strip(), '-- user config')
-        self.assertFalse((self.home / '.config/hypr/session.lua').is_symlink())
-        self.assertFalse((self.home / '.config/systemd/user/hypr-session-autosave.timer').is_symlink())
 
     def test_xcode_node_env_repoints_only_exact_installs(self):
         data = self.home / 'mise data'

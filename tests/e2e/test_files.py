@@ -96,6 +96,7 @@ class FilesTests(CliTestCase):
         self.write('macos/tmux.conf', '# tmux')
         self.write('omarchy/bashrc.local', '# bash')
         self.write('omarchy/tmux.local.conf', '# tmux')
+        bindings = self.write('omarchy/hypr/bindings.lua', '-- bindings')
         for profile, shell, tmux in [('macos', '.zshenv', '.tmux.conf'),
                                      ('omarchy', '.bashrc', '.config/tmux/tmux.conf')]:
             with self.subTest(profile=profile):
@@ -112,6 +113,7 @@ class FilesTests(CliTestCase):
                 self.assertEqual(block.read_text().count('# >>> donnes/configs >>>'), 1)
                 self.assertEqual(block.read_text().count('# <<< donnes/configs <<<'), 1)
                 if profile == 'omarchy':
+                    self.assertEqual((self.home / '.config/hypr/bindings.lua').resolve(), bindings)
                     self.assertIn('source-file -q ~/.config/tmux/local.conf', tmux_file.read_text())
                     self.assertEqual(tmux_file.read_text().count('# >>> donnes/configs >>>'), 1)
                 once = block.read_bytes()
@@ -122,6 +124,7 @@ class FilesTests(CliTestCase):
                 self.assertIn('export USER_SETTING=1', block.read_text())
                 self.assertNotIn('donnes/configs', block.read_text())
                 if profile == 'omarchy':
+                    self.assertFalse((self.home / '.config/hypr/bindings.lua').is_symlink())
                     self.assertIn('# user tmux', tmux_file.read_text())
                     self.assertNotIn('donnes/configs', tmux_file.read_text())
 

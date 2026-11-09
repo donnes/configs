@@ -38,7 +38,7 @@ Choose what the installer manages with repeatable `--skip` or `--only` options:
 `--interactive` opens a Clack multiselect with the default components selected.
 Use Space to toggle components and Enter to continue; Ctrl-C cancels. Available
 components are `packages`, `gh-extensions`, `apps` (Omarchy only), `agents`, `skills`, `mise`, `atuin`, `nvim`, `gradle`, `shell`, `tmux`,
-`git`, `tinycast` (macOS only), `session` (Omarchy only), `command-center` and `rea`. `command-center`
+`git`, `tinycast` (macOS only), `command-center` and `rea`. `command-center`
 is unchecked and excluded from the default install; default uninstall
 includes it; `rea` is always opt-in. `--skip-packages` remains an
 alias for `--skip packages`. Interactive mode cannot be combined with `--skip`
@@ -111,7 +111,7 @@ that no longer match anything. Keep it to this machine's own intent;
 - Nothing is backed up. A link that already resolves to the repo copy (such as `~/.claude/skills/x -> ../../.agents/skills/x`) or a local copy with identical content is relinked. A local file, directory, or skill whose content differs prompts to keep it, replace it with the repo version, update the repo from it, or show the diff; the default is whichever side was modified most recently. Without a terminal, differing copies are kept and reported. Untracked files inside managed directories such as `~/.config/nvim` stay in place.
 - The installer never mirror-deletes and never writes below `/usr/share/omarchy`.
 - Generated instructions offer keep, replace, and diff; edit their source documents instead of updating the generated copy from a local file.
-- Omarchy's bashrc, tmux config, and `hypr/hyprland.lua`, and macOS's `~/.zshenv`, `~/.zprofile`, and `~/.gitconfig`, receive one replaceable marker block each. `~/.gitconfig` stays a local file for identity and account routing; its block includes `macos/gitconfig`.
+- Omarchy's bashrc and tmux config, and macOS's `~/.zshenv`, `~/.zprofile`, and `~/.gitconfig`, receive one replaceable marker block each. `~/.gitconfig` stays a local file for identity and account routing; its block includes `macos/gitconfig`.
 - `./cli uninstall` removes only managed links and marker blocks. Packages, apps, mise settings, directories, and foreign files remain.
 
 Always inspect `./cli --dry-run` first.
@@ -119,7 +119,7 @@ Always inspect `./cli --dry-run` first.
 ## Layout
 
 - `shared/`: agent, editor, Neovim, Atuin, and tool overlays
-- `omarchy/`: bash/tmux deltas, vendored Omarchy Neovim keepers, `omarchy/bin` scripts linked into `~/.local/bin`, Helium's WebGPU flags (`helium-browser-flags.conf`), and the Hyprland session files (`hypr/`, `systemd/user/`)
+- `omarchy/`: bash/tmux deltas, vendored Omarchy Neovim keepers, `omarchy/bin` scripts linked into `~/.local/bin`, Helium's WebGPU flags (`helium-browser-flags.conf`), and Hyprland keybindings (`hypr/bindings.lua`, linked by `shell`)
 - `macos/`: full zsh, git, and tmux configuration, plus `macos/bin` scripts linked into `~/.local/bin`
 - `macos/tinycast/`: Raycast-style script commands linked into `~/Scripts/Tinycast`; import that folder once from Tinycast's custom commands settings
 - `shared/git/ignore`: the global gitignore on both machines, linked to `~/.config/git/ignore`; only macOS also gets `macos/gitconfig`
@@ -190,17 +190,6 @@ the commonly used Oh My Zsh Git aliases such as `gss`, `ggp`, `ggl`, `gst`,
 and `gsw`. Omarchy's existing `g`, `gcm`, `gcam`, and `gcad` meanings are
 preserved.
 
-## Hyprland session restore
-
-The Omarchy `session` component brings windows back after a crash or power cut.
-`hypr-session` (from `omarchy/bin`) saves which apps are open, how to relaunch
-them, and where their windows sit; `hypr-session-autosave.timer` snapshots the
-session every minute; and `hypr/session.lua`, required from `hyprland.lua`,
-runs `hypr-session resume` at login and binds Super+Shift+Alt+L (save) and
-Super+Alt+L (restore). Snapshots live in `~/.local/state/hypr-session/`.
-Unattended recovery also needs the firmware set to power on after AC loss and
-a disk that unlocks without a passphrase prompt.
-
 ## Adopt new files
 
 ```sh
@@ -208,7 +197,7 @@ a disk that unlocks without a passphrase prompt.
 ./cli adopt ~/.agents/skills/my-skill
 ```
 
-On Omarchy, `~/.local/bin`, `~/.config/hypr`, and `~/.config/systemd/user` also map into `omarchy/`. `adopt` moves a new file or directory into the mapped repo location and replaces source files with symlinks (a skill directory becomes a single directory symlink). It refuses an existing repo destination.
+On Omarchy, `~/.local/bin` and `~/.config/hypr` also map into `omarchy/`. `adopt` moves a new file or directory into the mapped repo location and replaces source files with symlinks (a skill directory becomes a single directory symlink). It refuses an existing repo destination.
 
 ## Update tracked files
 

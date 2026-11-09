@@ -32,7 +32,7 @@ class SkillCollectionTests(CliTestCase):
         agent = self.home / '.agents/skills/provision-box'
         claude = custom / 'skills/provision-box'
         # The default selection, minus what needs a package manager or Omarchy.
-        self.cli('--skip', 'packages,gh-extensions,agents,nvim,shell,tmux,git,session')
+        self.cli('--skip', 'packages,gh-extensions,agents,nvim,shell,tmux,git')
         self.assertFalse(agent.exists())
         self.assertEqual((custom / 'skills/example/SKILL.md').read_text(), 'shared')
         self.cli('--only', 'command-center', '--dry-run')
