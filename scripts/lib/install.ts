@@ -8,7 +8,7 @@ import { Agents } from './agents.ts';
 import { Mise } from './mise.ts';
 import { canPrompt } from './prompts.ts';
 
-export const components = ['packages', 'gh-extensions', 'apps', 'agents', 'skills', 'mise', 'atuin', 'nvim', 'gradle', 'shell', 'tmux', 'git', 'tinycast', 'command-center', 'rea'] as const;
+export const components = ['packages', 'gh-extensions', 'apps', 'agents', 'skills', 'mise', 'atuin', 'nvim', 'gradle', 'shell', 'tmux', 'git', 'tinycast', 'dock', 'command-center', 'rea'] as const;
 export type Component = typeof components[number];
 export type Profile = 'macos' | 'omarchy';
 
@@ -45,7 +45,7 @@ export function missingHomebrew(brew: string, kind: '--formula' | '--cask', want
 }
 
 export function available(profile: Profile) {
-  const exclusive: Component[] = profile === 'macos' ? ['apps'] : ['tinycast'];
+  const exclusive: Component[] = profile === 'macos' ? ['apps', 'dock'] : ['tinycast'];
   return components.filter(component => !exclusive.includes(component));
 }
 
@@ -351,6 +351,35 @@ export class Installer {
     });
     // Tinycast's imported script commands run these files from ~/Scripts/Tinycast.
     if (macos) await this.component('tinycast', () => this.tree('macos/tinycast', 'Scripts/Tinycast', uninstall));
+    if (!macos) await this.component('dock', async () => {
+      // Disabling the clone restores the built-in dock before its files go away.
+      if (uninstall && !this.files.dryRun) run('omarchy', ['plugin', 'disable', 'donnes.dock']);
+      await this.tree('omarchy/plugins/donnes.dock', '.config/omarchy/plugins/donnes.dock', uninstall);
+      this.files.log(uninstall ? 'disable' : 'enable', 'personal dock plugin');
+      if (!this.files.dryRun) {
+        run('omarchy-shell', ['shell', 'rescanPlugins']);
+        if (!uninstall) {
+          // Rescanning is asynchronous; wait for discovery before enabling.
+          let discovered = false;
+          for (let attempt = 0; attempt < 40; attempt++) {
+            const result = spawnSync('omarchy', ['plugin', 'list', '--json'], { encoding: 'utf8' });
+            if (result.error || result.status !== 0) throw new Error('could not list Omarchy plugins');
+            const plugins: unknown = JSON.parse(result.stdout);
+            if (Array.isArray(plugins) && plugins.some((plugin: unknown) =>
+              typeof plugin === 'object' && plugin !== null && 'id' in plugin && plugin.id === 'donnes.dock')) {
+              discovered = true;
+              break;
+            }
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
+          if (!discovered) throw new Error('Omarchy did not discover donnes.dock after rescanning');
+          run('omarchy', ['plugin', 'enable', 'donnes.dock']);
+          run('omarchy', ['dock', 'autohide', 'on']);
+          // Rescanning can retain cached QML at the same symlinked URL.
+          run('omarchy', ['restart', 'shell']);
+        }
+      }
+    });
     await this.component('tmux', async () => {
       if (macos) { await this.link('macos/tmux.conf', '.tmux.conf', uninstall); return; }
       const config = this.destination('.config/tmux/tmux.conf');

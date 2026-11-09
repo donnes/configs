@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "donnes.dock",
+  "name": "Personal Dock",
+  "version": "1.0.0",
+  "author": "Donald",
+  "description": "App dock with auto-hide on all workspaces",
+  "kinds": [
+    "service"
+  ],
+  "entryPoints": {
+    "service": "Dock.qml"
+  },
+  "omarchy": {
+    "clonedFrom": "omarchy.dock"
+  }
+}

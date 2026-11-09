@@ -38,7 +38,7 @@ Choose what the installer manages with repeatable `--skip` or `--only` options:
 `--interactive` opens a Clack multiselect with the default components selected.
 Use Space to toggle components and Enter to continue; Ctrl-C cancels. Available
 components are `packages`, `gh-extensions`, `apps` (Omarchy only), `agents`, `skills`, `mise`, `atuin`, `nvim`, `gradle`, `shell`, `tmux`,
-`git`, `tinycast` (macOS only), `command-center` and `rea`. `command-center`
+`git`, `tinycast` (macOS only), `dock` (Omarchy only), `command-center` and `rea`. `command-center`
 is unchecked and excluded from the default install; default uninstall
 includes it; `rea` is always opt-in. `--skip-packages` remains an
 alias for `--skip packages`. Interactive mode cannot be combined with `--skip`
@@ -403,3 +403,19 @@ uninstall affects all registered clients, not only these two. Review
 `npx --yes rea-agents@6.5.0 uninstall --help` before removing it. To update,
 review the new release's setup dry run, change the pinned version here and in
 `scripts/lib/install.ts`, then apply the REA component again.
+
+## Personal dock
+
+`./cli --dry-run --only dock` previews the macOS-style dock, and
+`./cli --only dock` applies it. It replaces `omarchy.dock` with the user plugin
+`donnes.dock`, with 36px icons and app-name tooltips. Its background opacity,
+borders and corners follow Omarchy's theme style for popup panels. Pinned apps
+without an open window appear slightly faded.
+The dock is available on every regular workspace, auto-hides until the pointer
+reaches its edge, and stays hidden during fullscreen apps. It keeps the existing
+app artwork, pin order and position. Applying enables auto-hide and restarts the
+Omarchy shell so edits to the symlinked QML take effect. Remove it with `./cli uninstall --only dock` to return
+to the built-in dock.
+
+The plugin in `omarchy/plugins/donnes.dock` is vendored from Omarchy 4.5.0-3.
+Review it against `/usr/share/omarchy/shell/plugins/dock` after dock updates.

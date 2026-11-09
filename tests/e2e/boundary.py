@@ -253,6 +253,37 @@ def vp():
     unexpected()
 
 
-handlers = {'brew': brew, 'curl': curl, 'gh': gh, 'systemctl': systemctl, 'launchctl': launchctl,
+def omarchy_shell():
+    if args != ['shell', 'rescanPlugins']:
+        unexpected()
+    state['dock']['rescanned'] = True
+    state['dock']['listed'] = 0
+    done()
+
+
+def omarchy():
+    if args == ['dock', 'autohide', 'on']:
+        state['dock']['autohide'] = True
+        done()
+    if args == ['restart', 'shell']:
+        state['dock']['restarts'] = state['dock'].get('restarts', 0) + 1
+        done()
+    if args == ['plugin', 'list', '--json']:
+        if not state['dock']['rescanned']:
+            done(out='[]')
+        state['dock']['listed'] += 1
+        # The first reply still has the old catalog while the scan completes.
+        done(out=json.dumps([] if state['dock']['listed'] == 1 else [{'id': 'donnes.dock'}]))
+    if args not in (['plugin', 'enable', 'donnes.dock'], ['plugin', 'disable', 'donnes.dock']):
+        unexpected()
+    if args[1] == 'enable':
+        manifest = home / '.config/omarchy/plugins/donnes.dock/manifest.json'
+        if state['dock'].get('listed', 0) < 2 or not manifest.exists():
+            done(1, err='dock must be installed and discovered before enabling')
+    state['dock']['enabled'] = args[1] == 'enable'
+    done()
+
+
+handlers = {'omarchy': omarchy, 'omarchy-shell': omarchy_shell, 'brew': brew, 'curl': curl, 'gh': gh, 'systemctl': systemctl, 'launchctl': launchctl,
             'mise': mise, 'npx': npx, 'vp': vp}
 handlers.get(name, packages)()
