@@ -1,2 +1,5 @@
 orbstack
 abue-ammar/tinycast/tinycast
+android-platform-tools
+moonlight
+zulu@17

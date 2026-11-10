@@ -67,11 +67,6 @@ esac
 
 export EDITOR="nvim"
 
-# bob
-export PATH="/Users/$USER/.local/share/bob/nvim-bin/:$PATH"
-
-export PATH="/opt/homebrew/opt/postgresql@18/bin:$PATH"
-
 # Added by px0 installer
 case ":$PATH:" in
   *":$HOME/.local/bin:"*) ;;
