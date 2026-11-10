@@ -1,0 +1,5 @@
+interface:
+  display_name: "Prototype"
+  short_description: "Build genuinely different UI variants behind a picker"
+policy:
+  allow_implicit_invocation: false
