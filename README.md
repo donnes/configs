@@ -107,7 +107,7 @@ that no longer match anything. Keep it to this machine's own intent;
 ## Safety
 
 - Files are linked individually with absolute symlinks; live state and foreign files remain untouched.
-- Skills are the exception: each `shared/skills/<name>` and `shared/skills/personal/<name>` is linked as one directory, because Codex ignores a symlinked `SKILL.md` but follows a symlinked skill directory. Skills are linked into both `~/.agents/skills` (Codex and others) and `~/.claude/skills` (Claude Code, which does not read `~/.agents`). Untracked skills in either directory remain untouched.
+- Skills are the exception: each `shared/skills/<name>`, `shared/skills/personal/<name>` and the machine's own `macos/skills/<name>` or `omarchy/skills/<name>` is linked as one directory, because Codex ignores a symlinked `SKILL.md` but follows a symlinked skill directory. Skills are linked into both `~/.agents/skills` (Codex and others) and `~/.claude/skills` (Claude Code, which does not read `~/.agents`). Untracked skills in either directory remain untouched.
 - Nothing is backed up. A link that already resolves to the repo copy (such as `~/.claude/skills/x -> ../../.agents/skills/x`) or a local copy with identical content is relinked. A local file, directory, or skill whose content differs prompts to keep it, replace it with the repo version, update the repo from it, or show the diff; the default is whichever side was modified most recently. Without a terminal, differing copies are kept and reported. Untracked files inside managed directories such as `~/.config/nvim` stay in place.
 - The installer never mirror-deletes and never writes below `/usr/share/omarchy`.
 - Generated instructions offer keep, replace, and diff; edit their source documents instead of updating the generated copy from a local file.
@@ -127,6 +127,7 @@ Always inspect `./cli --dry-run` first.
 - `packages/`: platform package lists, plus `gh-extensions.txt`, the gh extensions both machines install with the `gh-extensions` component
 - `shared/mise/`: shared mise tools and settings; `macos/mise/`: macOS-only agent CLIs; `omarchy/mise/`: the prune timer
 - `scripts/`: TypeScript CLI entry point and filesystem, installation, health, receipt, prompt, and skill modules
+- `macos/skills/`, `omarchy/skills/`: skills installed only on that OS
 - `fleet/skills/`: command-center workflows, installed only when selected
 - `COMPUTERS.md`: portable machine roles and desired setup; private connections live in ignored `COMPUTERS.local.md`
 
@@ -228,7 +229,7 @@ Without names, the command opens a Clack multiselect of tracked skills
 and asks for confirmation before deletion. Selecting nothing or pressing Ctrl-C cancels. With
 `--dry-run`, it previews the selected removals without deleting anything.
 
-`remove-skill` handles `shared/skills`, `shared/skills/personal` and `fleet/skills`. It deletes the tracked skill directories and removes agent symlinks that
+`remove-skill` handles `shared/skills`, `shared/skills/personal`, the machine's OS skills and `fleet/skills`. It deletes the tracked skill directories and removes agent symlinks that
 point to them.
 Unmanaged copies in `~/.agents/skills` or `~/.claude/skills` must be synced first.
 Names are checked before deletion begins.

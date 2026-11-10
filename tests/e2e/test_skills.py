@@ -1,4 +1,4 @@
-"""Skills: the shared and command-center collections, remove-skill and the old skills lockfile link."""
+"""Skills: the shared, OS and command-center collections, remove-skill and the old skills lockfile link."""
 import shutil
 import unittest
 
@@ -73,6 +73,17 @@ class SkillCollectionTests(CliTestCase):
         self.assertFalse((self.home / '.agents/skills/mine').is_symlink())
         self.assertFalse((self.home / '.claude/skills/mine').is_symlink())
 
+    def test_os_skills_install_only_on_their_os(self):
+        mac = self.write('macos/skills/simulator/SKILL.md', 'mac').parent
+        self.write('omarchy/skills/hyprland/SKILL.md', 'omarchy')
+        self.cli('--only', 'skills')
+        for root in ['.agents/skills', '.claude/skills']:
+            with self.subTest(root=root):
+                self.assertEqual((self.home / root / 'simulator').resolve(), mac)
+                self.assertFalse((self.home / root / 'hyprland').exists())
+        self.cli('uninstall', '--only', 'skills')
+        self.assertFalse((self.home / '.claude/skills/simulator').is_symlink())
+
     def test_skill_collection_install_rejects_duplicate_names_before_linking(self):
         self.write('shared/skills/example/SKILL.md', 'shared')
         self.write('fleet/skills/example/SKILL.md', 'manager')
@@ -83,15 +94,18 @@ class SkillCollectionTests(CliTestCase):
                 self.assertFalse((self.home / '.agents').exists())
                 self.assertFalse((self.home / '.claude').exists())
 
-    def test_detached_command_center_skill_updates_its_original_collection(self):
-        tracked = self.write('fleet/skills/provision-box/SKILL.md', 'initial').parent
-        local = self.write('.agents/skills/provision-box/SKILL.md', 'updated', home=True).parent
-        self.cli('update', str(local), '--dry-run')
-        self.assertEqual((tracked / 'SKILL.md').read_text(), 'initial')
-        self.cli('update', str(local))
-        self.assertEqual((tracked / 'SKILL.md').read_text(), 'updated')
-        self.assertEqual(local.resolve(), tracked)
-        self.assertFalse((self.repo / 'shared/skills/provision-box').exists())
+    def test_detached_skill_updates_its_original_collection(self):
+        for collection, name in [('fleet/skills', 'provision-box'), ('shared/skills/personal', 'mine'),
+                                 ('macos/skills', 'simulator')]:
+            with self.subTest(collection=collection):
+                tracked = self.write(f'{collection}/{name}/SKILL.md', 'initial').parent
+                local = self.write(f'.agents/skills/{name}/SKILL.md', 'updated', home=True).parent
+                self.cli('update', str(local), '--dry-run')
+                self.assertEqual((tracked / 'SKILL.md').read_text(), 'initial')
+                self.cli('update', str(local))
+                self.assertEqual((tracked / 'SKILL.md').read_text(), 'updated')
+                self.assertEqual(local.resolve(), tracked)
+                self.assertFalse((self.repo / f'shared/skills/{name}').exists())
 
     def test_install_and_uninstall_remove_only_the_old_lockfile_link(self):
         (self.repo / 'shared/skills').mkdir(exist_ok=True)

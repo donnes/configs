@@ -3,15 +3,22 @@ import * as path from 'node:path';
 import * as p from '@clack/prompts';
 import { children, exists, Files, realPath } from './files.ts';
 import { answer, canPrompt } from './prompts.ts';
+import type { Profile } from './install.ts';
 
 // Donald's own skills live apart from installed third-party ones but install alongside them.
 const PERSONAL = 'shared/skills/personal';
 
 export class Skills {
-  constructor(private files: Files, private claudeHome: string) {}
+  constructor(private files: Files, private claudeHome: string, private profile: Profile) {}
 
-  private sources() {
-    return ['shared/skills', PERSONAL, 'fleet/skills'].map(directory => path.join(this.files.repo, directory));
+  // The collections the skills component installs. Skills that only make sense on one OS,
+  // such as iOS simulator tooling, live in <profile>/skills.
+  private collections() {
+    return ['shared/skills', PERSONAL, `${this.profile}/skills`].map(directory => path.join(this.files.repo, directory));
+  }
+
+  sources() {
+    return [...this.collections(), path.join(this.files.repo, 'fleet/skills')];
   }
 
   source(name: string) {
@@ -60,14 +67,12 @@ export class Skills {
   }
 
   async install() {
-    await this.collection(path.join(this.files.repo, 'shared/skills'), false);
-    await this.collection(path.join(this.files.repo, PERSONAL), false);
+    for (const source of this.collections()) await this.collection(source, false);
     this.unlinkOldLock();
   }
 
   async uninstall() {
-    await this.collection(path.join(this.files.repo, 'shared/skills'), true);
-    await this.collection(path.join(this.files.repo, PERSONAL), true);
+    for (const source of this.collections()) await this.collection(source, true);
     this.unlinkOldLock();
   }
 

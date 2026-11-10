@@ -119,7 +119,7 @@ export class Installer {
 
   constructor(readonly files: Files, private profile: Profile, private enabled: Set<Component>,
     readonly homes: RuntimeHomes = runtimeHomes(files.home)) {
-    this.skills = new Skills(files, homes.claude);
+    this.skills = new Skills(files, homes.claude, profile);
   }
 
   private source(relative: string) { return path.join(this.files.repo, relative); }
@@ -426,7 +426,7 @@ export class Installer {
       ? this.source(`${this.profile}/nvim/lazy-lock.json`)
       : this.source(path.join(repoRoot, relative));
     const directory = fs.statSync(source).isDirectory();
-    const skill = directory && ['shared/skills', 'fleet/skills'].some(root => path.dirname(target) === this.source(root));
+    const skill = directory && this.skills.sources().includes(path.dirname(target));
     if (!update) {
       if (exists(target)) throw new Error(`${this.files.pretty(target)} already exists`);
       this.files.log('adopt', `${this.files.pretty(source)} -> ${this.files.pretty(target)}`);

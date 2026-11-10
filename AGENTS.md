@@ -32,10 +32,13 @@ details, and `./cli --help` for commands.
   whatever needs them.
 - JavaScript globals go through `bun add -g`, not npm or pnpm.
 - fastlane and atuin stay system packages.
-- Skills: Donald's own skills go in `shared/skills/personal/<name>`; skills
-  from other repos are vendored in `shared/skills/<name>` and we edit them
-  freely; nothing tracks their upstream, so an update is a fresh copy.
-  Command-center-only skills go in `fleet/skills`.
+- Skills: workflows for both machines go in `shared/skills/<name>`, whether
+  Donald wrote them or they're vendored from other repos. We edit vendored
+  skills freely; nothing tracks their upstream, so an update is a fresh copy.
+  Skills tied to Donald's own setup and preferences, such as unslop, go in
+  `shared/skills/personal/<name>`. Skills for one OS go in
+  `macos/skills` or `omarchy/skills`, and command-center-only skills go in
+  `fleet/skills`.
 - Agent instructions: edit `shared/agents/global/AGENTS.md` or the OS
   `CONTEXT.md`, never the generated `.generated/agents/*/AGENTS.md`. The
   generated file also carries the unslop skill's rules, so editing

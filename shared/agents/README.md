@@ -6,8 +6,9 @@ the host's OS context.
 
 ## Existing foundation
 
-The configs installer already links each `shared/skills/<name>` and
-`shared/skills/personal/<name>` directory into `~/.agents/skills` and
+The configs installer already links each `shared/skills/<name>`,
+`shared/skills/personal/<name>` and the machine's own `macos/skills/<name>` or
+`omarchy/skills/<name>` directory into `~/.agents/skills` and
 `~/.claude/skills`. Keep shared skills there. Avoid creating
 a second skill collection here or moving existing skills merely to reorganize them.
 
@@ -23,6 +24,7 @@ entire `~/.codex` or `~/.claude` directories.
 | Shared workflows | `shared/skills/<name>/SKILL.md` | Existing skills installer |
 | OS-specific context | `macos/agents/CONTEXT.md` and `linux/agents/CONTEXT.md` | Composed into installed instructions for the matching profile |
 | Machine inventory | Root `COMPUTERS.md` and ignored `COMPUTERS.local.md` | Portable roles in Git; connection records stay local |
+| OS-specific workflows | `macos/skills/<name>` and `omarchy/skills/<name>` | Existing skills installer, matching profile only |
 | Command-center workflows | `fleet/skills/<name>` | Explicit `command-center` component |
 | Runtime-specific instructions | Add `shared/agents/runtimes/<runtime>/` when needed | Only that runtime |
 | Specialist roles | Add `shared/agents/roles/` when a real delegated workflow needs them | Explicitly selected roles |
