@@ -29,7 +29,7 @@ Build it the way a product designer builds a launch page they will be judged on.
 
 ## Workflow
 
-Most of the quality is decided before any code. Write the plan first: where it sits, the focal object, the action, the payoff, what can be left out.
+Most of the quality is decided before any code. Write the plan first: where it sits, the focal object, the action, the payoff, what can be left out. If the brief leaves the layout, the look or the story open, build directions before step 4 (Directions, below).
 
 1. **Medium and place.** Still or animation (loop, once in view, or hover). The page, its ground, its width. Design at the size it will be seen, about 720 × 340 for a hero beside copy (`hero-demo`), 900 to 1100 wide for a full-width hero, 400 × 300 for a card, shown at 1:1; never under about 320 wide for a demo, though a bento tile or a satellite card may be smaller. Every demo that can sit in a phone column ships a `compact` design at the column's width (358), a redesign not a squeeze (`references/framing.md`, Small formats and the page). A grid of tiles is one set: plan it with `references/bento.md`.
 2. **Look.** With the product's code or site at hand, map its tokens to the kit's (`references/looks.md`); if the developer asks for their own components, use them inside the stage instead of the kit's small parts. Otherwise a theme (light, dark, blueprint, glass), a palette (accent, mono) and a fidelity: `minimal` is all bars, `standard` is words where they carry meaning and bars elsewhere, `realistic` is real content everywhere. Default light, accent, standard; go realistic at hero scale, for a named real product, or a still whose subject is a list or page. Write filler once with `Text filler` and the fidelity decides. The product's own icons, its real chrome, the content that makes it recognizable. A brief with a style (kawaii, paper, a poster color) gets that style in full, still built to these rules.
@@ -51,6 +51,12 @@ Faults that come back every round, each with its rule; check them before handing
 - **A selection that isn't under the I-beam** (`references/motion.md`, Drags and selection).
 - **A status bar or home indicator drawn by hand;** the Phone draws both (`references/craft.md`, Chrome and devices).
 - **A centered amount centered with its sign** (`references/craft.md`, Spacing and alignment).
+
+## Directions
+
+When the developer hasn't settled the layout, the look or the story, show genuinely different directions before polishing one. Follow the `prototype` skill's Phase 3: three directions by default (up to five on request), each with a name and a stated axis, and no two sharing a position on an axis. For a stageshow the axes are the layout (a row of the layout table in `references/framing.md`), the look (theme, palette, fidelity, a style the brief names) and the story's shape (`references/motion.md`, Story). Two directions that differ only in accent color or copy are one direction.
+
+Build each direction as its own Stage at the shown size, each started from its own gold example, with the frame and the poster beat in place and motion left out unless the story is the axis. Put them behind `prototype`'s picker (its `PICKER.md`, verbatim) in the host project, or as `examples/<yours>-<direction>/` in the playground, and film one still of each at both widths. Present them with `prototype`'s table (when each wins, what each costs) and stop. When the developer picks one, carry it through steps 4 to 7 and delete the others.
 
 ## Examples
 
