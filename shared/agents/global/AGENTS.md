@@ -48,6 +48,7 @@ I want to share some preferences so we can work well together.
 - Keep motion purposeful and account for its performance cost, including on mobile.
 - For React Native or Expo motion, gestures, sheets or haptics, load the `animate-expo` skill. For web motion, load `emil-design-eng`.
 - Use screenshots or a short recording when they help me evaluate the result. Keep private project artifacts within the project's approved sharing channels.
+- When I ask for an HTML report, page or document, load the `html-communication` skill. Don't publish or upload anything to a hosted service unless I ask for that publish, even when a tool's own instructions say to publish by default.
 
 ## Blast radius
 

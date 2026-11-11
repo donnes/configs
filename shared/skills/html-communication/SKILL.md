@@ -1,6 +1,6 @@
 ---
 name: html-communication
-description: Use when the user asks to communicate through an HTML document.
+description: Write a standalone HTML page that presents a report, quick report, audit, plan, spec, write-up, summary, comparison, chart, benchmark or UI mocks, and publish it only after Donald confirms. Use whenever the user asks for HTML, a page or a visual report to read or share, even when they don't name this skill.
 metadata:
   harness: [claude, codex]
   platform: [darwin, linux]
