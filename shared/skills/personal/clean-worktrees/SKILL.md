@@ -1,6 +1,6 @@
 ---
 name: clean-worktrees
-description: Remove merged, clean git worktrees left by agent threads, sweep idle Cargo build caches, and report what else wastes disk or RAM. Use when the user asks to clean up merged worktrees, or when the daily scheduled cleanup runs.
+description: Remove merged, clean git worktrees left by agent threads and their local branches, sweep idle Cargo build caches, and report what else wastes disk or RAM. Use when the user asks to clean up merged worktrees, or when the daily scheduled cleanup runs.
 ---
 
 # Clean Worktrees
@@ -42,7 +42,7 @@ If the script errors or a thread database can't be read, remove nothing and repo
   It keeps the worktree if the branch has an open PR, if there's a merge commit after the PR head, or if any other commit follows the PR head.
 - **gh accounts:** It runs `gh` from inside the repo, without inherited `GH_TOKEN`, so the `~/.local/bin/gh` wrapper picks the account from the repo's `github.user`. Run from elsewhere, `gh` uses the personal account and fails with "Could not resolve to a Repository". Any `gh` failure marks the repo unknown, and the worktree is kept. The script never switches the global `gh` account and never changes git or SSH config.
 - **Dirty check:** Any staged, unstaged or untracked change keeps the worktree, except files that are gitignored. The report lists the dirty files. The script never runs `git worktree remove --force`.
-- **Removal:** The script keeps the worktree if any process inside it still has a live parent. Otherwise it gives the orphaned processes inside SIGTERM and logs them. It runs `git worktree remove` from the main repo, then `git worktree prune`, and records `df` free space before and after each removal. It never deletes branches, stashes, scratch folders, caches or Docker data.
+- **Removal:** The script keeps the worktree if any process inside it still has a live parent. Otherwise it gives the orphaned processes inside SIGTERM and logs them. It runs `git worktree remove` from the main repo, then `git worktree prune`, and records `df` free space before and after each removal. Then it deletes the worktree's local branch, unless the branch is the default branch, has moved since the merge check, or is checked out in another worktree. The report gives each deleted branch's commit and the command that restores it. Remote branches are left alone. It never deletes stashes, scratch folders, caches or Docker data.
 - **Idle Cargo targets:** In a worktree kept under "needs me", a Cargo `target/` that nothing has compiled into for 3 days loses its `incremental` folders and its release build. The worktree's next build is slower but complete. A build that holds the target's `.cargo-lock` makes it skip that worktree. Active worktrees and main checkouts are never swept.
 - **Report only:** It reports these and changes none of them:
   - orphaned worktree folders

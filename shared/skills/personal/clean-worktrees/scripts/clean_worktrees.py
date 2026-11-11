@@ -302,6 +302,7 @@ class Worktree:
     threads: str = ""
     du_kb: int = 0
     freed_kb: int | None = None
+    branch_note: str = ""
 
 
 def dirty_files(path):
@@ -530,6 +531,26 @@ def remove(wt, only, log):
     git(wt.repo, "worktree", "prune")
     wt.freed_kb = free_kb() - before
     log.append(f"removed {wt.path} ({wt.repo}, {wt.branch}); free space +{fmt_gb(max(wt.freed_kb, 0))}")
+    if wt.branch:
+        wt.branch_note = delete_branch(wt)
+        log.append(wt.branch_note)
+
+
+def delete_branch(wt):
+    """Deletes a removed worktree's local branch while its tip is still the HEAD found merged. Returns a report note."""
+    if wt.branch == (default_branch(wt.repo) or "").split("/", 1)[-1]:
+        return f"kept branch {wt.branch}: it's the default branch"
+    _, tip, _ = git(wt.repo, "rev-parse", "--verify", "-q", f"refs/heads/{wt.branch}")
+    if tip.strip() != wt.head:
+        return f"kept branch {wt.branch}: it moved after the merge check"
+    _, listing, _ = git(wt.repo, "worktree", "list", "--porcelain")
+    if f"branch refs/heads/{wt.branch}" in listing.splitlines():
+        return f"kept branch {wt.branch}: checked out in another worktree"
+    # -D because squash and rebase merges never make the tip an ancestor of the default branch.
+    code, _, err = git(wt.repo, "branch", "-D", wt.branch)
+    if code != 0:
+        return f"kept branch {wt.branch}: {err.strip()[:160]}"
+    return f"deleted branch {wt.branch} (was {wt.head[:7]}; `git branch {wt.branch} {wt.head[:12]}` restores it)"
 
 
 # ---------------------------------------------------------------- reporting
@@ -694,7 +715,8 @@ def main():
     for wt in worktrees:
         if wt.verdict == "remove" or wt.freed_kb is not None:
             size = f"freed {fmt_gb(max(wt.freed_kb, 0))} (df)" if wt.freed_kb is not None else f"{fmt_gb(wt.du_kb)} by du, real freed unknown until removal"
-            out.append(f"- {wt.path} [{Path(wt.repo).name}, {wt.branch or 'detached'}]: {wt.why}; threads: {wt.threads}; {size}")
+            out.append(f"- {wt.path} [{Path(wt.repo).name}, {wt.branch or 'detached'}]: {wt.why}; threads: {wt.threads}; {size}"
+                       + (f"; {wt.branch_note}" if wt.branch_note else ""))
     if args.apply:
         out.append(f"- total: free space {fmt_gb(start_free)} -> {fmt_gb(end_free)} ({fmt_gb(end_free - start_free)} by df)")
     out.append("\n## Swept idle Cargo targets" if args.apply else "\n## Would sweep idle Cargo targets")
