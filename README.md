@@ -352,7 +352,8 @@ A machine that should run Vite+'s runtimes in terminals says so with
 `vp env on` instead whenever a scope is in system-first mode, its preview and
 health agree, and health accepts node, npm, pnpm, yarn and bun only when they
 resolve to Vite+'s own installs. Running `vp env on` or `off` by hand without
-changing `jsRuntimes` is drift that the next apply reverts. GUI apps and Xcode
+changing `jsRuntimes` makes health fail, because it changes which node every
+terminal, agent and build runs; the next `mise` apply reverts it. GUI apps and Xcode
 still use mise's shims either way.
 
 ### Xcode

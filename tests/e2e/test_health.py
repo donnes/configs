@@ -1,4 +1,4 @@
-"""./cli health: drift is a warning, missing or unanswerable state is a failure."""
+"""./cli health: drift is a warning; missing or unanswerable state, and runtimes that contradict machine.json, are failures."""
 import json
 import unittest
 
@@ -50,8 +50,10 @@ class HealthTests(CliTestCase):
 
         # A machine can give these runtimes to Vite+; apply and health follow it.
         machine = self.write('.config/donnes-configs/machine.json', json.dumps({'jsRuntimes': 'vite-plus'}), home=True)
-        warnings = self.warnings(self.health(0))
-        self.assertIn('path:node', warnings)
+        # A runtime owner that contradicts machine.json fails and names both fixes.
+        report = self.health(1)
+        self.check(report, 'fail', 'Shell', 'node', 'run ./cli --only mise', 'set jsRuntimes')
+        warnings = self.warnings(report)
         self.assertTrue([id for id in warnings if id.startswith('files:vp env on')], warnings)
         self.cli('--only', 'mise')
         report = self.health(0)
@@ -77,13 +79,14 @@ class HealthTests(CliTestCase):
         self.write('shared/mise/conf.d/donnes.toml', '[tools]\nnode = "lts"\nbat = "latest"\n')
         report = self.health(1)
         warnings = self.warnings(report)
-        for id in ['files:add managed block in ~/.zshenv', 'path:jj', 'path:node', 'path:npm:other',
+        for id in ['files:add managed block in ~/.zshenv', 'path:jj', 'path:npm:other',
                    'legacy:pyenv', 'duplicate:~/.bun/bin/jj']:
             self.assertIn(id, warnings)
         self.assertTrue([id for id in warnings if id.startswith('files:vp env off')], warnings)
         for section, words in [('Packages', ['formulae', 'mise']),
                                ('Packages', ['github/gh-stack']), ('mise', ['not configured', 'bat']),
                                ('mise', ['not installed', 'node']), ('Shell', ['mise doctor']),
+                               ('Shell', ['node', "Vite+'s", 'set jsRuntimes']),
                                ('Background', ['dev.dstech.mise-prune'])]:
             self.check(report, 'fail', section, *words)
         # The advice names exactly the components whose files drifted.

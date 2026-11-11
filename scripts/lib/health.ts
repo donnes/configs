@@ -353,6 +353,11 @@ export class Health {
     const isMise = (file: string, name?: string) => within(file, data) || delegatesToMise(file) || (name === 'rustfmt' && within(file, rustup));
     // machine.json can give Vite+ these runtimes; then only its own installs count.
     const vitePlusOwns = (name: string) => this.machine?.jsRuntimes === 'vite-plus' && vitePlusScopes.includes(name);
+    // A runtime owner that contradicts machine.json is a failure, not drift: it is
+    // usually a stray `vp env on` or `vp env off`, and it changes which node every
+    // terminal, agent and build runs.
+    const owner = this.machine?.jsRuntimes ?? 'mise';
+    const fix = `run ./cli --only mise to give them back to ${owner === 'mise' ? 'mise' : 'Vite+'}, or set jsRuntimes in ${this.files.pretty(machinePath(this.home))} if the switch was intended`;
     let resolved = 0, throughVitePlus = 0, managed = 0;
     for (const [kind, name, ...rest] of lines) {
       if (kind !== '@@bin' || !name) continue;
@@ -364,10 +369,10 @@ export class Health {
         const delegate = value('@@vp', name), target = delegate && path.resolve(delegate);
         if (vitePlusOwns(name)) {
           if (target && within(target, vitePlusHome(this.home))) managed++;
-          else this.report('warn', `${name} resolves to ${target ? this.files.pretty(target) : 'nothing'} instead of Vite+'s managed runtime that machine.json's jsRuntimes asks for; run ./cli --only mise`, `path:${name}`);
+          else this.report('fail', `${name} resolves to ${target ? this.files.pretty(target) : 'nothing'} instead of Vite+'s managed runtime that machine.json's jsRuntimes asks for; ${fix}`, `path:${name}`);
         } else if (target && isMise(target)) { resolved++; throughVitePlus++; }
-        else this.report('warn', `${name} resolves to Vite+'s ${target ? this.files.pretty(target) : 'shim'} instead of mise; run ./cli --only mise to hand Vite+'s shims to mise`, `path:${name}`);
-      } else if (vitePlusOwns(name)) this.report('warn', `${name} resolves to ${this.files.pretty(file)} instead of Vite+'s shim that machine.json's jsRuntimes asks for`, `path:${name}`);
+        else this.report('fail', `${name} resolves to Vite+'s ${target ? this.files.pretty(target) : 'shim'} instead of mise, which machine.json's jsRuntimes asks for; ${fix}`, `path:${name}`);
+      } else if (vitePlusOwns(name)) this.report('fail', `${name} resolves to ${this.files.pretty(file)} instead of Vite+'s shim that machine.json's jsRuntimes asks for; ${fix}`, `path:${name}`);
       else if (!isMise(file, name)) this.report('warn', `${name} resolves to ${this.files.pretty(file)} instead of mise`, `path:${name}`);
       else resolved++;
     }
