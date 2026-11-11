@@ -17,6 +17,7 @@ import sqlite3
 import subprocess
 import sys
 import time
+from contextlib import ExitStack
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -32,6 +33,7 @@ SCRATCH_ROOTS = [HOME / ".purpose-os/scratch", HOME / ".t3/scratch"]
 SKIP_DIRS = {"node_modules", ".pnpm", "Pods", "build", "dist", ".venv", "DerivedData"}
 NOW = datetime.now(timezone.utc)
 RECENT = timedelta(hours=24)
+IDLE_TARGET = timedelta(days=3)
 LEFTOVER_AGE = 12 * 3600
 DEV_PROCESS = re.compile(
     r"(^|/)(metro|idevicesyslog|qemu-system\S*|emulator|uvicorn|gunicorn|px0|chrome-headless-shell|adb)( |$)|"
@@ -472,8 +474,43 @@ def pid_alive(pid):
         return True
 
 
+def idle_cargo_target(path):
+    """Days since anything compiled into this worktree's Cargo target, if that's IDLE_TARGET or longer."""
+    target = Path(path, "target")
+    if not Path(path, "Cargo.toml").is_file() or not (target / "CACHEDIR.TAG").is_file():
+        return None
+    # rustc writes every output into <profile>/deps, so the folder's mtime is the last compile.
+    stamps = [d.stat().st_mtime for d in target.glob("*/deps")]
+    if not stamps:
+        return None
+    idle = NOW - datetime.fromtimestamp(max(stamps), timezone.utc)
+    return idle.days if idle >= IDLE_TARGET else None
+
+
+def sweepable(path):
+    """The parts of an idle target that only speed up the next build: incremental caches and release builds."""
+    target = Path(path, "target")
+    return sorted(target.glob("*/incremental")) + [p for p in [target / "release"] if p.is_dir()]
+
+
+def sweep(path, log):
+    """Deletes sweepable(path). Returns kB freed by df, or None when a running cargo holds the target's lock."""
+    with ExitStack() as stack:
+        for lock_path in Path(path, "target").glob("*/.cargo-lock"):
+            lock = stack.enter_context(open(lock_path, "a"))
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                return None
+        before = free_kb()
+        for p in sweepable(path):
+            shutil.rmtree(p, ignore_errors=True)
+            log.append(f"deleted {p}")
+        return free_kb() - before
+
+
 def remove(wt, only, log):
-    if only and wt.path not in only:
+    if wt.path not in only:
         wt.verdict, wt.why = "keep-needs-me", f"not in --only list (was: {wt.why})"
         return
     # Re-check right before removing: HEAD and cleanliness can change between analysis and removal.
@@ -606,8 +643,8 @@ def cache_report(repos):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--apply", action="store_true", help="remove worktrees that pass every check")
-    ap.add_argument("--only", action="append", default=[], help="with --apply, remove only these paths (repeatable)")
+    ap.add_argument("--apply", action="store_true", help="remove the --only worktrees that pass every check, and sweep idle Cargo targets")
+    ap.add_argument("--only", action="append", default=[], help="with --apply, the worktrees to remove (repeatable); none removes nothing")
     ap.add_argument("--no-fetch", action="store_true", help="skip git fetch (read-only audit)")
     ap.add_argument("--no-caches", action="store_true", help="skip the cache size report")
     args = ap.parse_args()
@@ -629,6 +666,9 @@ def main():
         for wt in worktrees:
             if wt.verdict == "remove":
                 wt.verdict, wt.why = "keep-needs-me", f"thread DB unreadable, so thread state is unknown (was: {wt.why})"
+    # Worktrees kept for a reason other than recent use still hold build caches nobody is using.
+    idle = [(wt.path, days) for wt in worktrees if wt.verdict == "keep-needs-me" and os.path.isdir(wt.path)
+            and not os.path.islink(wt.path) and (days := idle_cargo_target(wt.path)) is not None]
     start_free = free_kb()
     for wt in worktrees:
         if wt.verdict == "remove":
@@ -636,6 +676,15 @@ def main():
                 remove(wt, set(args.only), log)
             else:
                 wt.du_kb = du_kb(wt.path)
+    swept = []
+    for path, days in idle:
+        if args.apply:
+            freed = sweep(path, log)
+            swept.append(f"- {path}/target: idle {days} days; " + (
+                "skipped, a cargo build holds its lock" if freed is None else f"freed {fmt_gb(max(freed, 0))} (df)"))
+        else:
+            kb = sum(du_kb(p) for p in sweepable(path))
+            swept.append(f"- {path}/target: idle {days} days; incremental caches and release build {fmt_gb(kb)} by du")
     end_free = free_kb()
     removed = [wt for wt in worktrees if wt.freed_kb is not None]
 
@@ -648,6 +697,8 @@ def main():
             out.append(f"- {wt.path} [{Path(wt.repo).name}, {wt.branch or 'detached'}]: {wt.why}; threads: {wt.threads}; {size}")
     if args.apply:
         out.append(f"- total: free space {fmt_gb(start_free)} -> {fmt_gb(end_free)} ({fmt_gb(end_free - start_free)} by df)")
+    out.append("\n## Swept idle Cargo targets" if args.apply else "\n## Would sweep idle Cargo targets")
+    out.extend(swept or ["- none"])
     out.append("\n## Kept, needs me")
     for wt in worktrees:
         if wt.verdict == "keep-needs-me":
