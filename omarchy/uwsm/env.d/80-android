@@ -1,0 +1,10 @@
+# Changes require a restart to take effect.
+
+# Android builds (Godot's export, Gradle, React Native) use JDK 17 and the SDK the
+# apps component installs. `java` on PATH stays the system default JDK.
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+export ANDROID_HOME="$HOME/Android/Sdk"
+case ":$PATH:" in
+  *":$ANDROID_HOME/platform-tools:"*) ;;
+  *) export PATH="$PATH:$ANDROID_HOME/platform-tools" ;;
+esac

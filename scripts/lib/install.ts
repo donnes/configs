@@ -80,6 +80,8 @@ export const apps: App[] = [
   { name: 'Zed', packages: ['zed', 'omazed'], installer: ['omarchy-install-editor-zed'] },
   { name: 'Zen', packages: ['zen-browser-bin'], installer: ['omarchy-install-browser', 'zen'] },
   { name: 'Helium', packages: ['helium-browser-bin'], aur: true },
+  { name: 'Godot', packages: ['godot'] },
+  { name: 'Blender', packages: ['blender'] },
 ];
 
 // T3 Code's nightly ships as an AppImage on GitHub and updates itself once
@@ -100,6 +102,18 @@ export const hyperframes = {
   download: 'https://hyperframes.dev/studio/download?os=linux',
   entry: '.local/share/applications/hyperframes.desktop',
   icon: '.local/share/icons/dev.hyperframes.desktop.png',
+};
+
+// Godot's Android export (Exporting for Android in the 4.7 docs) and React Native
+// builds use this SDK. Godot and Android Studio look in ~/Android/Sdk on Linux.
+// Godot's docs advise against distribution SDK packages, which lag behind, so
+// the step bootstraps Google's command-line tools and installs with sdkmanager.
+// Each package lives in the directory its name spells with / for ;.
+export const androidSdk = {
+  root: 'Android/Sdk',
+  java: '/usr/lib/jvm/java-17-openjdk',
+  repository: 'https://dl.google.com/android/repository',
+  packages: ['platform-tools', 'build-tools;35.0.1', 'platforms;android-35', 'cmdline-tools;latest', 'cmake;3.10.2.4988404', 'ndk;28.1.13356709'],
 };
 
 function download(url: string) {
@@ -227,6 +241,40 @@ export class Installer {
     }
     this.t3code();
     this.hyperframes();
+    this.androidSdk();
+  }
+
+  private androidSdk() {
+    const root = this.destination(androidSdk.root);
+    const missing = androidSdk.packages.filter(name => !fs.existsSync(path.join(root, ...name.split(';'))));
+    if (!missing.length) { this.files.log('skip', `Android SDK: ${androidSdk.packages.length} packages installed`); return; }
+    this.files.log('app', `Android SDK: sdkmanager --install ${missing.join(' ')} -> ${this.files.pretty(root)}`);
+    if (this.files.dryRun) return;
+    fs.mkdirSync(root, { recursive: true });
+    const bootstrap = fs.mkdtempSync(path.join(root, '.cmdline-tools-'));
+    try {
+      let sdkmanager = path.join(root, 'cmdline-tools/latest/bin/sdkmanager');
+      if (!fs.existsSync(sdkmanager)) {
+        // The repository manifest names the current command-line tools zip and its SHA-1.
+        const manifest = download(`${androidSdk.repository}/repository2-3.xml`);
+        const entry = manifest.split('<remotePackage path="cmdline-tools;latest">')[1]?.split('</remotePackage>')[0] ?? '';
+        const [, sha1, file] = entry.match(/<checksum type="sha1">([0-9a-f]{40})<\/checksum>\s*<url>(commandlinetools-linux-[^<]+)<\/url>/) ?? [];
+        if (!sha1 || !file) throw new Error('Android SDK: cannot find the Linux command-line tools in the repository manifest');
+        const zip = path.join(bootstrap, file);
+        run('curl', ['-fsSL', '-o', zip, `${androidSdk.repository}/${file}`]);
+        if (createHash('sha1').update(fs.readFileSync(zip)).digest('hex') !== sha1) throw new Error(`${file} does not match its published checksum`);
+        run('unzip', ['-q', zip, '-d', bootstrap]);
+        sdkmanager = path.join(bootstrap, 'cmdline-tools/bin/sdkmanager');
+      }
+      // sdkmanager asks to accept each package's license; installing the SDK accepts them.
+      const result = spawnSync(sdkmanager, [`--sdk_root=${root}`, '--install', ...missing], {
+        stdio: ['pipe', 'inherit', 'inherit'], input: 'y\n'.repeat(20), env: { ...process.env, JAVA_HOME: androidSdk.java },
+      });
+      if (result.error) throw result.error;
+      if (result.status !== 0) throw new Error(`Android SDK: sdkmanager failed (${result.signal ?? result.status}); it needs JDK 17 (jdk17-openjdk from ./cli --only packages)`);
+    } finally {
+      fs.rmSync(bootstrap, { recursive: true, force: true });
+    }
   }
 
   private t3code() {

@@ -22,6 +22,9 @@ export NODE_OPTIONS=--max-old-space-size=4096
 # Local secrets (untracked)
 [ -f "$HOME/.secrets" ] && source "$HOME/.secrets"
 
+# SSH sessions skip uwsm, which sets the Android build environment for the desktop.
+source "$(dirname "${BASH_SOURCE[0]}")/uwsm/env.d/80-android"
+
 if command -v atuin >/dev/null 2>&1; then
   eval "$(atuin init bash)"
 fi

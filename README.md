@@ -266,7 +266,8 @@ Review what they will change first (`brew outdated`,
 ## Omarchy apps
 
 The `apps` component installs Steam, MangoHud, LACT, the Logitech racing wheel
-tools, Tailscale, Zed, Zen, Helium, T3 Code, and HyperFrames. Each goes through Omarchy's own
+tools, Tailscale, Zed, Zen, Helium, Godot, Blender, T3 Code, HyperFrames, and the
+Android SDK. Each goes through Omarchy's own
 installer where one exists, which also sets up drivers, services, or themes, or
 through Omarchy's package helpers otherwise. An app is installed only while one
 of its packages is missing, because some installers open the app or start a
@@ -284,6 +285,19 @@ checksum for it. The step downloads it only while the file is missing. The
 app's own desktop entry only handles its URL schemes and is hidden from the
 launcher, so the step also writes `~/.local/share/applications/hyperframes.desktop`
 with the icon from the AppImage, while that entry is missing.
+
+The Android SDK goes into `~/Android/Sdk`, where Godot and Android Studio look by
+default, with the packages Godot 4.7's Android export lists: platform-tools,
+build-tools 35.0.1, platform 35, the latest command-line tools, CMake
+3.10.2.4988404 and NDK r28b. Godot's docs advise against distribution SDK
+packages, so the step downloads Google's command-line tools, checks them against
+the SHA-1 in Google's repository manifest, and runs `sdkmanager` with JDK 17,
+accepting the packages' licenses. It runs only while a package directory is
+missing and reuses the installed `sdkmanager` after the first run.
+`omarchy/uwsm/env.d/80-android` sets `JAVA_HOME` to JDK 17 and `ANDROID_HOME` for
+the desktop session after the next login, and `omarchy/bashrc.local` sources it
+for SSH shells. Godot copies `JAVA_HOME` into its Java SDK Path setting when that
+setting is unset.
 
 ## mise
 
@@ -304,7 +318,8 @@ The fragment's `rust` installs through rustup into `~/.rustup` and `~/.cargo`,
 so its executables resolve from `~/.cargo/bin`. ktlint and detekt need a JVM,
 which stays outside mise so it can't change `JAVA_HOME` for Android builds:
 Zulu 17 on macOS and the latest OpenJDK (`jdk-openjdk` from
-`packages/omarchy.txt`) on Omarchy.
+`packages/omarchy.txt`) on Omarchy. Android builds on Omarchy use
+`jdk17-openjdk` through `JAVA_HOME` instead (Omarchy apps above).
 
 On Omarchy the CLI never edits Omarchy's files. Omarchy's `config.toml` replaces
 the shared list of version files mise reads, so the component appends the

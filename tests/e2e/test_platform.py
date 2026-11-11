@@ -102,6 +102,30 @@ class PlatformTests(CliTestCase):
         self.assertEqual(self.state['hyperframes']['downloads'], 1)
         self.assertEqual(sorted(path.name for path in self.home.iterdir() if path.name.startswith('.hyperframes')), [])
 
+    def test_omarchy_installs_the_android_sdk_once(self):
+        self.env['DONNES_CONFIGS_PROFILE'] = 'omarchy'
+        installed = 'steam mangohud lib32-mangohud lact tailscale zed omazed zen-browser-bin helium-browser-bin oversteer new-lg4ff-dkms-git usb_modeswitch godot blender'.split()
+        self.boundary(pacman={'installed': installed}, android={'checksum': 'f' * 40})
+        for app in ['Applications/T3-Code.AppImage', 'Applications/HyperFrames.AppImage', '.local/share/applications/hyperframes.desktop']:
+            self.write(app, 'installed', home=True)
+        sdk = self.home / 'Android/Sdk'
+        packages = ['platform-tools', 'build-tools;35.0.1', 'platforms;android-35', 'cmdline-tools;latest', 'cmake;3.10.2.4988404', 'ndk;28.1.13356709']
+        # A tampered download never runs, and leaves no bootstrap copy behind.
+        self.assertIn('does not match its published checksum', self.fails('--only', 'apps').stderr)
+        self.assertEqual(list(sdk.iterdir()), [])
+        self.boundary(android={'checksum': None})
+        self.cli('--only', 'apps')
+        self.assertEqual(self.state['android']['installs'], [packages])
+        downloads = self.state['android']['downloads']
+        self.assertEqual(sorted(file.name for file in sdk.iterdir()), sorted({package.split(';')[0] for package in packages}))
+        self.cli('--only', 'apps')
+        self.assertEqual(self.state['android']['installs'], [packages])
+        # A missing package comes back through the installed sdkmanager, without a new download.
+        (sdk / 'platforms/android-35').rmdir()
+        self.cli('--only', 'apps')
+        self.assertEqual(self.state['android']['installs'], [packages, ['platforms;android-35']])
+        self.assertEqual(self.state['android']['downloads'], downloads)
+
     def test_dock_installs_and_enables_the_clone_without_touching_other_plugins(self):
         self.env['DONNES_CONFIGS_PROFILE'] = 'omarchy'
         manifest = self.write('omarchy/plugins/donnes.dock/manifest.json', '{"id":"donnes.dock"}')

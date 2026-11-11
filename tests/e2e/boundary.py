@@ -11,10 +11,12 @@ harness reports, so a new command can never pass silently.
 """
 import base64
 import hashlib
+import io
 import json
 import os
 import plistlib
 import sys
+import zipfile
 from pathlib import Path
 
 state_file, name, args = Path(sys.argv[1]), sys.argv[2], sys.argv[3:]
@@ -79,11 +81,64 @@ mkdir -p squashfs-root && printf icon > "squashfs-root/$2"
 '''
 
 
+ANDROID_REPOSITORY = 'https://dl.google.com/android/repository/'
+ANDROID_TOOLS = 'commandlinetools-linux-16111833_latest.zip'
+ANDROID_JAVA = '/usr/lib/jvm/java-17-openjdk'
+
+
+def sdkmanager_script():
+    return f'#!/bin/sh\nexec "{sys.executable}" -I "{Path(__file__).resolve()}" "{state_file.resolve()}" sdkmanager "$@"\n'
+
+
+def android_tools_zip():
+    # The release zip holds cmdline-tools/bin/sdkmanager; here it runs this double.
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w') as archive:
+        info = zipfile.ZipInfo('cmdline-tools/bin/sdkmanager', date_time=(2026, 1, 1, 0, 0, 0))
+        info.external_attr = 0o100755 << 16
+        archive.writestr(info, sdkmanager_script())
+    return buffer.getvalue()
+
+
+def android_manifest():
+    # Google's manifest lists older command-line tools too; only "latest" names the current zip.
+    checksum = state['android']['checksum'] or hashlib.sha1(android_tools_zip()).hexdigest()
+    package = '<remotePackage path="cmdline-tools;{path}"><archives><archive><complete><checksum type="sha1">{sha1}</checksum><url>{url}</url></complete><host-os>linux</host-os></archive></archives></remotePackage>'
+    return '\n'.join([package.format(path='9.0', sha1='0' * 40, url='commandlinetools-linux-9123335_latest.zip'),
+                      package.format(path='latest', sha1=checksum, url=ANDROID_TOOLS)])
+
+
+def sdkmanager():
+    # Installs each package into the directory its name spells, after its license is accepted.
+    if os.environ.get('JAVA_HOME') != ANDROID_JAVA:
+        done(1, err='ERROR: sdkmanager needs JDK 17 in JAVA_HOME')
+    if len(args) < 3 or not args[0].startswith('--sdk_root=') or args[1] != '--install':
+        unexpected()
+    if 'y' not in sys.stdin.read():
+        done(1, err='Skipping following packages as the license is not accepted')
+    root = Path(args[0].split('=', 1)[1])
+    for package in args[2:]:
+        directory = root.joinpath(*package.split(';'))
+        directory.mkdir(parents=True, exist_ok=True)
+        if package == 'cmdline-tools;latest':
+            (directory / 'bin').mkdir(exist_ok=True)
+            (directory / 'bin/sdkmanager').write_text(sdkmanager_script())
+            (directory / 'bin/sdkmanager').chmod(0o755)
+    state['android']['installs'].append(args[2:])
+    done()
+
+
 def t3_appimage(tag):
     return f'T3-Code-{tag[1:]}-x86_64.AppImage'
 
 
 def curl():
+    if args == ['-fsSL', ANDROID_REPOSITORY + 'repository2-3.xml']:
+        done(out=android_manifest())
+    if len(args) == 4 and args[:2] == ['-fsSL', '-o'] and args[3] == ANDROID_REPOSITORY + ANDROID_TOOLS:
+        state['android']['downloads'] += 1
+        Path(args[2]).write_bytes(android_tools_zip())
+        done()
     # HyperFrames redirects to its latest AppImage; -L follows the redirect.
     # The AppImage double only extracts a file into ./squashfs-root, as the runtime does.
     if len(args) == 4 and args[:2] == ['-fsSL', '-o'] and args[3] == HYPERFRAMES_DOWNLOAD:
@@ -285,5 +340,5 @@ def omarchy():
 
 
 handlers = {'omarchy': omarchy, 'omarchy-shell': omarchy_shell, 'brew': brew, 'curl': curl, 'gh': gh, 'systemctl': systemctl, 'launchctl': launchctl,
-            'mise': mise, 'npx': npx, 'vp': vp}
+            'mise': mise, 'npx': npx, 'vp': vp, 'sdkmanager': sdkmanager}
 handlers.get(name, packages)()

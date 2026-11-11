@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import { spawnSync, type SpawnSyncOptions } from 'node:child_process';
 import { children, Files, realPath, within } from './files.ts';
 import {
-  apps, components, ghExtensions, Installer, listed, missingHomebrew, missingPacman, runtimeHomes, t3code, hyperframes,
+  androidSdk, apps, components, ghExtensions, Installer, listed, missingHomebrew, missingPacman, runtimeHomes, t3code, hyperframes,
   type Component, type Profile, type RuntimeHomes,
 } from './install.ts';
 import { miseCurrent, miseFragments, vitePlusHome, vitePlusScopes, type MiseTool } from './mise.ts';
@@ -247,13 +247,16 @@ export class Health {
           const absent = missingPacman(packages);
           return absent.length ? [`${name} (${absent.join(' ')})`] : [];
         });
-        const appImages = [['T3 Code', [t3code.appImage]], ['HyperFrames', [hyperframes.appImage, hyperframes.entry]]] as const;
-        for (const [name, files] of appImages) {
+        const fileApps = [
+          ['T3 Code', [t3code.appImage]], ['HyperFrames', [hyperframes.appImage, hyperframes.entry]],
+          ['Android SDK', androidSdk.packages.map(name => path.join(androidSdk.root, ...name.split(';')))],
+        ] as const;
+        for (const [name, files] of fileApps) {
           const absent = files.filter(file => !fs.existsSync(path.join(this.home, file)));
           if (absent.length) incomplete.push(`${name} (${absent.map(file => `~/${file}`).join(' ')})`);
         }
         if (incomplete.length) this.report('fail', `missing apps: ${incomplete.join(', ')}; run ./cli --only apps`);
-        else this.report('ok', `${apps.length + appImages.length} Omarchy apps installed`);
+        else this.report('ok', `${apps.length + fileApps.length} Omarchy apps installed`);
       } catch (error) {
         this.report('fail', message(error));
       }

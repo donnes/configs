@@ -2,4 +2,5 @@ atuin
 bash-preexec
 fastlane
 jdk-openjdk
+jdk17-openjdk
 superwhisper-bin

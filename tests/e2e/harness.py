@@ -43,6 +43,7 @@ EMPTY_STATE = {
     'vp': {'mode': 'managed'},
     't3code': {'tags': [], 'manifests': {}, 'downloads': []},
     'hyperframes': {'downloads': 0},
+    'android': {'checksum': None, 'downloads': 0, 'installs': []},
 }
 
 
