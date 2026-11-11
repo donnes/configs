@@ -30,6 +30,10 @@ const executables: Record<string, string> = {
   'aws-cli': 'aws', 'npm:cf': 'cf', 'github:voidzero-dev/vite-plus': 'vp', rust: 'rustfmt',
   'github:realm/SwiftLint': 'swiftlint', 'aqua:ktlint/ktlint': 'ktlint', 'github:detekt/detekt': 'detekt',
   'aqua:anomalyco/opencode': 'opencode', 'github:vercel-labs/agent-desktop': 'agent-desktop',
+  // Agent CLIs from Omarchy's /etc/mise/conf.d/omarchy-tools.toml.
+  'antigravity-cli': 'agy', 'hey-cli': 'hey', 'oh-my-pi': 'omp', 'http:devin': 'devin', 'http:kiro-cli': 'kiro-cli',
+  'npm:@deepseek-ai/dsh': 'dsh', 'npm:@kilocode/cli': 'kilo', 'npm:@minimax-ai/code': 'mcode',
+  'npm:@moonshot-ai/kimi-code': 'kimi', 'npm:command-code': 'command-code', 'npm:freebuff': 'freebuff',
 };
 const hour = 3_600_000;
 // Jobs with their expected interval, for spotting ones that stopped running.
