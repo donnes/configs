@@ -33,7 +33,7 @@ COMMANDS = ['omarchy', 'omarchy-shell', 'brew', 'curl', 'gh', 'yay', 'pacman', '
 EMPTY_STATE = {
     'unexpected': [],
     'dock': {'enabled': False, 'rescanned': False},
-    'brew': {'formulae': [], 'casks': [], 'taps': []},
+    'brew': {'formulae': [], 'casks': [], 'taps': [], 'targets': {}},
     'gh': {'extensions': []},
     'pacman': {'installed': [], 'aur': [], 'broken': False},
     'systemd': {'loaded': [], 'active': [], 'results': {}},

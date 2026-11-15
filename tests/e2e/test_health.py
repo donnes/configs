@@ -28,7 +28,10 @@ class HealthTests(CliTestCase):
         self.write('packages/macos.txt', 'git\nmise\n')
         self.write('packages/macos-casks.txt', 'abue-ammar/tinycast/tinycast\n')
         self.write('packages/gh-extensions.txt', 'github/gh-stack\n')
-        self.boundary(brew={'formulae': ['git', 'mise'], 'casks': ['tinycast']}, gh={'extensions': ['github/gh-stack']},
+        app = self.sandbox / 'Applications/Tinycast.app'
+        app.mkdir(parents=True, exist_ok=True)
+        self.boundary(brew={'formulae': ['git', 'mise'], 'casks': ['tinycast'], 'targets': {'tinycast': [str(app)]}},
+                      gh={'extensions': ['github/gh-stack']},
                       mise={'ls': {tool: [{'version': '1.0.0', 'installed': True}]
                                    for tool in ['node', 'jj', 'npm:cf', 'github:voidzero-dev/vite-plus', 'rust']}})
         self.cli('--skip', 'packages')
@@ -47,6 +50,11 @@ class HealthTests(CliTestCase):
         self.assertEqual(self.warnings(report), ['checkout:git'])
         self.assertEqual(self.failures(report), [])
         self.check(report, 'ok', 'Shell', '4 tools resolve through mise', "1 via Vite+'s system-first shims")
+
+        # Homebrew still lists a cask whose app was deleted; health checks the app itself.
+        (self.sandbox / 'Applications/Tinycast.app').rmdir()
+        self.check(self.health(1), 'fail', 'Packages', 'tinycast', 'Tinycast.app', 'brew reinstall --cask tinycast')
+        (self.sandbox / 'Applications/Tinycast.app').mkdir()
 
         # A machine can give these runtimes to Vite+; apply and health follow it.
         machine = self.write('.config/donnes-configs/machine.json', json.dumps({'jsRuntimes': 'vite-plus'}), home=True)

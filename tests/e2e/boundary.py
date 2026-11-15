@@ -56,6 +56,15 @@ def brew():
         done(out='/opt/homebrew')
     if len(args) == 3 and args[0] == 'list' and args[1] in ('--formula', '--cask') and args[2] == '-1':
         done(out='\n'.join(store['casks' if args[1] == '--cask' else 'formulae']))
+    # Each cask's artifacts carry the paths it installed as targets, from store['targets'].
+    if args[:3] == ['info', '--cask', '--json=v2'] and args[3:]:
+        unknown = [token for token in args[3:] if token not in store['casks']]
+        if unknown:
+            done(1, err=f'Error: Cask \'{unknown[0]}\' is unavailable: No Cask with this name exists.')
+        done(out=json.dumps({'formulae': [], 'casks': [
+            {'token': token, 'artifacts': [{'app': [Path(target).name], 'target': target}
+                                           for target in store['targets'].get(token, [])]}
+            for token in args[3:]]}))
     if args[:2] == ['trust', '--tap'] and len(args) == 3:
         store['taps'].append(args[2])
         done()

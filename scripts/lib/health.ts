@@ -7,7 +7,7 @@ import {
   androidSdk, apps, components, ghExtensions, Installer, listed, missingHomebrew, missingPacman, runtimeHomes, t3code, hyperframes,
   type Component, type Profile, type RuntimeHomes,
 } from './install.ts';
-import { miseCurrent, miseFragments, vitePlusHome, vitePlusScopes, type MiseTool } from './mise.ts';
+import { isRecord, miseCurrent, miseFragments, vitePlusHome, vitePlusScopes, type MiseTool } from './mise.ts';
 import { checkoutState, machinePath, readMachine, readReceipt, receiptPath, type Machine, type Receipt, type Role } from './state.ts';
 
 type Status = 'ok' | 'warn' | 'fail';
@@ -49,6 +49,29 @@ function capture(command: string, args: string[], options: SpawnSyncOptions = {}
 function delegatesToMise(file: string) {
   const stat = fs.statSync(file, { throwIfNoEntry: false });
   return stat !== undefined && stat.size < 4096 && /^exec mise (x|exec) /m.test(fs.readFileSync(file, 'utf8'));
+}
+
+// The files installed casks put outside the Caskroom, such as apps and binary
+// links, that no longer exist. brew info reports each one's path as its target.
+function missingCaskFiles(brew: string, casks: string[]) {
+  if (!casks.length) return [];
+  const result = capture(brew, ['info', '--cask', '--json=v2', ...casks]);
+  if (!result.ok) throw new Error(`${brew} info --cask failed: ${result.stderr.trim().split('\n').at(-1)}`);
+  let value: unknown;
+  try {
+    value = JSON.parse(result.stdout);
+  } catch {
+    throw new Error('brew info --cask returned invalid JSON');
+  }
+  if (!isRecord(value) || !Array.isArray(value.casks)) throw new Error('brew info --cask returned an unexpected shape');
+  return value.casks.flatMap((cask: unknown) => {
+    if (!isRecord(cask) || typeof cask.token !== 'string' || !Array.isArray(cask.artifacts)) {
+      throw new Error('brew info --cask returned an unexpected cask entry');
+    }
+    const files = cask.artifacts.flatMap((artifact: unknown) =>
+      isRecord(artifact) && typeof artifact.target === 'string' && !fs.existsSync(artifact.target) ? [artifact.target] : []);
+    return files.length ? [{ cask: cask.token, files }] : [];
+  });
 }
 
 function message(error: unknown) {
@@ -269,7 +292,14 @@ export class Health {
         const wanted = listed(path.join(this.repo, 'packages', list));
         const missing = missingHomebrew(brew, flag, wanted);
         if (missing.length) this.report('fail', `missing Homebrew ${kind}: ${missing.join(' ')}; run ./cli --only packages`);
-        else this.report('ok', `${wanted.length} listed Homebrew ${kind} installed`);
+        // brew list reads Homebrew's own records, which still list a cask whose
+        // app was deleted, so check the files each installed cask put in place.
+        const broken = kind === 'casks' ? missingCaskFiles(brew, wanted.filter(name => !missing.includes(name)).map(name => path.basename(name))) : [];
+        if (broken.length) {
+          this.report('fail', `Homebrew casks missing their files: ${broken.map(({ cask, files }) => `${cask} (${files.join(' ')})`).join(', ')}; `
+            + `run brew reinstall --cask ${broken.map(({ cask }) => cask).join(' ')}`);
+        }
+        if (!missing.length && !broken.length) this.report('ok', `${wanted.length} listed Homebrew ${kind} installed`);
       } catch (error) {
         this.report('fail', message(error));
       }
