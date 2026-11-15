@@ -26,3 +26,6 @@ codex/
 # Generated host instructions and private machine connection records
 /.generated/
 /COMPUTERS.local.md
+# T3 Code stages and rolls back theme publishes next to the file.
+shared/t3code/themes/*.staging-*
+shared/t3code/themes/*.rollback-*

@@ -90,6 +90,19 @@ class FilesTests(CliTestCase):
         self.cli('uninstall', '--only', 'tinycast')
         self.assertFalse(command.exists())
 
+    def test_t3code_themes_link_as_one_directory(self):
+        # T3 Code skips a symlinked theme file, so only the directory may be a link.
+        theme = self.write('shared/t3code/themes/harbor.json', '{"name": "Harbor"}\n')
+        themes = self.home / '.t3/userdata/themes'
+        for profile in ['macos', 'omarchy']:
+            with self.subTest(profile=profile):
+                self.env['DONNES_CONFIGS_PROFILE'] = profile
+                self.cli('--only', 't3code')
+                self.assertEqual(themes.resolve(), theme.parent)
+                self.assertFalse((themes / 'harbor.json').is_symlink())
+                self.cli('uninstall', '--only', 't3code')
+                self.assertFalse(themes.exists())
+
     def test_marker_blocks_are_idempotent_and_uninstall_preserves_user_content(self):
         self.write('macos/zshrc', '# zsh')
         self.write('macos/zshenv', '# env')

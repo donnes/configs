@@ -8,7 +8,7 @@ import { Agents } from './agents.ts';
 import { Mise } from './mise.ts';
 import { canPrompt } from './prompts.ts';
 
-export const components = ['packages', 'gh-extensions', 'apps', 'agents', 'skills', 'mise', 'atuin', 'nvim', 'gradle', 'shell', 'tmux', 'git', 'tinycast', 'dock', 'command-center', 'rea'] as const;
+export const components = ['packages', 'gh-extensions', 'apps', 'agents', 'skills', 'mise', 'atuin', 'nvim', 'gradle', 't3code', 'shell', 'tmux', 'git', 'tinycast', 'dock', 'command-center', 'rea'] as const;
 export type Component = typeof components[number];
 export type Profile = 'macos' | 'omarchy';
 
@@ -366,6 +366,10 @@ export class Installer {
     await this.component('nvim', () => this.nvim(uninstall));
     // Each machine builds Android for its own emulator ABI; Gradle writes nothing else to this file.
     await this.component('gradle', () => this.link(`${this.profile}/gradle.properties`, '.gradle/gradle.properties', uninstall));
+    // T3 Code refuses a symlinked theme file but follows a symlinked themes
+    // directory, so the directory is the link. Themes published on either
+    // machine land in the repo.
+    await this.component('t3code', () => this.link('shared/t3code/themes', '.t3/userdata/themes', uninstall));
     if (!uninstall) for (const name of ['ghostty', 'yazi', 'ssh']) this.files.log('skip', `shared/${name} is excluded from the default install`);
   }
 
