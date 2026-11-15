@@ -77,6 +77,9 @@ async function main() {
   if (values['dry-run'] && action === 'health') throw new Error('health never changes anything; run it without --dry-run');
   if ((values.json || values.strict) && action !== 'health') throw new Error('--json and --strict apply only to health');
   const profile = detectProfile();
+  // Omarchy's commands need OMARCHY_PATH, which only its login and interactive
+  // shells export; an apply over `ssh donnes-pc ./cli` gets neither.
+  if (profile === 'omarchy') process.env.OMARCHY_PATH ||= '/usr/share/omarchy';
   const defaults = components.filter(component => component !== 'rea' && (action === 'uninstall' || component !== 'command-center'));
   let enabled = new Set<Component>((only.length ? only : defaults).filter(component => !skip.includes(component)));
   if (values.interactive && ['install', 'uninstall'].includes(action)) {

@@ -320,6 +320,8 @@ def vp():
 def omarchy_shell():
     if args != ['shell', 'rescanPlugins']:
         unexpected()
+    if not os.environ.get('OMARCHY_PATH'):
+        done(1, err='OMARCHY_PATH is not set')
     state['dock']['rescanned'] = True
     state['dock']['listed'] = 0
     done()
