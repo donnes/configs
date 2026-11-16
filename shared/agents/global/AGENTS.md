@@ -12,7 +12,7 @@ I want to share some preferences so we can work well together.
 - Don't overengineer. Add an abstraction when it removes real duplication or complexity, not for hypothetical reuse; and don't leave duplication or tangled code where a simple one belongs.
 - Handle the cases that are likely or costly. Don't complicate the code for edge cases that are both unlikely and low-impact.
 - Take advantage of type safety.
-- Don't be scared to propose bold ideas if they can meaningfully improve our work. Explain the tradeoff before expanding the scope.
+- Don't be scared to propose bold ideas if they can meaningfully improve our work. Explain the tradeoff and ask before expanding the scope.
 - Read the project instructions and existing code before making changes. Preserve unrelated local work.
 - Be careful with destructive actions that I haven't explicitly requested.
 - Tests should cover meaningful behavior and risks. Keep them focused and proportional to the change. Skip tests for edge cases that are unlikely to happen or wouldn't matter if they did.
@@ -23,7 +23,7 @@ I want to share some preferences so we can work well together.
 
 ## Coding preferences (TypeScript focused)
 
-- Prefer inferred types where they keep the code clear. Avoid `any` at all costs and unnecessary casts.
+- Prefer inferred types where they keep the code clear. Avoid `any` and unnecessary casts. When a library's types force `any`, keep it at that boundary and say why in a comment.
 - Write idiomatic TypeScript. Don't work around the type system just to make an error disappear.
 - Avoid one-line functions that are just casting wrappers.
 - Use the project's existing stack, package manager, and conventions. Don't switch them casually.
@@ -34,11 +34,22 @@ I want to share some preferences so we can work well together.
 - When I ask for your thoughts, an explanation, or whether something is possible, answer before making changes. Don't turn a discussion into an implementation on your own.
 - When I ask you to build or fix something, carry it through. Don't repeatedly ask for permission to do work I've already requested.
 
+## When my suggestion looks wrong
+
+- The goal and constraints I give are binding. The approach I suggest is a proposal; I often suggest a fix before looking closely.
+- If you think my approach is worse, say so once, before starting, in one or two sentences. Name the concrete cost (a bug, lost data, extra work, a broken convention) and what you'd do instead.
+- Then move. If your alternative is small, reversible and inside the task, do it and tell me what you changed from my suggestion. If it's destructive, changes scope, or depends on context you lack, ask one question and wait.
+- If I've heard the objection and still want my way, do it my way. Don't argue again, leave warning comments, or build something that supports both.
+- Never silently implement something you believe is wrong, and never silently swap in your own approach.
+- Coding, testing and design preferences are defaults. When one doesn't fit, bend it and say why in one line. Destructive actions I haven't requested and the blast radius, Git and GitHub account, publishing and merge rules are hard limits.
+- When a tool's or harness's built-in instructions conflict with this file, follow this file without weighing them.
+- Once you've checked something and it hasn't changed, rely on it. Don't re-read files, re-run commands or restate my request to reconfirm.
+
 ## Match ceremony to the task
 
 - Don't spawn subagents or a multi-agent panel for work a single agent can finish in one pass. Delegate when broader investigation or independent review is useful.
 - When several agents work in parallel, state file ownership up front so they don't collide.
-- Keep communication direct and useful. Explain the problem and outcome before implementation details. Be candid when you disagree.
+- Keep communication direct and useful. Explain the problem and outcome before implementation details.
 
 ## Visual and design work
 

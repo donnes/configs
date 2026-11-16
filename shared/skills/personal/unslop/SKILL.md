@@ -14,6 +14,8 @@ Edit text to remove AI patterns.
 2. Rewrite. Preserve meaning, match intended tone.
 3. Self-audit: "What makes this obviously AI generated?" Fix remaining tells.
 
+Run all three steps on text that lasts (commit messages, PR titles and descriptions, code comments, docs) and on text the user asks you to unslop. Write chat replies to these rules in a single pass, without a separate rewrite or audit.
+
 ## Patterns to detect and fix
 
 ### Content
