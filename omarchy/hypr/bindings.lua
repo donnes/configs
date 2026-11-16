@@ -48,14 +48,7 @@ hl.unbind("SUPER + SHIFT + C")
 hl.unbind("SUPER + SHIFT + E")
 hl.unbind("SUPER + SHIFT + ALT + E")
 
--- Superwhisper's own shortcuts (F10 toggle, set in its Settings). It writes them to
--- shortcuts.lua but can't add this block itself because this file is a symlink.
--- Under Omarchy (a global `o` table), shortcuts.lua also makes F9 and Right Alt
--- push-to-talk keys, with no setting to turn that off. Hiding `o` while it loads
--- leaves only the shortcuts set in Superwhisper.
-local omarchy = o
-o = nil
--- Superwhisper managed shortcuts BEGIN
-dofile("/home/donnes/.config/superwhisper/shortcuts.lua")
--- Superwhisper managed shortcuts END
-o = omarchy
+-- Hex dictation on F10. Hyprland ignores the key recorded in Hex's Settings
+-- and only delivers shortcuts bound here; hold or tap comes from Hex's
+-- Shortcut mode. A key without modifiers keeps held modifiers out of Hex's paste.
+hl.bind("F10", hl.dsp.global("anomaly.hex:dictation"))

@@ -1,7 +1,7 @@
 atuin
 bash-preexec
 fastlane
+hex-bin
 jdk-openjdk
 jdk17-openjdk
 mkcert
-superwhisper-bin
