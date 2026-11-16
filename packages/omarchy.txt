@@ -3,4 +3,5 @@ bash-preexec
 fastlane
 jdk-openjdk
 jdk17-openjdk
+mkcert
 superwhisper-bin

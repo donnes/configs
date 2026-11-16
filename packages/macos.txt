@@ -11,6 +11,7 @@ ffmpeg-full
 gh
 git
 mise
+mkcert
 mobai-app/tap/simslim
 mole
 ncdu
