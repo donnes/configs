@@ -108,12 +108,17 @@ export const hyperframes = {
 // builds use this SDK. Godot and Android Studio look in ~/Android/Sdk on Linux.
 // Godot's docs advise against distribution SDK packages, which lag behind, so
 // the step bootstraps Google's command-line tools and installs with sdkmanager.
-// Each package lives in the directory its name spells with / for ;.
+// Each package lives in the directory its name spells with / for ;. The
+// emulator and its x86_64 image run Android tests on donnes-pc with KVM, which
+// needs SVM enabled in the BIOS.
 export const androidSdk = {
   root: 'Android/Sdk',
   java: '/usr/lib/jvm/java-17-openjdk',
   repository: 'https://dl.google.com/android/repository',
-  packages: ['platform-tools', 'build-tools;35.0.1', 'platforms;android-35', 'cmdline-tools;latest', 'cmake;3.10.2.4988404', 'ndk;28.1.13356709'],
+  packages: [
+    'platform-tools', 'build-tools;35.0.1', 'platforms;android-35', 'cmdline-tools;latest', 'cmake;3.10.2.4988404', 'ndk;28.1.13356709',
+    'emulator', 'system-images;android-35;google_apis;x86_64',
+  ],
 };
 
 function download(url: string) {

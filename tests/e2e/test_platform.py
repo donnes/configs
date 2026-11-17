@@ -109,7 +109,8 @@ class PlatformTests(CliTestCase):
         for app in ['Applications/T3-Code.AppImage', 'Applications/HyperFrames.AppImage', '.local/share/applications/hyperframes.desktop']:
             self.write(app, 'installed', home=True)
         sdk = self.home / 'Android/Sdk'
-        packages = ['platform-tools', 'build-tools;35.0.1', 'platforms;android-35', 'cmdline-tools;latest', 'cmake;3.10.2.4988404', 'ndk;28.1.13356709']
+        packages = ['platform-tools', 'build-tools;35.0.1', 'platforms;android-35', 'cmdline-tools;latest', 'cmake;3.10.2.4988404', 'ndk;28.1.13356709',
+                    'emulator', 'system-images;android-35;google_apis;x86_64']
         # A tampered download never runs, and leaves no bootstrap copy behind.
         self.assertIn('does not match its published checksum', self.fails('--only', 'apps').stderr)
         self.assertEqual(list(sdk.iterdir()), [])

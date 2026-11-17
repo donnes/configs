@@ -290,7 +290,9 @@ with the icon from the AppImage, while that entry is missing.
 The Android SDK goes into `~/Android/Sdk`, where Godot and Android Studio look by
 default, with the packages Godot 4.7's Android export lists: platform-tools,
 build-tools 35.0.1, platform 35, the latest command-line tools, CMake
-3.10.2.4988404 and NDK r28b. Godot's docs advise against distribution SDK
+3.10.2.4988404 and NDK r28b. It also installs the emulator and the Android 35
+Google APIs x86_64 system image for testing on donnes-pc, which needs SVM
+enabled in the BIOS for KVM. Godot's docs advise against distribution SDK
 packages, so the step downloads Google's command-line tools, checks them against
 the SHA-1 in Google's repository manifest, and runs `sdkmanager` with JDK 17,
 accepting the packages' licenses. It runs only while a package directory is
