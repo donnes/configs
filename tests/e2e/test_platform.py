@@ -17,7 +17,7 @@ class PlatformTests(CliTestCase):
                 self.env['DONNES_CONFIGS_PROFILE'] = profile
                 self.cli('--only', 'rea', '--dry-run')
                 self.cli('uninstall', '--only', 'rea')
-                self.cli('--skip', 'packages,gh-extensions,apps,agents,skills,mise,atuin,nvim,gradle,t3code,shell,tmux,git,tinycast,dock')
+                self.cli('--skip', 'packages,gh-extensions,apps,agents,skills,mise,atuin,nvim,gradle,t3code,shell,tmux,git,tinycast')
                 self.assertEqual(self.state['npx']['calls'], [])
                 result = self.fails('--only', 'rea')
                 self.assertIn('npx failed (7)', result.stderr)
@@ -126,30 +126,6 @@ class PlatformTests(CliTestCase):
         self.cli('--only', 'apps')
         self.assertEqual(self.state['android']['installs'], [packages, ['platforms;android-35']])
         self.assertEqual(self.state['android']['downloads'], downloads)
-
-    def test_dock_installs_and_enables_the_clone_without_touching_other_plugins(self):
-        self.env['DONNES_CONFIGS_PROFILE'] = 'omarchy'
-        manifest = self.write('omarchy/plugins/donnes.dock/manifest.json', '{"id":"donnes.dock"}')
-        window = self.write('omarchy/plugins/donnes.dock/DockWindow.qml', 'import QtQuick\nItem {}')
-        foreign = self.write('.config/omarchy/plugins/other/manifest.json', '{}', home=True)
-        target = self.home / '.config/omarchy/plugins/donnes.dock'
-        before = self.state
-        self.cli('--dry-run', '--only', 'dock')
-        self.assertEqual(self.state, before)
-        self.assertFalse(target.exists())
-        self.cli('--only', 'dock')
-        self.assertEqual((target / 'manifest.json').resolve(), manifest)
-        self.assertEqual((target / 'DockWindow.qml').resolve(), window)
-        self.assertTrue(self.state['dock']['enabled'])
-        self.assertTrue(self.state['dock']['autohide'])
-        self.assertEqual(self.state['dock'].get('restarts', 0), 1)
-        window.write_text('import QtQuick\nItem { width: 36 }')
-        self.cli('--only', 'dock')
-        self.assertEqual(self.state['dock'].get('restarts', 0), 2)
-        self.cli('uninstall', '--only', 'dock')
-        self.assertFalse(self.state['dock']['enabled'])
-        self.assertFalse((target / 'manifest.json').exists())
-        self.assertEqual(foreign.read_text(), '{}')
 
     def test_xcode_node_env_repoints_only_exact_installs(self):
         data = self.home / 'mise data'

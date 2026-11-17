@@ -27,12 +27,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 BOUNDARY = Path(__file__).resolve().parent / 'boundary.py'
-COMMANDS = ['omarchy', 'omarchy-shell', 'brew', 'curl', 'gh', 'yay', 'pacman', 'systemctl', 'launchctl', 'mise', 'npx',
+COMMANDS = ['brew', 'curl', 'gh', 'yay', 'pacman', 'systemctl', 'launchctl', 'mise', 'npx',
             'omarchy-pkg-present', 'omarchy-pkg-add', 'omarchy-pkg-aur-add', 'omarchy-install-gaming-steam',
             'omarchy-install-service-tailscale', 'omarchy-install-editor-zed', 'omarchy-install-browser']
 EMPTY_STATE = {
     'unexpected': [],
-    'dock': {'enabled': False, 'rescanned': False},
     'brew': {'formulae': [], 'casks': [], 'taps': [], 'targets': {}},
     'gh': {'extensions': []},
     'pacman': {'installed': [], 'aur': [], 'broken': False},
