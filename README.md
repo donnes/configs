@@ -124,7 +124,7 @@ Always inspect `./cli --dry-run` first.
 - `macos/tinycast/`: Raycast-style script commands linked into `~/Scripts/Tinycast`; import that folder once from Tinycast's custom commands settings
 - `shared/git/ignore`: the global gitignore on both machines, linked to `~/.config/git/ignore`; only macOS also gets `macos/gitconfig`
 - `macos/gradle.properties`, `omarchy/gradle.properties`: linked to `~/.gradle/gradle.properties`, so local Android builds target the machine's emulator ABI and share Gradle's build cache
-- `shared/t3code/themes/`: T3 Code's published themes, linked as the directory `~/.t3/userdata/themes` because T3 Code ignores a symlinked theme file. Pick a theme once per machine in T3 Code's settings or with `t3 theme set <id>`
+- `shared/t3code/themes/`: T3 Code's published themes, linked as the directory `~/.t3/userdata/themes` because T3 Code ignores a symlinked theme file or background image. A theme's background image sits beside it with the same name, such as `harbor.jpg`. Pick a theme once per machine in T3 Code's settings or with `t3 theme set <id>`
 - `packages/`: platform package lists, plus `gh-extensions.txt`, the gh extensions both machines install with the `gh-extensions` component
 - `shared/mise/`: shared mise tools and settings; `macos/mise/`: macOS-only agent CLIs; `omarchy/mise/`: the prune timer
 - `scripts/`: TypeScript CLI entry point and filesystem, installation, health, receipt, prompt, and skill modules
