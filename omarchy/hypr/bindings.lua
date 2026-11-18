@@ -49,6 +49,7 @@ hl.unbind("SUPER + SHIFT + E")
 hl.unbind("SUPER + SHIFT + ALT + E")
 
 -- Hex dictation on F10. Hyprland ignores the key recorded in Hex's Settings
--- and only delivers shortcuts bound here; hold or tap comes from Hex's
--- Shortcut mode. A key without modifiers keeps held modifiers out of Hex's paste.
-hl.bind("F10", hl.dsp.global("anomaly.hex:dictation"))
+-- and only delivers shortcuts bound here. A key without modifiers keeps held
+-- modifiers out of Hex's paste. The script toggles dictation and resumes
+-- music once the Bluetooth headset is back in music mode.
+o.bind("F10", "Toggle Hex dictation", "hex-dictation-toggle")

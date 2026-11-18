@@ -1,0 +1,39 @@
+#!/bin/bash
+# F10 toggles Hex dictation. Opening the Bluetooth headset's mic switches it to
+# call mode, and switching back to music mode about two seconds after dictation
+# pauses the player again. Hex resumes media before that switch, so its own
+# pause_media setting stays off and this script pauses and resumes instead.
+
+recording() { hex status | grep -q '^Capture *recording'; }
+
+if recording; then
+  exec hex dictation stop
+fi
+
+player_call() {
+  busctl --user call "$1" /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player "$2" >/dev/null 2>&1
+}
+
+playing=()
+for player in $(busctl --user list --no-legend | awk '$1 ~ /^org\.mpris\.MediaPlayer2\./ { print $1 }'); do
+  status=$(busctl --user get-property "$player" /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player PlaybackStatus 2>/dev/null)
+  [[ $status == 's "Playing"' ]] && playing+=("$player")
+done
+
+for player in "${playing[@]}"; do player_call "$player" Pause; done
+hex dictation start || exit
+((${#playing[@]})) || exit 0
+
+# Hex reports the recording a moment after it starts. The dictation can end
+# through Escape or Hex itself, not only F10.
+for _ in $(seq 1 30); do recording && break; sleep 0.1; done
+while recording; do sleep 0.3; done
+
+# Wait for the headset to leave call mode, then let the switch settle.
+for _ in $(seq 1 50); do
+  pactl list cards | grep -q 'Active Profile: headset-head-unit' || break
+  sleep 0.2
+done
+sleep 1.5
+
+for player in "${playing[@]}"; do player_call "$player" Play; done
