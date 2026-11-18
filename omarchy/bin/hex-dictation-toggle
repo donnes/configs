@@ -2,7 +2,7 @@
 # F10 toggles Hex dictation. Opening the Bluetooth headset's mic switches it to
 # call mode, and switching back to music mode about two seconds after dictation
 # pauses the player again. Hex resumes media before that switch, so its own
-# pause_media setting stays off and this script pauses and resumes instead.
+# pause_browser_media setting stays off and this script pauses and resumes instead.
 
 recording() { hex status | grep -q '^Capture *recording'; }
 
