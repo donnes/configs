@@ -10,7 +10,7 @@ class SkillCollectionTests(CliTestCase):
         alias = self.home.parent / 'home-alias'
         alias.symlink_to(self.home)
         self.env['HOME'] = str(alias)
-        (self.repo / 'shared/skills').mkdir(exist_ok=True)
+        (self.repo / 'shared/skills').mkdir(parents=True, exist_ok=True)
         agent = self.home / '.agents/skills/gone'
         agent.parent.mkdir(parents=True)
         agent.symlink_to(self.repo / 'shared/skills/gone')
@@ -56,18 +56,22 @@ class SkillCollectionTests(CliTestCase):
         self.assertFalse(agent.is_symlink())
         self.assertFalse(claude.is_symlink())
 
-    def test_personal_skills_install_alongside_shared_ones(self):
+    def test_grouped_skills_install_alongside_ungrouped_ones(self):
         personal = self.write('shared/skills/personal/mine/SKILL.md', 'mine').parent
+        grouped = self.write('shared/skills/design/sketch/SKILL.md', 'sketch').parent
+        self.write('shared/skills/design/LICENSE', 'license')
         self.write('shared/skills/example/SKILL.md', 'shared')
         self.cli('--only', 'skills')
         for root in ['.agents/skills', '.claude/skills']:
             with self.subTest(root=root):
                 self.assertEqual((self.home / root / 'mine').resolve(), personal)
+                self.assertEqual((self.home / root / 'sketch').resolve(), grouped)
                 self.assertEqual((self.home / root / 'example/SKILL.md').read_text(), 'shared')
-                self.assertFalse((self.home / root / 'personal').exists())
-        self.write('shared/skills/mine/SKILL.md', 'duplicate')
+                for loose in ['personal', 'design', 'LICENSE']:
+                    self.assertFalse((self.home / root / loose).exists())
+        self.write('shared/skills/design/mine/SKILL.md', 'duplicate')
         self.assertIn('ambiguous tracked skill: mine', self.fails('--only', 'skills').stderr)
-        shutil.rmtree(self.repo / 'shared/skills/mine')
+        shutil.rmtree(self.repo / 'shared/skills/design/mine')
         self.cli('remove-skill', 'mine')
         self.assertFalse(personal.exists())
         self.assertFalse((self.home / '.agents/skills/mine').is_symlink())
@@ -108,7 +112,7 @@ class SkillCollectionTests(CliTestCase):
                 self.assertFalse((self.repo / f'shared/skills/{name}').exists())
 
     def test_install_and_uninstall_remove_only_the_old_lockfile_link(self):
-        (self.repo / 'shared/skills').mkdir(exist_ok=True)
+        (self.repo / 'shared/skills').mkdir(parents=True, exist_ok=True)
         local = self.home / '.agents/.skill-lock.json'
         local.parent.mkdir(parents=True)
         local.symlink_to(self.repo / 'shared/skills.lock.json')
@@ -162,11 +166,13 @@ class RemoveSkillTests(CliTestCase):
         self.assertEqual((self.claude / 'SKILL.md').read_text(), 'foreign')
 
     def test_interactive_selection_and_confirmation(self):
+        grouped = self.write('shared/skills/personal/mine/SKILL.md', 'mine').parent
         self.interactive(['remove-skill'], [
             ('Select tracked skills to remove', ' \x1b[B \r'),
             ('from the repository and agents?', 'y'),
         ])
         self.assertFalse(self.skill.exists())
+        self.assertFalse(grouped.exists())
 
     def test_interactive_cancel_and_dry_run(self):
         for exchanges, dry_run, code in [

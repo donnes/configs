@@ -5,16 +5,22 @@ import { children, exists, Files, realPath } from './files.ts';
 import { answer, canPrompt } from './prompts.ts';
 import type { Profile } from './install.ts';
 
-// Donald's own skills live apart from installed third-party ones but install alongside them.
-const PERSONAL = 'shared/skills/personal';
+const SHARED = 'shared/skills';
+
+const isSkill = (directory: string) => fs.statSync(path.join(directory, 'SKILL.md'), { throwIfNoEntry: false })?.isFile() ?? false;
 
 export class Skills {
   constructor(private files: Files, private claudeHome: string, private profile: Profile) {}
 
-  // The collections the skills component installs. Skills that only make sense on one OS,
-  // such as iOS simulator tooling, live in <profile>/skills.
+  // The collections the skills component installs. shared/skills groups skills into folders
+  // such as animation or personal; a folder without a SKILL.md is a group, and a skill
+  // directly under shared/skills (a fresh adoption) still installs until it moves into one.
+  // Skills that only make sense on one OS, such as iOS simulator tooling, live in <profile>/skills.
   private collections() {
-    return ['shared/skills', PERSONAL, `${this.profile}/skills`].map(directory => path.join(this.files.repo, directory));
+    const shared = path.join(this.files.repo, SHARED);
+    const groups = children(shared).filter(entry => !path.basename(entry).startsWith('.')
+      && fs.statSync(entry, { throwIfNoEntry: false })?.isDirectory() && !isSkill(entry));
+    return [shared, ...groups, path.join(this.files.repo, `${this.profile}/skills`)];
   }
 
   sources() {
@@ -24,7 +30,7 @@ export class Skills {
   source(name: string) {
     const matches = this.sources().map(root => path.join(root, name)).filter(exists);
     if (matches.length > 1) throw new Error(`ambiguous tracked skill: ${name}`);
-    return matches[0] ?? path.join(this.files.repo, 'shared/skills', name);
+    return matches[0] ?? path.join(this.files.repo, SHARED, name);
   }
 
   private agentRoots() {
@@ -43,8 +49,10 @@ export class Skills {
   }
 
   private async collection(source: string, uninstall: boolean) {
-    const personal = path.join(this.files.repo, PERSONAL);
-    const entries = children(source).filter(entry => !path.basename(entry).startsWith('.') && entry !== personal);
+    const groups = this.collections();
+    // Skip loose files, such as a vendored group's LICENSE.
+    const entries = children(source).filter(entry => !path.basename(entry).startsWith('.') && !groups.includes(entry)
+      && fs.statSync(entry, { throwIfNoEntry: false })?.isDirectory());
     if (!uninstall) for (const entry of entries) this.source(path.basename(entry));
     // Claude links may go through ~/.agents/skills, so process Codex first.
     for (const destination of this.agentRoots()) {

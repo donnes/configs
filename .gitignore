@@ -20,6 +20,7 @@ credentials/
 .syncode-logs/
 
 # AI agent configs stay local
+.claude/worktrees/
 claude/
 codex/
 

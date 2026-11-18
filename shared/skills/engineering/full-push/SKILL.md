@@ -47,7 +47,7 @@ commits to the default branch, not the branch itself.
 2. **Prove it.** Follow full-send's Proof. Run the checks CI runs before you
    push, because a failure now lands on the default branch instead of a branch
    you can throw away.
-3. **Review it.** Run `sol-review-loop` on the local change. Fix real findings
+3. **Review it.** Run `sol-loop` on the local change. Fix real findings
    and prove each fix.
 4. **Commit.** Follow the repo's commit message conventions. Put unrelated
    changes in separate commits.

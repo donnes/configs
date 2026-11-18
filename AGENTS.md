@@ -32,17 +32,21 @@ details, and `./cli --help` for commands.
   whatever needs them.
 - JavaScript globals go through `bun add -g`, not npm or pnpm.
 - fastlane and atuin stay system packages.
-- Skills: workflows for both machines go in `shared/skills/<name>`, whether
-  Donald wrote them or they're vendored from other repos. We edit vendored
-  skills freely; nothing tracks their upstream, so an update is a fresh copy.
-  Skills tied to Donald's own setup and preferences, such as unslop, go in
-  `shared/skills/personal/<name>`. Skills for one OS go in
+- Skills: workflows for both machines go in a group folder,
+  `shared/skills/<group>/<name>`: `animation`, `design`, `engineering`, or
+  `pstack` for the skills we kept from Lauren Tan's pstack, adapted for T3 Code. That applies whether Donald wrote
+  them or they're vendored from other repos. We edit vendored skills freely;
+  nothing tracks their upstream, so an update is a fresh copy. Skills tied to
+  Donald's own setup and preferences, such as clean-worktrees, go in
+  `shared/skills/personal/<name>`. Skill names stay unique across groups,
+  because each installs as `~/.agents/skills/<name>`. `adopt` puts a new skill
+  directly in `shared/skills`; move it into a group. Skills for one OS go in
   `macos/skills` or `omarchy/skills`, and command-center-only skills go in
   `fleet/skills`.
 - Agent instructions: edit `shared/agents/global/AGENTS.md` or the OS
-  `CONTEXT.md`, never the generated `.generated/agents/*/AGENTS.md`. The
-  generated file also carries the unslop skill's rules, so editing
-  `shared/skills/personal/unslop/SKILL.md` changes every session's instructions.
+  `CONTEXT.md`, never the generated `.generated/agents/*/AGENTS.md`. Subagent definitions go in
+  `shared/agents/roles/<name>.md`; the `agents` component links them into
+  Claude Code's `agents` directory.
 - Private details (hostnames, SSH aliases, account mappings) belong in the
   ignored `COMPUTERS.local.md`, never in tracked files. A machine's role,
   JavaScript runtime owner (`jsRuntimes`), runtime homes and accepted health

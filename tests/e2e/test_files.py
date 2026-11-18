@@ -226,6 +226,8 @@ class FilesTests(CliTestCase):
 
     def test_agents_compose_matching_context_and_refresh_custom_runtime_homes(self):
         global_file = self.write('shared/agents/global/AGENTS.md', 'SHARED_CONTEXT')
+        role = self.write('shared/agents/roles/helper.md', 'HELPER_ROLE')
+        installed_role = self.home / '.claude-work/agents/helper.md'
         default_claude = self.write('.claude/CLAUDE.md', 'default remains local', home=True)
         codex = self.home / '.codex-work/AGENTS.md'
         claude = self.home / '.claude-work/CLAUDE.md'
@@ -247,12 +249,16 @@ class FilesTests(CliTestCase):
                 self.assertIn('SHARED_CONTEXT', codex.read_text())
                 self.assertIn(included, codex.read_text())
                 self.assertNotIn(excluded, codex.read_text())
-                self.assertIn('UNSLOP_RULES', codex.read_text())
                 self.assertIn('COMPUTERS.md', codex.read_text())
+                self.assertEqual(installed_role.resolve(), role)
                 self.assertEqual(default_claude.read_text(), 'default remains local')
                 installed = codex.stat().st_mtime_ns
                 self.cli('--only', 'agents')
                 self.assertEqual(codex.stat().st_mtime_ns, installed)
+        role.unlink()
+        self.cli('--only', 'agents')
+        self.assertFalse(installed_role.is_symlink())
+        role.write_text('HELPER_ROLE')
         global_file.write_text('UPDATED_SHARED_CONTEXT')
         self.cli('--only', 'agents')
         self.assertIn('UPDATED_SHARED_CONTEXT', codex.read_text())
@@ -261,11 +267,14 @@ class FilesTests(CliTestCase):
         self.cli('uninstall', '--only', 'agents')
         self.assertFalse(codex.is_symlink())
         self.assertFalse(claude.is_symlink())
+        self.assertFalse(installed_role.is_symlink())
         self.assertEqual(default_claude.read_text(), 'default remains local')
         self.assertEqual(global_file.read_text(), 'UPDATED_SHARED_CONTEXT')
 
     def test_missing_os_context_fails_before_replacing_existing_instructions(self):
         global_file = self.write('shared/agents/global/AGENTS.md', 'SHARED_CONTEXT')
+        role = self.write('shared/agents/roles/helper.md', 'HELPER_ROLE')
+        installed_role = self.home / '.claude-work/agents/helper.md'
         codex = self.home / '.codex/AGENTS.md'
         codex.parent.mkdir()
         codex.symlink_to(global_file)

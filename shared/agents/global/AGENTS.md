@@ -18,7 +18,10 @@ I want to share some preferences so we can work well together.
 - Tests should cover meaningful behavior and risks. Keep them focused and proportional to the change. Skip tests for edge cases that are unlikely to happen or wouldn't matter if they did.
 - Before adding a test, name the behavior it protects and the regression that would break it, and check that existing coverage doesn't already catch it. Test at the real boundary; don't add exports, flags or hooks that only tests use.
 - A bug's regression test must fail on the pre-fix code for the intended reason before it counts.
-- Comments should clarify how something works or why a decision was made. Don't narrate every line. Keep comments up to date when the code changes.
+- Default to no comment. Keep one only for a license header, a public API's doc comment, a link to an issue or RFC, or behavior forced by a dependency, platform or protocol we can't change. Keep comments up to date when the code changes.
+- When our own code needs a comment to explain a surprise or a workaround, reshape the code instead: rename, extract, add a type or remove the workaround. If that fix is outside the task, delete the comment and report the open problem.
+- Don't add `eslint-disable`, `@ts-ignore` or `@ts-expect-error` for a rule that protects correctness. Fix the code. A suppression is fine only for a faulty or style-only rule.
+- A comment that says "do not remove" or "do not change" states a constraint. Offer to encode it as a type, a test or a lint, and ask before deleting it.
 - Start with targeted verification. Run broader checks when the change or project requires them. Report what actually passed and what you couldn't verify.
 
 ## Coding preferences (TypeScript focused)
@@ -99,4 +102,3 @@ I want to share some preferences so we can work well together.
 - Resolve bot threads you fixed or dismissed with evidence. Never dismiss a human review or resolve a human reviewer's thread on their behalf.
 - Don't let review feedback expand the PR beyond the original goal. Stay quiet when nothing has changed. Stop when the required checks and reviews pass on the latest commit, or report a blocker.
 - Merge only when requested. Otherwise, report that the PR is ready. Treat deploying as a separate action.
-- Our tstack skills `modernize` and `sol-loop` are installed as `modernize-pr` and `sol-review-loop`. When another skill, such as `full-send` or `takeover`, names the old skill, use the renamed one.

@@ -84,7 +84,7 @@ instead of deleting it to get green.
    affected tests. Rerun the baseline commands and compare counts and wall
    time. A failure that also happens on the baseline is not from the cut; say
    so in the report.
-5. **Review.** Run `sol-review-loop` on the diff. Tell Sol the intent is
+5. **Review.** Run `sol-loop` on the diff. Tell Sol the intent is
    deleting low-signal tests, and ask it to flag keep contracts that lost
    their only test. Restore those tests.
 6. **Report.** Give the before and after table of tests and wall time per

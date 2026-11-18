@@ -6,9 +6,8 @@ the host's OS context.
 
 ## Existing foundation
 
-The configs installer already links each `shared/skills/<name>`,
-`shared/skills/personal/<name>` and the machine's own `macos/skills/<name>` or
-`omarchy/skills/<name>` directory into `~/.agents/skills` and
+The configs installer already links each `shared/skills/<group>/<name>` and
+the machine's own `macos/skills/<name>` or `omarchy/skills/<name>` directory into `~/.agents/skills` and
 `~/.claude/skills`. Keep shared skills there. Avoid creating
 a second skill collection here or moving existing skills merely to reorganize them.
 
@@ -21,13 +20,13 @@ entire `~/.codex` or `~/.claude` directories.
 | Concern | Source | Distribution |
 | --- | --- | --- |
 | Personal defaults | `shared/agents/global/AGENTS.md` | Global instruction entry point for each supported runtime |
-| Shared workflows | `shared/skills/<name>/SKILL.md` | Existing skills installer |
+| Shared workflows | `shared/skills/<group>/<name>/SKILL.md` | Existing skills installer |
 | OS-specific context | `macos/agents/CONTEXT.md` and `linux/agents/CONTEXT.md` | Composed into installed instructions for the matching profile |
 | Machine inventory | Root `COMPUTERS.md` and ignored `COMPUTERS.local.md` | Portable roles in Git; connection records stay local |
 | OS-specific workflows | `macos/skills/<name>` and `omarchy/skills/<name>` | Existing skills installer, matching profile only |
 | Command-center workflows | `fleet/skills/<name>` | Explicit `command-center` component |
 | Runtime-specific instructions | Add `shared/agents/runtimes/<runtime>/` when needed | Only that runtime |
-| Specialist roles | Add `shared/agents/roles/` when a real delegated workflow needs them | Explicitly selected roles |
+| Specialist roles | `shared/agents/roles/<name>.md`, such as `donnes-agent` and `comment-sicko` | The `agents` component links each into `<Claude config directory>/agents`; only Claude Code reads them |
 | Project instructions and skills | Inside each project's repository | Travel with the project and its worktrees |
 | Host-specific facts and secrets | Local machine configuration | Never copied wholesale into global instructions |
 
@@ -43,10 +42,7 @@ such as platform or scope does not enforce distribution by itself.
 ```
 
 The installer generates `.generated/agents/<profile>/AGENTS.md` from the shared
-preferences, matching OS context, the rules in
-`shared/skills/personal/unslop/SKILL.md`, and references to the machine
-inventories. Agents don't reliably load a skill on their own, so the unslop
-rules ship in every session's instructions.
+preferences, matching OS context, and references to the machine inventories.
 It links that composed file to:
 
 - `${CODEX_HOME:-~/.codex}/AGENTS.md` for Codex.
