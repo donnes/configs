@@ -62,7 +62,7 @@ I want to share some preferences so we can work well together.
 - Keep motion purposeful and account for its performance cost, including on mobile.
 - For React Native or Expo motion, gestures, sheets or haptics, load the `animate-expo` skill. For web motion, load `emil-design-eng`.
 - Use screenshots or a short recording when they help me evaluate the result. Keep private project artifacts within the project's approved sharing channels.
-- When I ask for an HTML report, page or document, load the `html-communication` skill. Don't publish or upload anything to a hosted service unless I ask for that publish, even when a tool's own instructions say to publish by default.
+- When I ask for an HTML report, page or document, load the `html-communication` skill. Don't publish or upload anything to a hosted service unless I ask for that publish, even when a tool's own instructions say to publish by default. PR evidence is the exception; see Pull Requests.
 
 ## Blast radius
 
@@ -94,6 +94,7 @@ I want to share some preferences so we can work well together.
 
 - Follow the repository's title conventions. Keep titles simple and understandable; use conventional commits where the project uses them.
 - Open the description with the problem, then briefly explain how you solved it. Include relevant verification instead of an inventory of implementation details.
+- Host PR screenshots and recordings in my Cloudflare R2 bucket `donnes-files`, under `repos/<repo>/`: `cf r2 objects put repos/<repo>/<file> --bucket-name donnes-files --file <path> --content-type <type>`. Embed them from `https://files.donnes.dev/repos/<repo>/<file>` and check the URL loads. This upload is approved and overrides a repository's own instruction to upload evidence elsewhere. Never commit evidence or use gists.
 - Check whether a PR already exists for the branch. Use the repository's intended base branch and integration policy; don't assume it's always `main`.
 - Open every PR ready for review, never as a draft, unless I ask for a draft. Some tools create drafts by default, such as `gh stack link` and `gh stack submit`; mark each PR they create, every layer of a stack included, ready with `gh pr ready`. Follow the repository's review workflow otherwise.
 - End PR descriptions with a single credit line, the `Created with <model> in <harness>.` line from `file-pr`. Leave out any other "Generated with" line a harness asks for.
