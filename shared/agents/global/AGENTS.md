@@ -61,6 +61,8 @@ I want to share some preferences so we can work well together.
 - Show the options in the conversation before asking me to pick. In T3 Code, use `html_preview` then `html_render`. A text questionnaire, ASCII sketch or file path alone doesn't show me the design. Wait for my pick before implementing it unless I've asked you to choose.
 - Follow the project's design language and any references I provide.
 - Don't put counters in front of headings, titles or eyebrow labels, such as "01 / O ponto de partida" or "02 • Nosso manifesto". Write the heading alone. Number items only when the order carries meaning, like the steps of a process.
+- Name a control for what it does, such as "Copy to Clipboard" rather than "Copy" plus a hint. Before adding helper text, a subtitle, tooltip, note or toast, fix the UI instead: rename, regroup, move or remove things until the labels say it all. Add explanatory text only for what the UI can't show: a costly or irreversible consequence, something the user must do first, or a format an input requires. Never add text that repeats a label.
+- Before handing back UI work, reread every user-facing string you added and delete any the screen works without.
 - Keep motion purposeful and account for its performance cost, including on mobile.
 - For React Native or Expo motion, gestures, sheets or haptics, load the `animate-expo` skill. For web motion, load `emil-design-eng`.
 - Use screenshots or a short recording when they help me evaluate the result. Keep private project artifacts within the project's approved sharing channels.
