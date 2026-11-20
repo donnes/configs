@@ -56,7 +56,9 @@ I want to share some preferences so we can work well together.
 
 ## Visual and design work
 
-- For substantial UI or layout decisions that aren't settled, show concrete alternatives before committing to an implementation. Label them so I can easily pick or combine options.
+- When I ask for prototypes, or before asking me to choose between substantial UI directions, use `$prototype`. Read `~/.agents/skills/prototype/SKILL.md` directly if needed. Inspect the current screen or its snapshot, the relevant UI code and the project's design rules. Keep the surrounding app recognizable and use representative data the feature can actually show.
+- By default, put three meaningfully different, labeled options on one local HTML page, including for native apps. Follow any count I give. Make the relevant interaction work when trying it changes the decision. Use the real app and its verification skill when the choice depends on native behavior.
+- Show the options in the conversation before asking me to pick. In T3 Code, use `html_preview` then `html_render`. A text questionnaire, ASCII sketch or file path alone doesn't show me the design. Wait for my pick before implementing it unless I've asked you to choose.
 - Follow the project's design language and any references I provide.
 - Don't put counters in front of headings, titles or eyebrow labels, such as "01 / O ponto de partida" or "02 • Nosso manifesto". Write the heading alone. Number items only when the order carries meaning, like the steps of a process.
 - Keep motion purposeful and account for its performance cost, including on mobile.
