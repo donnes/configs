@@ -8,6 +8,8 @@
 uv = "latest"
 claude = "latest"
 codex = "latest"
+# Google Antigravity CLI, `agy`. Omarchy ships it as antigravity-cli.
+antigravity-cli = "latest"
 # Grok Build. The registry entry downloads the same native binary as
 # x.ai/cli/install.sh, without that script's shell-profile and PATH edits.
 # Omarchy installs it as npm:@xai-official/grok.

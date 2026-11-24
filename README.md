@@ -309,9 +309,9 @@ mise manages language runtimes and agent CLIs on both profiles; Homebrew and
 pacman keep system packages. The `mise` component links
 `shared/mise/conf.d/donnes.toml` into `~/.config/mise/conf.d/`, and on macOS
 also `macos/mise/conf.d/donnes-macos.toml`, which holds the agent CLIs (claude,
-codex, grok, opencode). Omarchy installs those into its own `config.toml`, and its
-`~/.local/bin` wrappers run `mise use -g`, which refuses a tool declared in two
-global files. mise loads the fragments
+codex, antigravity-cli, grok, opencode). Omarchy manages those CLIs itself,
+and its `~/.local/bin` wrappers run `mise use -g`, which refuses a tool declared
+in two global files. mise loads the fragments
 before `~/.config/mise/config.toml`, which stays machine-owned: `mise use -g`
 and Omarchy write there, and its values win. Projects pin versions with
 `.nvmrc`, `.node-version`, `.ruby-version`, `.python-version`,
