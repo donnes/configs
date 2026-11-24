@@ -24,8 +24,8 @@ lazygit = "latest"
 jj = "latest"
 # Reruns a command when files change, such as a project's rebuild-and-relaunch.
 watchexec = "latest"
-# rustup's default profile can be minimal, which has no rustfmt.
-rust = { version = "stable", components = "rustfmt" }
+# rustup's default profile can be minimal, which has no rustfmt or rust-analyzer.
+rust = { version = "stable", components = "rustfmt,rust-analyzer" }
 # Swift and Kotlin linters. ktlint and detekt need a JVM: Zulu 17 on macOS, the
 # latest jdk-openjdk on Omarchy. SwiftLint's Linux zip has a dynamic `swiftlint`
 # that needs libxml2.so.2, so Linux uses the static one under the same name.
