@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # @raycast.schemaVersion 1
-# @raycast.title Screenshot Window (Clean Desktop)
+# @raycast.title Screenshot Window
 # @raycast.mode silent
 # @raycast.icon 📸
 # @raycast.packageName Screenshots
