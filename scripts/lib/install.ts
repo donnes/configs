@@ -168,6 +168,37 @@ export class Installer {
     else await this.files.link(this.source(source), this.destination(destination));
   }
 
+  // Omarchy's wallpaper cycling compares resolved paths, so it never advances past a linked wallpaper.
+  private copy(source: string, destination: string, uninstall: boolean) {
+    const from = this.source(source), to = this.destination(destination), real = realPath(from);
+    if (real !== undefined && realPath(to) === real) {
+      this.files.log('keep', `${this.files.pretty(to)} resolves to ${this.files.pretty(from)}; replace it with a directory to install copies`);
+      if (!uninstall && !this.files.dryRun) this.files.keep(to);
+      return;
+    }
+    for (const file of walk(from)) {
+      const copy = path.join(to, path.relative(from, file)), stock = realPath(file);
+      if (stock === undefined) { this.files.log('skip', `${this.files.pretty(file)} points to a missing image`); continue; }
+      const stat = fs.lstatSync(copy, { throwIfNoEntry: false });
+      const current = stat?.isFile() && fs.readFileSync(copy).equals(fs.readFileSync(file));
+      if (uninstall) {
+        if (!current) continue;
+        this.files.log('remove', this.files.pretty(copy));
+        if (!this.files.dryRun) fs.unlinkSync(copy);
+      } else if (current) this.files.log('skip', `${this.files.pretty(copy)} is current`);
+      else if (stat && !(stat.isSymbolicLink() && realPath(copy) === stock)) {
+        this.files.log('keep', `${this.files.pretty(copy)} differs from ${this.files.pretty(file)}; delete it to install the repo's copy`);
+        if (!this.files.dryRun) this.files.keep(copy);
+      } else {
+        this.files.log('copy', `${this.files.pretty(file)} -> ${this.files.pretty(copy)}`);
+        if (this.files.dryRun) continue;
+        fs.mkdirSync(path.dirname(copy), { recursive: true });
+        fs.rmSync(copy, { force: true });
+        fs.copyFileSync(file, copy);
+      }
+    }
+  }
+
   private block(destination: string, content: string, uninstall: boolean) {
     this.files.block(this.destination(destination), uninstall ? undefined : content);
   }
@@ -393,6 +424,8 @@ export class Installer {
         await this.link('omarchy/helium-browser-flags.conf', '.config/helium-browser-flags.conf', uninstall);
         await this.tree('omarchy/bin', '.local/bin', uninstall);
         await this.tree('omarchy/hypr', '.config/hypr', uninstall);
+        await this.link('omarchy/themes/donnes', '.config/omarchy/themes/donnes', uninstall);
+        this.copy('omarchy/backgrounds/donnes', '.config/omarchy/backgrounds/donnes', uninstall);
       }
     });
     await this.component('git', async () => {

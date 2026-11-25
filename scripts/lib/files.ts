@@ -43,6 +43,8 @@ export class Files {
   // Differing local copies left in place, which leave an install incomplete.
   get kept() { return [...this.keptPaths]; }
 
+  keep(file: string) { this.keptPaths.add(file); }
+
   pretty(file: string) {
     for (const [root, label] of [[this.repo, '<repo>'], [this.home, '~']]) {
       if (root !== undefined && within(file, root)) return label + file.slice(root.length);
