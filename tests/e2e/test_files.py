@@ -1,4 +1,5 @@
 """Managed files: links, generated instructions, marker blocks, conflicts, adopt and update."""
+import json
 import os
 import shutil
 import subprocess
@@ -110,6 +111,12 @@ class FilesTests(CliTestCase):
         self.write('omarchy/bashrc.local', '# bash')
         self.write('omarchy/tmux.local.conf', '# tmux')
         bindings = self.write('omarchy/hypr/bindings.lua', '-- bindings')
+        theme = self.write('omarchy/themes/donnes/colors.toml', 'mode = "dark"\n').parent
+        stock = self.write('stock/meadow.webp', 'meadow', home=True)
+        (self.repo / 'omarchy/backgrounds/donnes').mkdir(parents=True)
+        (self.repo / 'omarchy/backgrounds/donnes/meadow.webp').symlink_to(stock)
+        (self.repo / 'omarchy/backgrounds/donnes/removed.webp').symlink_to(self.home / 'stock/removed.webp')
+        wallpaper = self.home / '.config/omarchy/backgrounds/donnes/meadow.webp'
         for profile, shell, tmux in [('macos', '.zshenv', '.tmux.conf'),
                                      ('omarchy', '.bashrc', '.config/tmux/tmux.conf')]:
             with self.subTest(profile=profile):
@@ -118,6 +125,8 @@ class FilesTests(CliTestCase):
                 block.chmod(0o640)
                 if profile == 'omarchy':
                     tmux_file = self.write(tmux, '# user tmux\n', home=True)
+                    wallpaper.parent.mkdir(parents=True)
+                    wallpaper.symlink_to(stock)
                 self.cli('--only', 'shell,tmux', '--dry-run')
                 self.assertEqual(block.read_text(), 'export USER_SETTING=1\n')
                 self.cli('--only', 'shell,tmux')
@@ -127,6 +136,9 @@ class FilesTests(CliTestCase):
                 self.assertEqual(block.read_text().count('# <<< donnes/configs <<<'), 1)
                 if profile == 'omarchy':
                     self.assertEqual((self.home / '.config/hypr/bindings.lua').resolve(), bindings)
+                    self.assertEqual((self.home / '.config/omarchy/themes/donnes').resolve(), theme)
+                    self.assertFalse(wallpaper.is_symlink())
+                    self.assertEqual(wallpaper.read_text(), 'meadow')
                     self.assertIn('source-file -q ~/.config/tmux/local.conf', tmux_file.read_text())
                     self.assertEqual(tmux_file.read_text().count('# >>> donnes/configs >>>'), 1)
                 once = block.read_bytes()
@@ -138,8 +150,15 @@ class FilesTests(CliTestCase):
                 self.assertNotIn('donnes/configs', block.read_text())
                 if profile == 'omarchy':
                     self.assertFalse((self.home / '.config/hypr/bindings.lua').is_symlink())
+                    self.assertFalse((self.home / '.config/omarchy/themes/donnes').exists())
+                    self.assertFalse(wallpaper.exists())
                     self.assertIn('# user tmux', tmux_file.read_text())
                     self.assertNotIn('donnes/configs', tmux_file.read_text())
+                    wallpaper.write_text('mine')
+                    self.cli('--only', 'shell')
+                    self.assertEqual(wallpaper.read_text(), 'mine')
+                    receipt = json.loads((self.home / '.local/state/donnes-configs/receipt.json').read_text())
+                    self.assertEqual(receipt['lastRun']['kept'], ['~/.config/omarchy/backgrounds/donnes/meadow.webp'])
 
     def test_marker_block_is_replaced_in_place_and_malformed_markers_stop_the_install(self):
         self.write('macos/zshrc', '# zsh')
@@ -193,6 +212,16 @@ class FilesTests(CliTestCase):
         self.cli('--only', 'skills')
         self.assertFalse(skill.parent.is_symlink())
         self.assertEqual(skill.read_text(), 'repository skill')
+        stock = self.write('stock/meadow.webp', 'meadow', home=True)
+        wallpapers = self.repo / 'omarchy/backgrounds/donnes'
+        wallpapers.mkdir(parents=True)
+        (wallpapers / 'meadow.webp').symlink_to(stock)
+        (self.home / '.config/omarchy/backgrounds').mkdir(parents=True)
+        (self.home / '.config/omarchy/backgrounds/donnes').symlink_to(wallpapers)
+        self.env['DONNES_CONFIGS_PROFILE'] = 'omarchy'
+        for command in [[], ['uninstall']]:
+            self.cli(*command, '--only', 'shell')
+            self.assertEqual(os.readlink(wallpapers / 'meadow.webp'), str(stock))
 
     def test_uncomparable_conflict_keeps_local_and_continues_install(self):
         source = self.write('shared/atuin/config.toml', 'repository')
