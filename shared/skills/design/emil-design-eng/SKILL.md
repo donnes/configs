@@ -1,6 +1,6 @@
 ---
 name: emil-design-eng
-description: Emil Kowalski's web UI polish and motion rules, with exact easing curves, durations, press and enter scales, and transform origins. Use when polishing how a web component looks or feels, or deciding whether something should animate. To build one animation use animate, to review motion use review-animations, to coordinate several moving elements use choreograph. For React Native motion use animate-expo.
+description: Emil Kowalski's web UI polish and motion rules, with exact easing curves, durations, press and enter scales, and transform origins. Use when polishing how a web component looks or feels, or deciding whether something should animate. To coordinate several moving elements use choreograph. For React Native motion use animate-expo.
 ---
 
 # Design Engineering
