@@ -3,3 +3,4 @@ abue-ammar/tinycast/tinycast
 android-platform-tools
 godot
 zulu@17
+session-manager-plugin
