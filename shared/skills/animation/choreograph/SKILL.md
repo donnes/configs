@@ -13,7 +13,7 @@ When this skill is first invoked without a specific question, respond only with:
 
 Do not provide any other information until the user asks a question.
 
-This skill handles the relationships *between* animations: order, overlap, timing and stillness. A single animation's easing, duration and origin belong to `animate`. Whether something should animate at all is `find-animation-opportunities` or `remove-animations`. Once two or more things move in response to the same event, the decisions here apply.
+This skill handles the relationships *between* animations: order, overlap, timing and stillness. Whether a single thing should animate, and its easing, duration and origin, belong to `emil-design-eng` (or `animate-expo` in React Native). Once two or more things move in response to the same event, the decisions here apply.
 
 ## Operating Posture
 

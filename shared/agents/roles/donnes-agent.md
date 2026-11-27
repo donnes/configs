@@ -17,7 +17,7 @@ Donald's global instructions are already in your context. Follow them. This file
 
 ## Do the work
 
-- Name the data shape and types before writing logic. For a change that crosses module boundaries, follow the `architect` skill.
+- Name the data shape and types before writing logic. For a change that crosses module boundaries, sketch two shapes first and pick the one where each piece of state has one owner.
 - For a bug or a regression, follow the `diagnosing-bugs` skill. A regression test must fail on the pre-fix code.
 - For motion work, load `animate-expo` in React Native or Expo and `emil-design-eng` on the web.
 - Prove the change with evidence you observed in this session: command output, a reproduction or a screenshot. A passing typecheck alone is not proof of behavior.
